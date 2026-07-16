@@ -1,0 +1,109 @@
+"use client";
+
+import { Button } from '@/components/ui/button';
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger,
+} from '@/components/ui/dropdown-menu';
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
+} from '@/components/ui/dialog';
+import { MoreHorizontal, Pencil, Trash2, Eye } from 'lucide-react';
+import Link from 'next/link';
+import { useState } from 'react';
+import { deleteRefPropinsi } from '@/app/actions/ref-propinsi';
+import { toast } from 'sonner';
+
+interface RefPropinsiActionsProps {
+  id: number;
+}
+
+export function RefPropinsiActions({ id }: RefPropinsiActionsProps) {
+  const [isDeleteDialogOpen, setIsDeleteDialogOpen] = useState(false);
+  const [isDeleting, setIsDeleting] = useState(false);
+
+  const handleDelete = async () => {
+    setIsDeleting(true);
+    try {
+      const result = await deleteRefPropinsi(id);
+      if (result.success) {
+        toast.success('Propinsi berhasil dihapus (permanen)');
+        setIsDeleteDialogOpen(false);
+      } else {
+        toast.error(result.error || 'Gagal menghapus propinsi');
+      }
+    } catch (error) {
+      toast.error('Terjadi kesalahan saat menghapus propinsi');
+    } finally {
+      setIsDeleting(false);
+    }
+  };
+
+  return (
+    <>
+      <DropdownMenu>
+        <DropdownMenuTrigger asChild>
+          <Button variant="ghost" size="sm">
+            <MoreHorizontal className="h-4 w-4" />
+          </Button>
+        </DropdownMenuTrigger>
+        <DropdownMenuContent align="end">
+          <DropdownMenuItem>
+            <Link href={`/dashboard/referensi/propinsi/${id}`} className="flex items-center w-full">
+              <Eye className="mr-2 h-4 w-4" />
+              Detail
+            </Link>
+          </DropdownMenuItem>
+          <DropdownMenuItem>
+            <Link href={`/dashboard/referensi/propinsi/${id}/edit`} className="flex items-center w-full">
+              <Pencil className="mr-2 h-4 w-4" />
+              Edit
+            </Link>
+          </DropdownMenuItem>
+          <DropdownMenuItem
+            onClick={() => setIsDeleteDialogOpen(true)}
+            className="text-destructive"
+          >
+            <Trash2 className="mr-2 h-4 w-4" />
+            Hapus
+          </DropdownMenuItem>
+        </DropdownMenuContent>
+      </DropdownMenu>
+
+      <Dialog open={isDeleteDialogOpen} onOpenChange={setIsDeleteDialogOpen}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>Hapus Propinsi</DialogTitle>
+            <DialogDescription>
+              Apakah Anda yakin ingin <strong>menghapus permanen</strong> propinsi ini? Tindakan ini akan
+              menghapus data dari basis data dan tidak dapat dikembalikan.
+            </DialogDescription>
+          </DialogHeader>
+          <DialogFooter>
+            <Button
+              variant="outline"
+              onClick={() => setIsDeleteDialogOpen(false)}
+              disabled={isDeleting}
+            >
+              Batal
+            </Button>
+            <Button
+              variant="destructive"
+              onClick={handleDelete}
+              disabled={isDeleting}
+            >
+              {isDeleting ? 'Menghapus...' : 'Hapus'}
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+    </>
+  );
+}

@@ -4,11 +4,13 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { EmptyState } from "@/components/shared/empty-state";
-import { Users, Search, Plus, MoreHorizontal } from "lucide-react";
+import { AnakActions } from "@/components/anak/anak-actions";
+import { Users, Search, Plus } from "lucide-react";
 import { getAnakList } from "@/app/actions/anak";
 import { Suspense } from "react";
+import Link from "next/link";
 
-async function AnakTable({ searchParams }: { searchParams: { page?: string; search?: string } }) {
+async function AnakTable({ searchParams }: { searchParams: { page?: string; search?: string; field?: string; direction?: string } }) {
   const page = parseInt(searchParams.page || '1');
   const search = searchParams.search;
   
@@ -40,9 +42,30 @@ async function AnakTable({ searchParams }: { searchParams: { page?: string; sear
         <Table>
           <TableHeader>
             <TableRow>
-              <TableHead>Kode Anak</TableHead>
-              <TableHead>NIK</TableHead>
-              <TableHead>Nama Lengkap</TableHead>
+              <TableHead>
+                <Link 
+                  href={`/dashboard/anak?${new URLSearchParams({ ...searchParams, field: 'kodeAnak', direction: searchParams.direction === 'asc' ? 'desc' : 'asc' }).toString()}`}
+                  className="hover:text-foreground"
+                >
+                  Kode Anak
+                </Link>
+              </TableHead>
+              <TableHead>
+                <Link 
+                  href={`/dashboard/anak?${new URLSearchParams({ ...searchParams, field: 'nik', direction: searchParams.direction === 'asc' ? 'desc' : 'asc' }).toString()}`}
+                  className="hover:text-foreground"
+                >
+                  NIK
+                </Link>
+              </TableHead>
+              <TableHead>
+                <Link 
+                  href={`/dashboard/anak?${new URLSearchParams({ ...searchParams, field: 'namaLengkap', direction: searchParams.direction === 'asc' ? 'desc' : 'asc' }).toString()}`}
+                  className="hover:text-foreground"
+                >
+                  Nama Lengkap
+                </Link>
+              </TableHead>
               <TableHead>Jenis Kelamin</TableHead>
               <TableHead>Tanggal Lahir</TableHead>
               <TableHead>Status</TableHead>
@@ -67,9 +90,7 @@ async function AnakTable({ searchParams }: { searchParams: { page?: string; sear
                   </span>
                 </TableCell>
                 <TableCell className="text-right">
-                  <Button variant="ghost" size="sm">
-                    <MoreHorizontal className="h-4 w-4" />
-                  </Button>
+                  <AnakActions id={Number(anak.id)} />
                 </TableCell>
               </TableRow>
             ))}
@@ -79,32 +100,31 @@ async function AnakTable({ searchParams }: { searchParams: { page?: string; sear
       
       <div className="flex items-center justify-between mt-4">
         <div className="text-sm text-muted-foreground">
-          Menampilkan {data.length} dari {total} anak
+          Menampilkan {(page - 1) * 20 + 1}-{Math.min(page * 20, total)} dari {total} anak
         </div>
-        <div className="flex gap-2">
+        <div className="flex items-center gap-2">
           <Button 
             variant="outline" 
             size="sm" 
             disabled={page === 1}
-            onClick={() => {
-              const params = new URLSearchParams(searchParams as any);
-              params.set('page', String(page - 1));
-              window.location.search = params.toString();
-            }}
+            asChild
           >
-            Sebelumnya
+            <Link href={{ pathname: '/dashboard/anak', query: { ...searchParams, page: page - 1 } }}>
+              Sebelumnya
+            </Link>
           </Button>
+          <span className="text-sm font-medium">
+            Halaman {page} dari {Math.ceil(total / 20)}
+          </span>
           <Button 
             variant="outline" 
             size="sm"
             disabled={page * 20 >= total}
-            onClick={() => {
-              const params = new URLSearchParams(searchParams as any);
-              params.set('page', String(page + 1));
-              window.location.search = params.toString();
-            }}
+            asChild
           >
-            Selanjutnya
+            <Link href={{ pathname: '/dashboard/anak', query: { ...searchParams, page: page + 1 } }}>
+              Selanjutnya
+            </Link>
           </Button>
         </div>
       </div>
@@ -130,23 +150,32 @@ export default async function AnakPage({
         <CardHeader>
           <div className="flex items-center justify-between">
             <CardTitle>Daftar Anak</CardTitle>
-            <Button>
-              <Plus className="h-4 w-4 mr-2" />
-              Tambah Anak
-            </Button>
+            <Link href="/dashboard/anak/new">
+              <Button>
+                <Plus className="h-4 w-4 mr-2" />
+                Tambah Anak
+              </Button>
+            </Link>
           </div>
         </CardHeader>
         <CardContent>
-          <div className="flex items-center gap-4 mb-4">
+          <form className="flex items-center gap-4 mb-4">
             <div className="relative flex-1">
               <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
               <Input 
+                name="search"
                 placeholder="Cari anak berdasarkan nama, kode, atau NIK..." 
                 className="pl-10"
                 defaultValue={resolvedSearchParams.search}
               />
             </div>
-          </div>
+            <Button type="submit">Cari</Button>
+            {resolvedSearchParams.search && (
+              <Link href="/dashboard/anak">
+                <Button variant="outline" type="button">Reset</Button>
+              </Link>
+            )}
+          </form>
           
           <Suspense fallback={<div className="text-center py-8">Memuat data...</div>}>
             <AnakTable searchParams={resolvedSearchParams} />

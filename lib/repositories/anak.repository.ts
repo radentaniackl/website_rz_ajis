@@ -1,4 +1,4 @@
-import { eq, ilike, and, count, desc, sql, type SQL } from 'drizzle-orm';
+import { eq, ilike, and, count, desc, asc, sql, type SQL } from 'drizzle-orm';
 import { ajisAnak } from '@/db/schema';
 import { db, getOffset, safeQuery, type ListParams } from './base.repository';
 
@@ -17,6 +17,8 @@ export type ListAnakParams = ListParams & {
   /** Filter RBAC hasil dari filterByRole() */
   rbacFilter?: SQL;
   aktif?: 'y' | 'n';
+  field?: string;
+  direction?: 'asc' | 'desc';
 };
 
 // ─── READ ────────────────────────────────────────────────────────────────────
@@ -44,7 +46,7 @@ export async function findAnakByKode(kodeAnak: string): Promise<AnakRow | null> 
 }
 
 export async function listAnak(params: ListAnakParams) {
-  const { page, pageSize, search, rbacFilter, aktif = 'y' } = params;
+  const { page, pageSize, search, rbacFilter, aktif = 'y', field, direction = 'desc' } = params;
 
   return safeQuery(`listAnak(page=${page}, search=${search ?? '-'})`, async () => {
     const conditions: SQL[] = [eq(ajisAnak.aktif, aktif)];
@@ -59,12 +61,24 @@ export async function listAnak(params: ListAnakParams) {
 
     const where = and(...conditions);
 
+    // Determine sort column and direction
+    let orderBy;
+    if (field === 'kodeAnak') {
+      orderBy = direction === 'asc' ? asc(ajisAnak.kodeAnak) : desc(ajisAnak.kodeAnak);
+    } else if (field === 'nik') {
+      orderBy = direction === 'asc' ? asc(ajisAnak.nik) : desc(ajisAnak.nik);
+    } else if (field === 'namaLengkap') {
+      orderBy = direction === 'asc' ? asc(ajisAnak.namaLengkap) : desc(ajisAnak.namaLengkap);
+    } else {
+      orderBy = direction === 'asc' ? asc(ajisAnak.tglTerdaftar) : desc(ajisAnak.tglTerdaftar);
+    }
+
     const [rows, totalResult] = await Promise.all([
       db
         .select()
         .from(ajisAnak)
         .where(where)
-        .orderBy(desc(ajisAnak.tglTerdaftar))
+        .orderBy(orderBy)
         .limit(pageSize)
         .offset(getOffset(page, pageSize)),
       db

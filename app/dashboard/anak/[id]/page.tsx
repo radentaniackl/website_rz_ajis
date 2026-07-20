@@ -1,26 +1,48 @@
 import { PageHeader } from "@/components/shared/page-header";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { ArrowLeft, Edit, Trash2 } from "lucide-react";
+import { ArrowLeft, Edit } from "lucide-react";
 import Link from "next/link";
 import { getAnakDetail } from "@/app/actions/anak";
 import { notFound } from "next/navigation";
+import { AnakActions } from "@/components/anak/anak-actions";
 
 async function AnakDetail({ id }: { id: string }) {
   const result = await getAnakDetail(parseInt(id));
   
-  if (!result.success || !result.data) {
-    notFound();
+  if (!result.success) {
+    if (result.error === 'Forbidden - You do not have access to this anak') {
+      return (
+        <div className="text-center py-12">
+          <p className="text-destructive font-medium">Akses Ditolak</p>
+          <p className="text-muted-foreground mt-2">Anda tidak memiliki akses untuk melihat data anak ini.</p>
+        </div>
+      );
+    }
+    return (
+      <div className="text-center py-12">
+        <p className="text-destructive font-medium">Terjadi Kesalahan</p>
+        <p className="text-muted-foreground mt-2">{result.error || 'Gagal memuat data anak'}</p>
+      </div>
+    );
   }
 
   const anak = result.data;
+
+  if (!anak) {
+    return (
+      <div className="text-center py-12">
+        <p className="text-destructive font-medium">Data tidak ditemukan</p>
+      </div>
+    );
+  }
 
   return (
     <div className="space-y-6">
       <div className="flex items-center justify-between">
         <div>
           <h2 className="text-2xl font-bold">{anak.namaLengkap}</h2>
-          <p className="text-muted-foreground">{anak.kafkaAnak} - {anak.nik}</p>
+          <p className="text-muted-foreground">{anak.kodeAnak} - {anak.nik}</p>
         </div>
         <div className="flex gap-2">
           <Link href={`/dashboard/anak/${id}/edit`}>
@@ -29,10 +51,7 @@ async function AnakDetail({ id }: { id: string }) {
               Edit
             </Button>
           </Link>
-          <Button variant="destructive">
-            <Trash2 className="h-4 w-4 mr-2" />
-            Hapus
-          </Button>
+          <AnakActions id={Number(anak.id)} />
         </div>
       </div>
 

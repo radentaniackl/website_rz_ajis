@@ -11,7 +11,7 @@ import { revalidatePath } from 'next/cache';
  */
 export async function getRefPropinsiList(params: {
   page: number;
-  pageSize?: number;
+  pageSize: number;
   search?: string;
   aktif?: 'y' | 'n';
   field?: string;

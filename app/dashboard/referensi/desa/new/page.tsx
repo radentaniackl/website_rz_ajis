@@ -7,13 +7,18 @@ import { getActiveRefKecamatanList } from '@/app/actions/ref-kecamatan';
 export default async function NewRefDesaPage() {
   const kecamatanResult = await getActiveRefKecamatanList();
 
-  if (!kecamatanResult.success) {
+  if (!kecamatanResult.success || !kecamatanResult.data) {
     return (
       <div className="p-4 border border-red-200 bg-red-50 rounded-lg">
-        <p className="text-red-600">{kecamatanResult.error}</p>
+        <p className="text-red-600">{kecamatanResult.error || 'Gagal memuat data kecamatan'}</p>
       </div>
     );
   }
+
+  const kecamatanOptions = kecamatanResult.data.map((k) => ({
+    id: Number(k.id),
+    nama: k.nama,
+  }));
 
   return (
     <div className="space-y-6">
@@ -30,7 +35,7 @@ export default async function NewRefDesaPage() {
         </div>
       </div>
 
-      <RefDesaForm mode="create" kecamatanOptions={kecamatanResult.data} />
+      <RefDesaForm mode="create" kecamatanOptions={kecamatanOptions} />
     </div>
   );
 }

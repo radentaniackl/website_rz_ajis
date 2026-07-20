@@ -15,7 +15,12 @@ export async function getRefDesaList(params: {
   direction?: 'asc' | 'desc';
 }) {
   try {
-    const result = await refDesaRepository.findMany(params);
+    // Ensure required pagination fields exist to match repository `ListParams`
+    const callParams = {
+      ...params,
+      pageSize: params.pageSize ?? 20,
+    };
+    const result = await refDesaRepository.findMany(callParams);
     return { success: true, data: result };
   } catch (error) {
     console.error('Error fetching ref desa list:', error);

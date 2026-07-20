@@ -76,10 +76,10 @@ async function RefPropinsiList({
     direction,
   });
 
-  if (!result.success) {
+  if (!result.success || !result.data) {
     return (
       <div className="p-4 border border-red-200 bg-red-50 rounded-lg">
-        <p className="text-red-600">{result.error}</p>
+        <p className="text-red-600">{result.error || 'Gagal memuat data propinsi'}</p>
       </div>
     );
   }

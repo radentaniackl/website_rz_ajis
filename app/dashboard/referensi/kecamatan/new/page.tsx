@@ -7,13 +7,18 @@ import { getActiveRefKabupatenList } from '@/app/actions/ref-kabupaten';
 export default async function NewRefKecamatanPage() {
   const kabupatenResult = await getActiveRefKabupatenList();
 
-  if (!kabupatenResult.success) {
+  if (!kabupatenResult.success || !kabupatenResult.data) {
     return (
       <div className="p-4 border border-red-200 bg-red-50 rounded-lg">
-        <p className="text-red-600">{kabupatenResult.error}</p>
+        <p className="text-red-600">{kabupatenResult.error || 'Gagal memuat data kabupaten'}</p>
       </div>
     );
   }
+
+  const kabupatenOptions = kabupatenResult.data.map((k) => ({
+    id: Number(k.id),
+    nama: k.nama,
+  }));
 
   return (
     <div className="space-y-6">
@@ -30,7 +35,7 @@ export default async function NewRefKecamatanPage() {
         </div>
       </div>
 
-      <RefKecamatanForm mode="create" kabupatenOptions={kabupatenResult.data} />
+      <RefKecamatanForm mode="create" kabupatenOptions={kabupatenOptions} />
     </div>
   );
 }

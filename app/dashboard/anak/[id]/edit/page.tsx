@@ -1,47 +1,80 @@
 import { PageHeader } from "@/components/shared/page-header";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { ArrowLeft } from "lucide-react";
 import Link from "next/link";
+import { AnakForm } from "@/components/anak/anak-form";
 import { getAnakDetail } from "@/app/actions/anak";
+import { updateAnakAction } from "@/app/actions/anak";
 import { notFound } from "next/navigation";
-import { Suspense } from "react";
-
-function AnakFormSkeleton() {
-  return (
-    <div className="space-y-6">
-      <div className="h-8 bg-muted animate-pulse rounded" />
-      <div className="h-4 bg-muted animate-pulse rounded w-1/2" />
-      <div className="space-y-4">
-        {[...Array(10)].map((_, i) => (
-          <div key={i} className="h-10 bg-muted animate-pulse rounded" />
-        ))}
-      </div>
-    </div>
-  );
-}
+import { redirect } from "next/navigation";
 
 async function AnakEditForm({ id }: { id: string }) {
   const result = await getAnakDetail(parseInt(id));
   
-  if (!result.success || !result.data) {
-    notFound();
+  if (!result.success) {
+    if (result.error === 'Forbidden - You do not have access to this anak' || result.error === 'Forbidden - You do not have permission to edit this anak') {
+      return (
+        <div className="text-center py-12">
+          <p className="text-destructive font-medium">Akses Ditolak</p>
+          <p className="text-muted-foreground mt-2">Anda tidak memiliki akses untuk mengedit data anak ini.</p>
+        </div>
+      );
+    }
+    return (
+      <div className="text-center py-12">
+        <p className="text-destructive font-medium">Terjadi Kesalahan</p>
+        <p className="text-muted-foreground mt-2">{result.error || 'Gagal memuat data anak'}</p>
+      </div>
+    );
   }
 
   const anak = result.data;
+  if (!anak) {
+    return (
+      <div className="text-center py-12">
+        <p className="text-destructive font-medium">Data Tidak Ditemukan</p>
+        <p className="text-muted-foreground mt-2">Data anak tidak ditemukan atau telah dihapus.</p>
+      </div>
+    );
+  }
+
+  // Transform database data to match schema types
+  const initialData: any = {
+    ...anak,
+    jnsKel: anak.jnsKel as "L" | "P",
+    tglLahir: anak.tglLahir || "",
+    tglTerdaftar: anak.tglTerdaftar || "",
+    tglPengajuan: anak.tglPengajuan || "",
+    tglKematianAyah: anak.tglKematianAyah || "",
+    tglKematianIbu: anak.tglKematianIbu || "",
+    tglPeminjaman: anak.tglPeminjaman || "",
+    tglExpired: anak.tglExpired || "",
+    penghasilanAyah: anak.penghasilanAyah ? Number(anak.penghasilanAyah) : undefined,
+    penghasilanIbu: anak.penghasilanIbu ? Number(anak.penghasilanIbu) : undefined,
+    penghasilanWali: anak.penghasilanWali ? Number(anak.penghasilanWali) : undefined,
+    penghasilanTinggal: anak.penghasilanTinggal ? Number(anak.penghasilanTinggal) : undefined,
+    // Handle enum fields with proper validation
+    statusSurvey: (anak.statusSurvey === 'y' || anak.statusSurvey === 'n') ? anak.statusSurvey : 'n',
+    statusKelayakan: (anak.statusKelayakan === 'y' || anak.statusKelayakan === 'n') ? anak.statusKelayakan : 'n',
+    statusPinjam: (anak.statusPinjam === 'y' || anak.statusPinjam === 'n') ? anak.statusPinjam : 'n',
+    statusMentor: (anak.statusMentor === 'y' || anak.statusMentor === 'n') ? anak.statusMentor : 'n',
+    aktif: (anak.aktif === 'y' || anak.aktif === 'n') ? anak.aktif : 'y',
+  };
+
+  const handleSubmit = async (data: any) => {
+    const result = await updateAnakAction(parseInt(id), data);
+    if (result.success) {
+      redirect(`/dashboard/anak/${id}`);
+    }
+    return result;
+  };
 
   return (
-    <div className="space-y-6">
-      <div className="text-center py-12 text-muted-foreground">
-        Form edit anak akan diimplementasikan di sini
-        <br />
-        <span className="text-sm">(Menggunakan React Hook Form + Zod validation)</span>
-        <br />
-        <span className="text-xs text-muted-foreground mt-2 block">
-          Data anak: {anak.namaLengkap} ({anak.kodeAnak})
-        </span>
-      </div>
-    </div>
+    <AnakForm 
+      initialData={initialData} 
+      onSubmit={handleSubmit} 
+      isEdit={true} 
+    />
   );
 }
 
@@ -64,16 +97,7 @@ export default function EditAnakPage({
         />
       </div>
 
-      <Card>
-        <CardHeader>
-          <CardTitle>Form Edit Anak</CardTitle>
-        </CardHeader>
-        <CardContent>
-          <Suspense fallback={<AnakFormSkeleton />}>
-            <AnakEditForm id={params.id} />
-          </Suspense>
-        </CardContent>
-      </Card>
+      <AnakEditForm id={params.id} />
     </div>
   );
 }

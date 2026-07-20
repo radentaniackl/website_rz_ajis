@@ -1,25 +1,46 @@
 import { PageHeader } from "@/components/shared/page-header";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { ArrowLeft } from "lucide-react";
 import Link from "next/link";
-import { Suspense } from "react";
+import { AnakForm } from "@/components/anak/anak-form";
+import { createAnakAction } from "@/app/actions/anak";
+import { redirect } from "next/navigation";
+import { auth } from "@/auth";
 
-function AnakFormSkeleton() {
-  return (
-    <div className="space-y-6">
-      <div className="h-8 bg-muted animate-pulse rounded" />
-      <div className="h-4 bg-muted animate-pulse rounded w-1/2" />
-      <div className="space-y-4">
-        {[...Array(10)].map((_, i) => (
-          <div key={i} className="h-10 bg-muted animate-pulse rounded" />
-        ))}
+export default async function NewAnakPage() {
+  const session = await auth();
+  
+  // RBAC check: Korwil cannot create anak (read-only access)
+  if (session?.user?.id_group_user === 9) {
+    return (
+      <div className="space-y-6">
+        <div className="flex items-center gap-4">
+          <Link href="/dashboard/anak">
+            <Button variant="ghost" size="icon">
+              <ArrowLeft className="h-4 w-4" />
+            </Button>
+          </Link>
+          <PageHeader 
+            title="Tambah Anak Baru" 
+            description="Isi form di bawah untuk menambahkan data anak baru"
+          />
+        </div>
+        <div className="text-center py-12">
+          <p className="text-destructive font-medium">Akses Ditolak</p>
+          <p className="text-muted-foreground mt-2">Korwil memiliki akses read-only untuk data anak.</p>
+        </div>
       </div>
-    </div>
-  );
-}
+    );
+  }
 
-export default function NewAnakPage() {
+  const handleSubmit = async (data: any) => {
+    const result = await createAnakAction(data);
+    if (result.success) {
+      redirect("/dashboard/anak");
+    }
+    return result;
+  };
+
   return (
     <div className="space-y-6">
       <div className="flex items-center gap-4">
@@ -34,20 +55,7 @@ export default function NewAnakPage() {
         />
       </div>
 
-      <Card>
-        <CardHeader>
-          <CardTitle>Form Data Anak</CardTitle>
-        </CardHeader>
-        <CardContent>
-          <Suspense fallback={<AnakFormSkeleton />}>
-            <div className="text-center py-12 text-muted-foreground">
-              Form anak akan diimplementasikan di sini
-              <br />
-              <span className="text-sm">(Menggunakan React Hook Form + Zod validation)</span>
-            </div>
-          </Suspense>
-        </CardContent>
-      </Card>
+      <AnakForm onSubmit={handleSubmit} isEdit={false} />
     </div>
   );
 }

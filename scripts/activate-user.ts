@@ -12,9 +12,9 @@ async function run() {
 
   try {
     if (/^\d+$/.test(arg)) {
-      const id = Number(arg)
+      const id = BigInt(arg)
       await db.update(ajisUser).set({ aktif: 'y' }).where(eq(ajisUser.id, id))
-      console.log(`Activated user id=${id}`)
+      console.log(`Activated user id=${arg}`)
     } else {
       const username = arg
       await db.update(ajisUser).set({ aktif: 'y' }).where(eq(ajisUser.username, username))

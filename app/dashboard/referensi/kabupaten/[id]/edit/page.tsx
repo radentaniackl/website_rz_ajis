@@ -28,13 +28,18 @@ export default async function EditRefKabupatenPage(props: PageProps) {
     notFound();
   }
 
-  if (!propinsiResult.success) {
+  if (!propinsiResult.success || !propinsiResult.data) {
     return (
       <div className="p-4 border border-red-200 bg-red-50 rounded-lg">
-        <p className="text-red-600">{propinsiResult.error}</p>
+        <p className="text-red-600">{propinsiResult.error || 'Gagal memuat data propinsi'}</p>
       </div>
     );
   }
+
+  const propinsiOptions = propinsiResult.data.map((p) => ({
+    id: Number(p.id),
+    nama: p.nama,
+  }));
 
   return (
     <div className="space-y-6">
@@ -62,7 +67,7 @@ export default async function EditRefKabupatenPage(props: PageProps) {
           ibukota: kabupatenResult.data.ibukota,
           aktif: kabupatenResult.data.aktif,
         }}
-        propinsiOptions={propinsiResult.data}
+        propinsiOptions={propinsiOptions}
       />
     </div>
   );

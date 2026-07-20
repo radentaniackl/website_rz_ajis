@@ -61,10 +61,10 @@ async function RefKabupatenList({
 }) {
   const result = await getRefKabupatenList({ page, pageSize: 20, search, aktif, field, direction });
 
-  if (!result.success) {
+  if (!result.success || !result.data) {
     return (
       <div className="p-4 border border-red-200 bg-red-50 rounded-lg">
-        <p className="text-red-600">{result.error}</p>
+        <p className="text-red-600">{result.error || 'Gagal memuat data kabupaten'}</p>
       </div>
     );
   }

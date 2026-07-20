@@ -27,13 +27,18 @@ export default async function EditRefDesaPage(props: PageProps) {
     notFound();
   }
 
-  if (!kecamatanResult.success) {
+  if (!kecamatanResult.success || !kecamatanResult.data) {
     return (
       <div className="p-4 border border-red-200 bg-red-50 rounded-lg">
-        <p className="text-red-600">{kecamatanResult.error}</p>
+        <p className="text-red-600">{kecamatanResult.error || 'Gagal memuat data kecamatan'}</p>
       </div>
     );
   }
+
+  const kecamatanOptions = kecamatanResult.data.map((k) => ({
+    id: Number(k.id),
+    nama: k.nama,
+  }));
 
   return (
     <div className="space-y-6">
@@ -61,7 +66,7 @@ export default async function EditRefDesaPage(props: PageProps) {
           nomorIndukDesa: desaResult.data.nomorIndukDesa,
           aktif: desaResult.data.aktif,
         }}
-        kecamatanOptions={kecamatanResult.data}
+        kecamatanOptions={kecamatanOptions}
       />
     </div>
   );

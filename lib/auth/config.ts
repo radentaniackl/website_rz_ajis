@@ -4,7 +4,7 @@ import Google from 'next-auth/providers/google';
 // Microsoft provider commented out - requires separate installation
 // import Microsoft from 'next-auth/providers/microsoft';
 import { db } from '@/lib/db';
-import { ajisUser, ajisAuditLog } from '@/db/schema';
+import { ajisUser, ajisAuditLog, ajisUserWilayahPembinaan } from '@/db/schema';
 import { eq } from 'drizzle-orm';
 import bcrypt from 'bcryptjs';
 
@@ -22,7 +22,8 @@ export const authConfig: NextAuthConfig = {
     newUser: '/auth/new-user',
   },
   callbacks: {
-    async jwt({ token, user }) {
+    async jwt({ token, user, trigger, session }) {
+      // Update token on sign in or session update
       if (user) {
         token.id = Number(user.id);
         token.username = (user as any).username;
@@ -32,6 +33,12 @@ export const authConfig: NextAuthConfig = {
         token.aktif = (user as any).aktif;
         token.mustResetPassword = (user as any).mustResetPassword;
       }
+      
+      // Log token data for debugging
+      if (token.id_wilayah_pembinaan) {
+        console.log('JWT token wilayah_pembinaan:', token.id_wilayah_pembinaan);
+      }
+      
       return token;
     },
     async session({ session, token }) {
@@ -43,6 +50,9 @@ export const authConfig: NextAuthConfig = {
         (session.user as any).id_wilayah_pembinaan = token.id_wilayah_pembinaan;
         (session.user as any).aktif = token.aktif;
         (session.user as any).mustResetPassword = token.mustResetPassword;
+        
+        // Log session data for debugging
+        console.log('Session user wilayah_pembinaan:', (session.user as any).id_wilayah_pembinaan);
       }
       return session;
     },
@@ -154,6 +164,17 @@ export const authConfig: NextAuthConfig = {
           lockedUntil: null,
         }).where(eq(ajisUser.id, user.id));
 
+        // Fetch wilayah pembinaan assignments for this user
+        const wilayahAssignments = await db
+          .select({ wilayahPembinaanId: ajisUserWilayahPembinaan.wilayahPembinaanId })
+          .from(ajisUserWilayahPembinaan)
+          .where(eq(ajisUserWilayahPembinaan.userId, Number(user.id)));
+
+        const wilayahIds = wilayahAssignments.map(w => Number(w.wilayahPembinaanId));
+
+        console.log(`User ${user.username} (ID: ${user.id}) wilayah assignments:`, wilayahIds);
+        console.log(`User ${user.username} groupUserId:`, user.groupUserId);
+
         await db.insert(ajisAuditLog).values({
           userId: Number(user.id),
           action: 'LOGIN_SUCCESS',
@@ -167,6 +188,7 @@ export const authConfig: NextAuthConfig = {
           id_group_user: Number(user.groupUserId),
           aktif: user.aktif,
           kantor_id: user.kantorId ? Number(user.kantorId) : null,
+          id_wilayah_pembinaan: wilayahIds.length > 0 ? wilayahIds : undefined,
           mustResetPassword: user.mustResetPassword,
         } as any;
       },

@@ -1,4 +1,4 @@
-import { eq, inArray } from 'drizzle-orm';
+import { eq, inArray, sql } from 'drizzle-orm';
 import { ROLES } from './constants';
 
 export interface UserContext {
@@ -23,7 +23,8 @@ export function buildRbacFilter(user: UserContext, table: any) {
     case ROLES.KORWIL:
       // Korwil: Filter by wilayah_pembinaan_id
       if (!user.id_wilayah_pembinaan || user.id_wilayah_pembinaan.length === 0) {
-        throw new Error('Korwil must have at least one wilayah assigned');
+        console.warn('Korwil user has no wilayah assigned - returning empty result');
+        return sql`1 = 0`; // Return no results instead of throwing error
       }
       return inArray(table.wilayahPembinaanId, user.id_wilayah_pembinaan);
     

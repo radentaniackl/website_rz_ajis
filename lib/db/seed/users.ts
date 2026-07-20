@@ -1,6 +1,6 @@
 import { ajisGroupUser, ajisUser, ajisUserWilayahPembinaan, ajisWilayahPembinaan } from '@/db/schema';
 import { hashPassword } from '@/lib/auth/password';
-import { sql } from 'drizzle-orm';
+import { sql, inArray } from 'drizzle-orm';
 
 export async function seedUsers(db: any, organizationData: any) {
   console.log('👤 Seeding user data...');
@@ -99,16 +99,44 @@ export async function seedUsers(db: any, organizationData: any) {
     { username: 'korwil_samatiga', email: 'korwil_samatiga@rz-ajis.com', passwordHash: korwilPassword, mustResetPassword: true, groupUserId: Number(groups[2].id), aktif: 'y', userInsert: 'system', dateInsert: new Date().toISOString() },
   ]).onConflictDoNothing();
 
-  // 5. Assign regions to Korwil users
+  // 5. Assign regions to Korwil users based on username
   const korwilUsers = await db.select().from(ajisUser).where(sql`${ajisUser.username} LIKE 'korwil_%'`);
   
+  console.log(`Found ${korwilUsers.length} Korwil users`);
+  
   if (korwilUsers.length > 0 && wilayah.length > 0) {
-    const userWilayahAssignments = korwilUsers.slice(0, 9).map((user, index) => ({
-      userId: Number(user.id),
-      wilayahPembinaanId: getWilayahId(index + 1), // Use kodeLama (1-9)
-    }));
+    // Delete existing assignments for these users
+    const korwilUserIds = korwilUsers.map((user: any) => Number(user.id));
+    console.log(`Deleting existing assignments for user IDs:`, korwilUserIds);
+    await db.delete(ajisUserWilayahPembinaan).where(inArray(ajisUserWilayahPembinaan.userId, korwilUserIds));
+    
+    // Map username to wilayah kodeLama
+    const usernameToWilayah: Record<string, number> = {
+      'korwil_jkt_pusat': 1,
+      'korwil_jkt_selatan': 2,
+      'korwil_jkt_barat': 3,
+      'korwil_cibinong': 4,
+      'korwil_citeureup': 5,
+      'korwil_gunungputri': 6,
+      'korwil_johan': 7,
+      'korwil_jantho': 8,
+      'korwil_samatiga': 9,
+    };
+    
+    // Insert new assignments based on username
+    const userWilayahAssignments = korwilUsers
+      .filter((user: any) => usernameToWilayah[user.username])
+      .map((user: any) => ({
+        userId: Number(user.id),
+        wilayahPembinaanId: getWilayahId(usernameToWilayah[user.username]),
+      }));
 
-    await db.insert(ajisUserWilayahPembinaan).values(userWilayahAssignments).onConflictDoNothing();
+    console.log(`Inserting ${userWilayahAssignments.length} wilayah assignments:`, userWilayahAssignments);
+    await db.insert(ajisUserWilayahPembinaan).values(userWilayahAssignments);
+    
+    // Verify assignments
+    const verifyAssignments = await db.select().from(ajisUserWilayahPembinaan);
+    console.log(`Total wilayah assignments in database: ${verifyAssignments.length}`);
   }
 
   console.log('✅ User seeding completed');

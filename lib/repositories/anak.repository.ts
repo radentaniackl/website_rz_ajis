@@ -51,8 +51,7 @@ export async function listAnak(params: ListAnakParams) {
   return safeQuery(`listAnak(page=${page}, search=${search ?? '-'})`, async () => {
     const conditions: SQL[] = [];
 
-    // Comment out aktif filter temporarily to see all data
-    // if (aktif) conditions.push(eq(ajisAnak.aktif, aktif));
+    if (aktif) conditions.push(eq(ajisAnak.aktif, aktif));
 
     if (rbacFilter) conditions.push(rbacFilter);
     if (search) {

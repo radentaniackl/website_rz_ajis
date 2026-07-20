@@ -19,7 +19,7 @@ export async function getAnakList(params: { page?: number; pageSize?: number; se
       id: session.user.id,
       id_group_user: session.user.id_group_user,
       kantor_id: session.user.kantor_id,
-      wilayah_ids: session.user.id_wilayah_pembinaan,
+      id_wilayah_pembinaan: session.user.id_wilayah_pembinaan,
     };
 
     const result = await listAnakByUser(user, params);
@@ -41,7 +41,7 @@ export async function getAnakDetail(id: number) {
       id: session.user.id,
       id_group_user: session.user.id_group_user,
       kantor_id: session.user.kantor_id,
-      wilayah_ids: session.user.id_wilayah_pembinaan,
+      id_wilayah_pembinaan: session.user.id_wilayah_pembinaan,
     };
 
     // Use service with RBAC filter applied at database layer
@@ -145,7 +145,7 @@ export async function updateAnakAction(id: number, data: AnakUpdateInput) {
       id: session.user.id,
       id_group_user: session.user.id_group_user,
       kantor_id: session.user.kantor_id,
-      wilayah_ids: session.user.id_wilayah_pembinaan,
+      id_wilayah_pembinaan: session.user.id_wilayah_pembinaan,
     };
 
     // RBAC check: Korwil cannot edit anak (read-only access per PRD)
@@ -225,7 +225,7 @@ export async function deleteAnakAction(id: number) {
       id: session.user.id,
       id_group_user: session.user.id_group_user,
       kantor_id: session.user.kantor_id,
-      wilayah_ids: session.user.id_wilayah_pembinaan,
+      id_wilayah_pembinaan: session.user.id_wilayah_pembinaan,
     };
 
     const result = await deleteAnakForUser(user, id, { force: false });
@@ -254,7 +254,7 @@ export async function forceDeleteAnakAction(id: number) {
       id: session.user.id,
       id_group_user: session.user.id_group_user,
       kantor_id: session.user.kantor_id,
-      wilayah_ids: session.user.id_wilayah_pembinaan,
+      id_wilayah_pembinaan: session.user.id_wilayah_pembinaan,
     };
 
     const result = await deleteAnakForUser(user, id, { force: true });

@@ -29,7 +29,7 @@ export type UserSession = {
   id: number;
   id_group_user: number;
   kantor_id: number | null;
-  wilayah_ids?: number[];
+  id_wilayah_pembinaan?: number[];
 };
 
 export type ListAnakOptions = {

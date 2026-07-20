@@ -15,15 +15,15 @@ export default async function DashboardLayout({
   }
 
   return (
-    <div className="flex min-h-screen w-full flex-col bg-muted/10 md:flex-row">
-      <div className="hidden border-r bg-muted/40 md:block">
+    <div className="flex min-h-screen flex-col md:flex-row">
+      <div className="w-64 border-r bg-muted/40 flex-shrink-0">
         <AppSidebar session={session} />
       </div>
       
-      <div className="flex flex-col sm:gap-4 md:py-0 w-full min-w-0">
+      <div className="flex flex-1 flex-col">
         <AppHeader session={session} />
         
-        <main className="flex-1 items-start gap-4 p-4 sm:px-6 sm:py-0 md:gap-8 overflow-y-auto">
+        <main className="flex-1 overflow-y-auto p-4 sm:px-6 sm:py-0 md:gap-8">
           {children}
         </main>
       </div>

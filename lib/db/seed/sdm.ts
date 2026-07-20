@@ -1,13 +1,31 @@
-import { db } from '@/lib/db';
 import { ajisSdmWilayah } from '@/db/schema';
+import { eq } from 'drizzle-orm';
 
-export async function seedSdm() {
+export async function seedSdm(db: any, organizationData: any) {
   console.log('👥 Seeding SDM data...');
 
+  const { kantor, wilayah } = organizationData;
+
+  // Create maps for ID lookup
+  const kantorByKode = new Map(kantor.map((k: any) => [k.kode, k]));
+  const wilayahByKodeLama = new Map(wilayah.map((w: any) => [w.kodeLama, w]));
+
+  // Helper functions
+  const getKantorId = (kode: string) => {
+    const k = kantorByKode.get(kode) as any;
+    if (!k) throw new Error(`Kantor with kode ${kode} not found`);
+    return Number(k.id);
+  };
+
+  const getWilayahId = (kodeLama: number) => {
+    const w = wilayahByKodeLama.get(kodeLama) as any;
+    if (!w) throw new Error(`Wilayah with kodeLama ${kodeLama} not found`);
+    return Number(w.id);
+  };
+
   // SDM Wilayah data (3 per wilayah = 9 total)
-  // Using hardcoded wilayah IDs that will be created by organization seed
   const sdmData = [
-    // Jakarta Pusat (wilayah ID 1)
+    // Jakarta Pusat (wilayah kodeLama 1)
     {
       kodeLama: 1,
       nik: '3171234567890010',
@@ -21,15 +39,15 @@ export async function seedSdm() {
       email: 'budi.santoso@rz-ajis.com',
       keterangan: 'SDM Wilayah Jakarta Pusat',
       keaktifanEdukasi: 'y',
-      penugasanWilayahId: 1,
-      penugasanKantorId: 1,
+      penugasanWilayahId: getWilayahId(1),
+      penugasanKantorId: getKantorId('K001'),
       penugasanFungsiStruktur: 'Mentor',
       penugasanKeaktifanEdukasi: 'y',
       aktif: 'y',
       userInsert: 'seed',
       dateInsert: new Date().toISOString(),
     },
-    // Jakarta Selatan (wilayah ID 2)
+    // Jakarta Selatan (wilayah kodeLama 2)
     {
       kodeLama: 2,
       nik: '3171234567890011',
@@ -43,15 +61,15 @@ export async function seedSdm() {
       email: 'dewi.kartika@rz-ajis.com',
       keterangan: 'SDM Wilayah Jakarta Selatan',
       keaktifanEdukasi: 'y',
-      penugasanWilayahId: 2,
-      penugasanKantorId: 1,
+      penugasanWilayahId: getWilayahId(2),
+      penugasanKantorId: getKantorId('K001'),
       penugasanFungsiStruktur: 'Mentor',
       penugasanKeaktifanEdukasi: 'y',
       aktif: 'y',
       userInsert: 'seed',
       dateInsert: new Date().toISOString(),
     },
-    // Jakarta Barat (wilayah ID 3)
+    // Jakarta Barat (wilayah kodeLama 3)
     {
       kodeLama: 3,
       nik: '3171234567890012',
@@ -65,15 +83,15 @@ export async function seedSdm() {
       email: 'agus.setiawan@rz-ajis.com',
       keterangan: 'SDM Wilayah Jakarta Barat',
       keaktifanEdukasi: 'y',
-      penugasanWilayahId: 3,
-      penugasanKantorId: 1,
+      penugasanWilayahId: getWilayahId(3),
+      penugasanKantorId: getKantorId('K001'),
       penugasanFungsiStruktur: 'Mentor',
       penugasanKeaktifanEdukasi: 'y',
       aktif: 'y',
       userInsert: 'seed',
       dateInsert: new Date().toISOString(),
     },
-    // Cibinong (wilayah ID 4)
+    // Cibinong (wilayah kodeLama 4)
     {
       kodeLama: 4,
       nik: '3201234567890010',
@@ -87,15 +105,15 @@ export async function seedSdm() {
       email: 'siti.aminah@rz-ajis.com',
       keterangan: 'SDM Wilayah Cibinong',
       keaktifanEdukasi: 'y',
-      penugasanWilayahId: 4,
-      penugasanKantorId: 2,
+      penugasanWilayahId: getWilayahId(4),
+      penugasanKantorId: getKantorId('K002'),
       penugasanFungsiStruktur: 'Mentor',
       penugasanKeaktifanEdukasi: 'y',
       aktif: 'y',
       userInsert: 'seed',
       dateInsert: new Date().toISOString(),
     },
-    // Citeureup (wilayah ID 5)
+    // Citeureup (wilayah kodeLama 5)
     {
       kodeLama: 5,
       nik: '3201234567890011',
@@ -109,15 +127,15 @@ export async function seedSdm() {
       email: 'joko.susilo@rz-ajis.com',
       keterangan: 'SDM Wilayah Citeureup',
       keaktifanEdukasi: 'y',
-      penugasanWilayahId: 5,
-      penugasanKantorId: 2,
+      penugasanWilayahId: getWilayahId(5),
+      penugasanKantorId: getKantorId('K002'),
       penugasanFungsiStruktur: 'Mentor',
       penugasanKeaktifanEdukasi: 'y',
       aktif: 'y',
       userInsert: 'seed',
       dateInsert: new Date().toISOString(),
     },
-    // Gunung Putri (wilayah ID 6)
+    // Gunung Putri (wilayah kodeLama 6)
     {
       kodeLama: 6,
       nik: '3201234567890012',
@@ -131,15 +149,15 @@ export async function seedSdm() {
       email: 'ratna.sari@rz-ajis.com',
       keterangan: 'SDM Wilayah Gunung Putri',
       keaktifanEdukasi: 'y',
-      penugasanWilayahId: 6,
-      penugasanKantorId: 2,
+      penugasanWilayahId: getWilayahId(6),
+      penugasanKantorId: getKantorId('K002'),
       penugasanFungsiStruktur: 'Mentor',
       penugasanKeaktifanEdukasi: 'y',
       aktif: 'y',
       userInsert: 'seed',
       dateInsert: new Date().toISOString(),
     },
-    // Johan Pahlawan (wilayah ID 7)
+    // Johan Pahlawan (wilayah kodeLama 7)
     {
       kodeLama: 7,
       nik: '1101234567890010',
@@ -153,15 +171,15 @@ export async function seedSdm() {
       email: 'teuku.iskandar@rz-ajis.com',
       keterangan: 'SDM Wilayah Johan Pahlawan',
       keaktifanEdukasi: 'y',
-      penugasanWilayahId: 7,
-      penugasanKantorId: 3,
+      penugasanWilayahId: getWilayahId(7),
+      penugasanKantorId: getKantorId('K003'),
       penugasanFungsiStruktur: 'Mentor',
       penugasanKeaktifanEdukasi: 'y',
       aktif: 'y',
       userInsert: 'seed',
       dateInsert: new Date().toISOString(),
     },
-    // Jantho (wilayah ID 8)
+    // Jantho (wilayah kodeLama 8)
     {
       kodeLama: 8,
       nik: '1101234567890011',
@@ -175,15 +193,15 @@ export async function seedSdm() {
       email: 'siti.sarah@rz-ajis.com',
       keterangan: 'SDM Wilayah Jantho',
       keaktifanEdukasi: 'y',
-      penugasanWilayahId: 8,
-      penugasanKantorId: 3,
+      penugasanWilayahId: getWilayahId(8),
+      penugasanKantorId: getKantorId('K003'),
       penugasanFungsiStruktur: 'Mentor',
       penugasanKeaktifanEdukasi: 'y',
       aktif: 'y',
       userInsert: 'seed',
       dateInsert: new Date().toISOString(),
     },
-    // Samatiga (wilayah ID 9)
+    // Samatiga (wilayah kodeLama 9)
     {
       kodeLama: 9,
       nik: '1101234567890012',
@@ -197,8 +215,8 @@ export async function seedSdm() {
       email: 'abdullah@rz-ajis.com',
       keterangan: 'SDM Wilayah Samatiga',
       keaktifanEdukasi: 'y',
-      penugasanWilayahId: 9,
-      penugasanKantorId: 3,
+      penugasanWilayahId: getWilayahId(9),
+      penugasanKantorId: getKantorId('K003'),
       penugasanFungsiStruktur: 'Mentor',
       penugasanKeaktifanEdukasi: 'y',
       aktif: 'y',
@@ -207,7 +225,11 @@ export async function seedSdm() {
     },
   ];
 
-  const insertedSdm = await db.insert(ajisSdmWilayah).values(sdmData).returning();
+  // Insert SDM wilayah (skip if already exists)
+  await db.insert(ajisSdmWilayah).values(sdmData).onConflictDoNothing();
+
+  // Fetch all SDM wilayah
+  const insertedSdm = await db.select().from(ajisSdmWilayah).where(eq(ajisSdmWilayah.aktif, 'y'));
   console.log(`✅ Inserted ${insertedSdm.length} SDM wilayah`);
 
   return insertedSdm;

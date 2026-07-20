@@ -133,10 +133,18 @@ export function AppSidebar({ session }: AppSidebarProps) {
     },
   ];
 
-  const filteredRoutes = routes.filter(route => route.roles.includes(role || 0));
+  // Show all routes if role is not available (fallback for production issues)
+  const filteredRoutes = role ? routes.filter(route => route.roles.includes(role)) : routes;
 
+  // Debug: log to check if routes are being filtered
+  if (process.env.NODE_ENV === 'development') {
+    console.log('Session role:', role);
+    console.log('Filtered routes:', filteredRoutes);
+  }
+
+  // Always render the sidebar structure even if there are issues
   return (
-    <div className="flex h-full flex-col border-r bg-white w-64 md:w-64">
+    <aside className="flex flex-col border-r bg-white w-64" style={{ minHeight: '100vh', minWidth: '16rem' }}>
       <div className="flex h-14 items-center border-b px-4 lg:h-[60px] lg:px-6">
         <Link href="/dashboard" className="flex items-center gap-2 font-semibold">
           <span className="text-xl font-bold text-primary">RZ AJIS</span>
@@ -159,8 +167,13 @@ export function AppSidebar({ session }: AppSidebarProps) {
               {route.label}
             </Link>
           ))}
+          {filteredRoutes.length === 0 && (
+            <div className="px-4 py-2 text-sm text-muted-foreground">
+              No routes available for your role
+            </div>
+          )}
         </nav>
       </div>
-    </div>
+    </aside>
   );
 }

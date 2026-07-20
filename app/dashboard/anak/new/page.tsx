@@ -33,14 +33,6 @@ export default async function NewAnakPage() {
     );
   }
 
-  const handleSubmit = async (data: any) => {
-    const result = await createAnakAction(data);
-    if (result.success) {
-      redirect("/dashboard/anak");
-    }
-    return result;
-  };
-
   return (
     <div className="space-y-6">
       <div className="flex items-center gap-4">
@@ -55,7 +47,7 @@ export default async function NewAnakPage() {
         />
       </div>
 
-      <AnakForm onSubmit={handleSubmit} isEdit={false} />
+      <AnakForm isEdit={false} />
     </div>
   );
 }

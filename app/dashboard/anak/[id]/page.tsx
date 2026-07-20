@@ -8,7 +8,18 @@ import { notFound } from "next/navigation";
 import { AnakActions } from "@/components/anak/anak-actions";
 
 async function AnakDetail({ id }: { id: string }) {
-  const result = await getAnakDetail(parseInt(id));
+  // Validate id is a valid number
+  const idNumber = parseInt(id);
+  if (isNaN(idNumber)) {
+    return (
+      <div className="text-center py-12">
+        <p className="text-destructive font-medium">ID tidak valid</p>
+        <p className="text-muted-foreground mt-2">ID anak harus berupa angka yang valid.</p>
+      </div>
+    );
+  }
+
+  const result = await getAnakDetail(idNumber);
   
   if (!result.success) {
     if (result.error === 'Forbidden - You do not have access to this anak') {
@@ -71,7 +82,7 @@ async function AnakDetail({ id }: { id: string }) {
             </div>
             <div>
               <label className="text-sm font-medium text-muted-foreground">Jenis Kelamin</label>
-              <p className="text-base">{anak.jnsKel === 'L' ? 'Laki-laki' : 'Perempuan'}</p>
+              <p className="text-base">{anak.jnsKel === 'L' || anak.jnsKel === 'l' ? 'Laki-laki' : 'Perempuan'}</p>
             </div>
             <div>
               <label className="text-sm font-medium text-muted-foreground">Tempat, Tanggal Lahir</label>

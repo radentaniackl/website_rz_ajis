@@ -78,7 +78,7 @@ async function AnakTable({ searchParams }: { searchParams: { page?: string; sear
                 <TableCell className="font-medium">{anak.kodeAnak}</TableCell>
                 <TableCell>{anak.nik}</TableCell>
                 <TableCell>{anak.namaLengkap}</TableCell>
-                <TableCell>{anak.jnsKel === 'L' ? 'Laki-laki' : 'Perempuan'}</TableCell>
+                <TableCell>{anak.jnsKel === 'L' || anak.jnsKel === 'l' ? 'Laki-laki' : 'Perempuan'}</TableCell>
                 <TableCell>{anak.tglLahir ? new Date(anak.tglLahir).toLocaleDateString('id-ID') : '-'}</TableCell>
                 <TableCell>
                   <span className={`inline-flex items-center px-2 py-1 rounded-full text-xs font-medium ${

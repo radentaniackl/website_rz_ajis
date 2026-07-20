@@ -2,7 +2,7 @@ import * as anakRepo from '@/lib/repositories/anak.repository';
 import { ajisAnak } from '@/db/schema';
 import { buildRbacFilter } from '@/lib/rbac/filters';
 import { db } from '@/lib/repositories/base.repository';
-import { count, sql } from 'drizzle-orm';
+import { count, sql, and, eq } from 'drizzle-orm';
 import {
   pemasangan,
   donasiTransaksi,

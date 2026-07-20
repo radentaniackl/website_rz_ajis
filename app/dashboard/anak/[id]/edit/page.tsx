@@ -9,7 +9,18 @@ import { notFound } from "next/navigation";
 import { redirect } from "next/navigation";
 
 async function AnakEditForm({ id }: { id: string }) {
-  const result = await getAnakDetail(parseInt(id));
+  // Validate id is a valid number
+  const idNumber = parseInt(id);
+  if (isNaN(idNumber)) {
+    return (
+      <div className="text-center py-12">
+        <p className="text-destructive font-medium">ID tidak valid</p>
+        <p className="text-muted-foreground mt-2">ID anak harus berupa angka yang valid.</p>
+      </div>
+    );
+  }
+
+  const result = await getAnakDetail(idNumber);
   
   if (!result.success) {
     if (result.error === 'Forbidden - You do not have access to this anak' || result.error === 'Forbidden - You do not have permission to edit this anak') {
@@ -61,19 +72,11 @@ async function AnakEditForm({ id }: { id: string }) {
     aktif: (anak.aktif === 'y' || anak.aktif === 'n') ? anak.aktif : 'y',
   };
 
-  const handleSubmit = async (data: any) => {
-    const result = await updateAnakAction(parseInt(id), data);
-    if (result.success) {
-      redirect(`/dashboard/anak/${id}`);
-    }
-    return result;
-  };
-
   return (
     <AnakForm 
       initialData={initialData} 
-      onSubmit={handleSubmit} 
-      isEdit={true} 
+      isEdit={true}
+      anakId={parseInt(id)}
     />
   );
 }

@@ -1,10 +1,28 @@
-import { db } from '@/lib/db';
 import { ajisGroupUser, ajisUser, ajisUserWilayahPembinaan, ajisWilayahPembinaan } from '@/db/schema';
 import { hashPassword } from '@/lib/auth/password';
 import { sql } from 'drizzle-orm';
 
-export async function seedUsers() {
+export async function seedUsers(db: any, organizationData: any) {
   console.log('👤 Seeding user data...');
+
+  const { kantor, wilayah } = organizationData;
+
+  // Create maps for ID lookup
+  const kantorByKode = new Map(kantor.map((k: any) => [k.kode, k]));
+  const wilayahByKodeLama = new Map(wilayah.map((w: any) => [w.kodeLama, w]));
+
+  // Helper functions
+  const getKantorId = (kode: string) => {
+    const k = kantorByKode.get(kode) as any;
+    if (!k) throw new Error(`Kantor with kode ${kode} not found`);
+    return Number(k.id);
+  };
+
+  const getWilayahId = (kodeLama: number) => {
+    const w = wilayahByKodeLama.get(kodeLama) as any;
+    if (!w) throw new Error(`Wilayah with kodeLama ${kodeLama} not found`);
+    return Number(w.id);
+  };
 
   // 1. Create user groups if not exist
   await db.insert(ajisGroupUser).values([
@@ -38,7 +56,7 @@ export async function seedUsers() {
       passwordHash: branchPassword,
       mustResetPassword: true,
       groupUserId: Number(groups[1].id),
-      kantorId: 1, // Jakarta (will be updated after kantor seed)
+      kantorId: getKantorId('K001'), // Jakarta
       aktif: 'y',
       userInsert: 'system',
       dateInsert: new Date().toISOString(),
@@ -49,7 +67,7 @@ export async function seedUsers() {
       passwordHash: branchPassword,
       mustResetPassword: true,
       groupUserId: Number(groups[1].id),
-      kantorId: 2, // Bandung
+      kantorId: getKantorId('K002'), // Bandung
       aktif: 'y',
       userInsert: 'system',
       dateInsert: new Date().toISOString(),
@@ -60,7 +78,7 @@ export async function seedUsers() {
       passwordHash: branchPassword,
       mustResetPassword: true,
       groupUserId: Number(groups[1].id),
-      kantorId: 3, // Aceh
+      kantorId: getKantorId('K003'), // Aceh
       aktif: 'y',
       userInsert: 'system',
       dateInsert: new Date().toISOString(),
@@ -83,12 +101,11 @@ export async function seedUsers() {
 
   // 5. Assign regions to Korwil users
   const korwilUsers = await db.select().from(ajisUser).where(sql`${ajisUser.username} LIKE 'korwil_%'`);
-  const wilayah = await db.select().from(ajisWilayahPembinaan);
   
   if (korwilUsers.length > 0 && wilayah.length > 0) {
     const userWilayahAssignments = korwilUsers.slice(0, 9).map((user, index) => ({
       userId: Number(user.id),
-      wilayahPembinaanId: Number(wilayah[index]?.id || 1),
+      wilayahPembinaanId: getWilayahId(index + 1), // Use kodeLama (1-9)
     }));
 
     await db.insert(ajisUserWilayahPembinaan).values(userWilayahAssignments).onConflictDoNothing();

@@ -1,26 +1,59 @@
-import { db } from '@/lib/db';
 import { ajisAnak } from '@/db/schema';
+import { eq } from 'drizzle-orm';
 
-export async function seedAnak() {
+export async function seedAnak(db: any, geographicData: any, organizationData: any, sdmData: any) {
   console.log('👶 Seeding anak data...');
 
-  // Anak data (3 per wilayah = 9 total)
-  // Using hardcoded wilayah IDs that will be created by organization seed
+  const { desa } = geographicData;
+  const { kantor, wilayah } = organizationData;
+
+  // Create maps for ID lookup
+  const desaByKode = new Map(desa.map((d: any) => [d.kode, d]));
+  const kantorByKode = new Map(kantor.map((k: any) => [k.kode, k]));
+  const wilayahByKodeLama = new Map(wilayah.map((w: any) => [w.kodeLama, w]));
+  const sdmByKodeLama = new Map(sdmData.map((s: any) => [s.kodeLama, s]));
+
+  // Helper functions
+  const getDesaId = (kode: string) => {
+    const d = desaByKode.get(kode) as any;
+    if (!d) throw new Error(`Desa with kode ${kode} not found`);
+    return Number(d.id);
+  };
+
+  const getKantorId = (kode: string) => {
+    const k = kantorByKode.get(kode) as any;
+    if (!k) throw new Error(`Kantor with kode ${kode} not found`);
+    return Number(k.id);
+  };
+
+  const getWilayahId = (kodeLama: number) => {
+    const w = wilayahByKodeLama.get(kodeLama) as any;
+    if (!w) throw new Error(`Wilayah with kodeLama ${kodeLama} not found`);
+    return Number(w.id);
+  };
+
+  const getSdmId = (kodeLama: number) => {
+    const s = sdmByKodeLama.get(kodeLama) as any;
+    if (!s) throw new Error(`SDM with kodeLama ${kodeLama} not found`);
+    return Number(s.id);
+  };
+
+  // Anak data (5 rows with proper correlations)
   const anakData = [
-    // Wilayah Jakarta Pusat (wilayah ID 1)
+    // Wilayah Jakarta Pusat (wilayah kodeLama 1, kantor K001, desa 310101001, sdm kodeLama 1)
     {
       kodeAnak: 'ANK-JKT-001',
       nik: '3171234567890001',
       namaLengkap: 'Ahmad Fauzi',
       namaPanggilan: 'Fauzi',
       agama: 'Islam',
-      jnsKel: 'L',
+      jnsKel: 'l',
       tempatLahir: 'Jakarta',
       tglLahir: '2012-05-15',
       anakKe: 1,
       dariSaudara: 2,
       alamat: 'Jl. Sudirman No. 123, Jakarta Pusat',
-      desaId: 1,
+      desaId: getDesaId('310101001'),
       jenjangPendidikan: 'SD',
       kelas: '5',
       namaSekolah: 'SDN Gambir 01',
@@ -46,8 +79,9 @@ export async function seedAnak() {
       aktif: 'y',
       alumniJuara: 'n',
       juara: 'ya',
-      wilayahPembinaanId: 1,
-      kantorId: 1,
+      wilayahPembinaanId: getWilayahId(1),
+      kantorId: getKantorId('K001'),
+      sdmWilayahId: getSdmId(1),
       namaMentorManual: 'Budi Santoso',
       tglTerdaftar: '2020-01-15',
       tglPengajuan: '2020-01-10',
@@ -80,20 +114,20 @@ export async function seedAnak() {
       pekerjaanTinggal: 'Pedagang',
       tidakSerumahOrtu: 'y',
     },
-    // Wilayah Cibinong (wilayah ID 4)
+    // Wilayah Cibinong (wilayah kodeLama 4, kantor K002, desa 320101001, sdm kodeLama 4)
     {
       kodeAnak: 'ANK-BDG-001',
       nik: '3201234567890001',
       namaLengkap: 'Rina Melati',
       namaPanggilan: 'Melati',
       agama: 'Islam',
-      jnsKel: 'P',
+      jnsKel: 'p',
       tempatLahir: 'Bogor',
       tglLahir: '2011-12-01',
       anakKe: 1,
       dariSaudara: 2,
       alamat: 'Jl. Raya Cibinong No. 200, Cibinong',
-      desaId: 4,
+      desaId: getDesaId('320101001'),
       jenjangPendidikan: 'SMP',
       kelas: '8',
       namaSekolah: 'SMPN 1 Cibinong',
@@ -119,8 +153,9 @@ export async function seedAnak() {
       aktif: 'y',
       alumniJuara: 'n',
       juara: 'ya',
-      wilayahPembinaanId: 4,
-      kantorId: 2,
+      wilayahPembinaanId: getWilayahId(4),
+      kantorId: getKantorId('K002'),
+      sdmWilayahId: getSdmId(4),
       namaMentorManual: 'Siti Aminah',
       tglTerdaftar: '2020-04-10',
       tglPengajuan: '2020-04-05',
@@ -147,20 +182,20 @@ export async function seedAnak() {
       pekerjaanTinggal: 'Buruh Tani',
       tidakSerumahOrtu: 'n',
     },
-    // Wilayah Johan Pahlawan (wilayah ID 7)
+    // Wilayah Johan Pahlawan (wilayah kodeLama 7, kantor K003, desa 110101001, sdm kodeLama 7)
     {
       kodeAnak: 'ANK-ACEH-001',
       nik: '1101234567890001',
       namaLengkap: 'Teuku Rizky',
       namaPanggilan: 'Rizky',
       agama: 'Islam',
-      jnsKel: 'L',
+      jnsKel: 'l',
       tempatLahir: 'Meulaboh',
       tglLahir: '2010-04-12',
       anakKe: 1,
       dariSaudara: 2,
       alamat: 'Jl. Johan Pahlawan No. 50, Meulaboh',
-      desaId: 7,
+      desaId: getDesaId('110101001'),
       jenjangPendidikan: 'SMA',
       kelas: '11',
       namaSekolah: 'SMA Negeri 1 Johan Pahlawan',
@@ -186,8 +221,9 @@ export async function seedAnak() {
       aktif: 'y',
       alumniJuara: 'n',
       juara: 'ya',
-      wilayahPembinaanId: 7,
-      kantorId: 3,
+      wilayahPembinaanId: getWilayahId(7),
+      kantorId: getKantorId('K003'),
+      sdmWilayahId: getSdmId(7),
       namaMentorManual: 'Teuku Iskandar',
       tglTerdaftar: '2020-07-10',
       tglPengajuan: '2020-07-05',
@@ -212,9 +248,147 @@ export async function seedAnak() {
       pekerjaanTinggal: 'Nelayan',
       tidakSerumahOrtu: 'n',
     },
+    // Wilayah Jantho (wilayah kodeLama 8, kantor K003, desa 110201001, sdm kodeLama 8)
+    {
+      kodeAnak: 'ANK-ACEH-002',
+      nik: '1101234567890002',
+      namaLengkap: 'Cut Nurul Hidayah',
+      namaPanggilan: 'Nurul',
+      agama: 'Islam',
+      jnsKel: 'p',
+      tempatLahir: 'Jantho',
+      tglLahir: '2013-08-22',
+      anakKe: 2,
+      dariSaudara: 3,
+      alamat: 'Jl. Jantho No. 75, Jantho',
+      desaId: getDesaId('110201001'),
+      jenjangPendidikan: 'SD',
+      kelas: '6',
+      namaSekolah: 'SDN Jantho 01',
+      alamatSekolah: 'Jl. Jantho No. 25, Jantho',
+      noRekening: '7788990011',
+      pemilikRekening: 'Cut Nurul Hidayah',
+      namaBank: 'BRI',
+      nilai: 'A',
+      pelajaranFavorit: 'Bahasa Arab',
+      jarakRumah: '1.5 km',
+      alatTransportasi: 'Jalan Kaki',
+      hobi: 'Membaca Al-Quran',
+      prestasi: 'Juara 1 Lomba Mengaji',
+      noKartuKeluarga: '1101234567890002',
+      asnaf: 'Yatim',
+      statusOrtu: 'Yatim',
+      statusSurvey: 'y',
+      statusKelayakan: 'y',
+      statusAnakJuara: 'ya',
+      statusTersantuni: 'su',
+      statusPinjam: 'n',
+      statusMentor: 'y',
+      aktif: 'y',
+      alumniJuara: 'n',
+      juara: 'ya',
+      wilayahPembinaanId: getWilayahId(8),
+      kantorId: getKantorId('K003'),
+      sdmWilayahId: getSdmId(8),
+      namaMentorManual: 'Siti Sarah',
+      tglTerdaftar: '2020-10-15',
+      tglPengajuan: '2020-10-10',
+      namaLengkapAyah: 'Teuku Zulkarnain',
+      alamatAyah: 'Jl. Jantho No. 75, Jantho',
+      pekerjaanAyah: 'Petani',
+      penghasilanAyah: '1800000.00',
+      tglKematianAyah: '2017-11-30',
+      penyebabKematianAyah: 'Sakit Jantung',
+      namaLengkapIbu: 'Cut Meutia',
+      alamatIbu: 'Jl. Jantho No. 75, Jantho',
+      pekerjaanIbu: 'Penjahit',
+      penghasilanIbu: '1200000.00',
+      telpDihubungi: '081234567897',
+      atasNama: 'Cut Meutia',
+      hubunganKerabat: 'Ibu',
+      viaInput: 'Manual',
+      approvalIjf: 'y',
+      kodeProgramRz: 'RZ-ACEH',
+      tinggalBersama: 'Ibu',
+      namaTinggal: 'Cut Meutia',
+      ketTinggal: 'Tinggal bersama ibu',
+      penghasilanTinggal: '1200000',
+      pekerjaanTinggal: 'Penjahit',
+      tidakSerumahOrtu: 'n',
+    },
+    // Wilayah Citeureup (wilayah kodeLama 5, kantor K002, desa 320101002, sdm kodeLama 5)
+    {
+      kodeAnak: 'ANK-BDG-002',
+      nik: '3201234567890002',
+      namaLengkap: 'Dedi Kurniawan',
+      namaPanggilan: 'Dedi',
+      agama: 'Islam',
+      jnsKel: 'l',
+      tempatLahir: 'Citeureup',
+      tglLahir: '2009-03-18',
+      anakKe: 1,
+      dariSaudara: 2,
+      alamat: 'Jl. Citeureup No. 88, Citeureup',
+      desaId: getDesaId('320101002'),
+      jenjangPendidikan: 'SMP',
+      kelas: '9',
+      namaSekolah: 'SMPN 1 Citeureup',
+      alamatSekolah: 'Jl. Citeureup No. 30, Citeureup',
+      noRekening: '4455667788',
+      pemilikRekening: 'Dedi Kurniawan',
+      namaBank: 'Mandiri',
+      nilai: 'B',
+      pelajaranFavorit: 'IPA',
+      jarakRumah: '2.5 km',
+      alatTransportasi: 'Sepeda',
+      hobi: 'Bermain Sepak Bola',
+      prestasi: 'Juara 2 Lomba Futsal Sekolah',
+      noKartuKeluarga: '3201234567890002',
+      asnaf: 'Dhuafa',
+      statusOrtu: 'Kedua Orang Tua Hidup',
+      statusSurvey: 'y',
+      statusKelayakan: 'y',
+      statusAnakJuara: 'tidak',
+      statusTersantuni: 'su',
+      statusPinjam: 'n',
+      statusMentor: 'y',
+      aktif: 'y',
+      alumniJuara: 'n',
+      juara: 'tidak',
+      wilayahPembinaanId: getWilayahId(5),
+      kantorId: getKantorId('K002'),
+      sdmWilayahId: getSdmId(5),
+      namaMentorManual: 'Joko Susilo',
+      tglTerdaftar: '2020-05-20',
+      tglPengajuan: '2020-05-15',
+      namaLengkapAyah: 'Supriyanto',
+      alamatAyah: 'Jl. Citeureup No. 88, Citeureup',
+      pekerjaanAyah: 'Buruh Pabrik',
+      penghasilanAyah: '2200000.00',
+      namaLengkapIbu: 'Sri Mulyani',
+      alamatIbu: 'Jl. Citeureup No. 88, Citeureup',
+      pekerjaanIbu: 'Ibu Rumah Tangga',
+      penghasilanIbu: '0.00',
+      telpDihubungi: '081234567894',
+      atasNama: 'Supriyanto',
+      hubunganKerabat: 'Ayah',
+      viaInput: 'Manual',
+      approvalIjf: 'y',
+      kodeProgramRz: 'RZ-BDG',
+      tinggalBersama: 'Orang Tua',
+      namaTinggal: 'Supriyanto',
+      ketTinggal: 'Tinggal bersama orang tua',
+      penghasilanTinggal: '2200000',
+      pekerjaanTinggal: 'Buruh Pabrik',
+      tidakSerumahOrtu: 'n',
+    },
   ];
 
-  const insertedAnak = await db.insert(ajisAnak).values(anakData).returning();
+  // Insert anak (skip if already exists)
+  await db.insert(ajisAnak).values(anakData).onConflictDoNothing();
+
+  // Fetch all anak
+  const insertedAnak = await db.select().from(ajisAnak).where(eq(ajisAnak.aktif, 'y'));
   console.log(`✅ Inserted ${insertedAnak.length} anak`);
 
   return insertedAnak;

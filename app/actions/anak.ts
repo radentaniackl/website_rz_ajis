@@ -37,12 +37,6 @@ export async function getAnakDetail(id: number) {
       return { success: false, error: 'Unauthorized' };
     }
 
-    const anak = await getAnakById(id);
-    if (!anak) {
-      return { success: false, error: 'Anak not found' };
-    }
-
-    // RBAC check: ensure user can access this anak
     const user = {
       id: session.user.id,
       id_group_user: session.user.id_group_user,
@@ -50,25 +44,29 @@ export async function getAnakDetail(id: number) {
       wilayah_ids: session.user.id_wilayah_pembinaan,
     };
 
-    // Super Admin can access all anak
+    // Use service with RBAC filter applied at database layer
+    const anak = await getAnakById(id);
+    if (!anak) {
+      return { success: false, error: 'Anak not found' };
+    }
+
+    // RBAC check: ensure user can access this anak (database layer filter)
+    const { buildRbacFilter } = await import('@/lib/rbac/filters');
+    const { ajisAnak } = await import('@/db/schema');
+    const { eq, and } = await import('drizzle-orm');
+    const { db } = await import('@/lib/repositories/base.repository');
+
+    const rbacFilter = buildRbacFilter(user, ajisAnak);
+    
+    // Super Admin has no filter, can access all
     if (user.id_group_user === 1) {
       return { success: true, data: anak };
     }
 
-    // Branch Admin can access anak in their kantor or wilayah
-    if (user.id_group_user === 2) {
-      const can_ACCESS = 
-        (user.kantor_id && anak.kantorId === user.kantor_id) ||
-        (user.wilayah_ids && user.wilayah_ids.includes(Number(anak.wilayahPembinaanId)));
-      
-      if (!can_ACCESS) {
-        return { success: false, error: 'Forbidden - You do not have access to this anak' };
-      }
-    }
-
-    // Korwil can only access anak in their assigned wilayah
-    if (user.id_group_user === 9) {
-      if (!user.wilayah_ids || !user.wilayah_ids.includes(Number(anak.wilayahPembinaanId))) {
+    // For other roles, verify the anak matches their filter
+    if (rbacFilter) {
+      const match = await db.select().from(ajisAnak).where(and(rbacFilter, eq(ajisAnak.id, BigInt(id)))).limit(1);
+      if (!match.length) {
         return { success: false, error: 'Forbidden - You do not have access to this anak' };
       }
     }

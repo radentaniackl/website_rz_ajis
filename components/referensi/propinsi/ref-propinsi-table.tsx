@@ -25,6 +25,8 @@ interface RefPropinsiTableProps {
   total: number;
   currentPage: number;
   totalPages: number;
+  canEdit?: boolean;
+  canDelete?: boolean;
 }
 
 export function RefPropinsiTable({
@@ -32,6 +34,8 @@ export function RefPropinsiTable({
   total,
   currentPage,
   totalPages,
+  canEdit = true,
+  canDelete = true,
 }: RefPropinsiTableProps) {
   const pageSize = 20;
   const startRow = (currentPage - 1) * pageSize + 1;
@@ -71,7 +75,7 @@ export function RefPropinsiTable({
                     </Badge>
                   </TableCell>
                   <TableCell className="text-right">
-                    <RefPropinsiActions id={Number(item.id)} />
+                    <RefPropinsiActions id={Number(item.id)} canEdit={canEdit} canDelete={canDelete} />
                   </TableCell>
                 </TableRow>
               ))

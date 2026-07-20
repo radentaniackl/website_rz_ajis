@@ -5,6 +5,7 @@ import { RefDesaTableSkeleton } from '@/components/referensi/desa/ref-desa-table
 import { Button } from '@/components/ui/button';
 import { Plus } from 'lucide-react';
 import Link from 'next/link';
+import { auth } from '@/auth';
 
 interface PageProps {
   searchParams: Promise<{
@@ -18,11 +19,17 @@ interface PageProps {
 
 export default async function RefDesaPage(props: PageProps) {
   const searchParams = await props.searchParams;
+  const session = await auth();
+  const userRole = session?.user?.id_group_user || 1;
+  
   const page = parseInt(searchParams.page || '1');
   const search = searchParams.search;
   const aktif = searchParams.aktif;
   const field = searchParams.field;
   const direction = searchParams.direction;
+
+  // Determine if user can create reference data
+  const canCreate = userRole !== 9; // Korwil cannot create reference data
 
   return (
     <div className="space-y-6">
@@ -31,16 +38,18 @@ export default async function RefDesaPage(props: PageProps) {
           <h1 className="text-2xl font-bold">Referensi Desa/Kelurahan</h1>
           <p className="text-sm text-muted-foreground">Kelola data desa/kelurahan</p>
         </div>
-        <Button asChild>
-          <Link href="/dashboard/referensi/desa/new">
-            <Plus className="mr-2 h-4 w-4" />
-            Tambah Desa
-          </Link>
-        </Button>
+        {canCreate && (
+          <Button asChild>
+            <Link href="/dashboard/referensi/desa/new">
+              <Plus className="mr-2 h-4 w-4" />
+              Tambah Desa
+            </Link>
+          </Button>
+        )}
       </div>
 
       <Suspense fallback={<RefDesaTableSkeleton />}>
-        <RefDesaList page={page} search={search} aktif={aktif} field={field} direction={direction} />
+        <RefDesaList page={page} search={search} aktif={aktif} field={field} direction={direction} userRole={userRole} />
       </Suspense>
     </div>
   );
@@ -52,12 +61,14 @@ async function RefDesaList({
   aktif,
   field,
   direction,
+  userRole,
 }: {
   page: number;
   search?: string;
   aktif?: 'y' | 'n';
   field?: string;
   direction?: 'asc' | 'desc';
+  userRole: number;
 }) {
   const result = await getRefDesaList({ page, pageSize: 20, search, aktif, field, direction });
 
@@ -69,7 +80,17 @@ async function RefDesaList({
     );
   }
 
+  const canEdit = userRole !== 9; // Korwil cannot edit reference data
+  const canDelete = userRole !== 9; // Korwil cannot delete reference data
+
   return (
-    <RefDesaTable data={result.data.data} total={result.data.total} currentPage={page} totalPages={result.data.totalPages} />
+    <RefDesaTable 
+      data={result.data.data} 
+      total={result.data.total} 
+      currentPage={page} 
+      totalPages={result.data.totalPages}
+      canEdit={canEdit}
+      canDelete={canDelete}
+    />
   );
 }

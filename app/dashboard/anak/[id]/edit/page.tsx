@@ -7,47 +7,22 @@ import { getAnakDetail } from "@/app/actions/anak";
 import { updateAnakAction } from "@/app/actions/anak";
 import { notFound } from "next/navigation";
 import { redirect } from "next/navigation";
+import { auth } from "@/auth";
 
 async function AnakEditForm({ id }: { id: string }) {
   // Validate id is a valid number
   const idNumber = parseInt(id);
   if (isNaN(idNumber)) {
-    return (
-      <div className="text-center py-12">
-        <p className="text-destructive font-medium">ID tidak valid</p>
-        <p className="text-muted-foreground mt-2">ID anak harus berupa angka yang valid.</p>
-      </div>
-    );
+    notFound();
   }
 
   const result = await getAnakDetail(idNumber);
   
-  if (!result.success) {
-    if (result.error === 'Forbidden - You do not have access to this anak' || result.error === 'Forbidden - You do not have permission to edit this anak') {
-      return (
-        <div className="text-center py-12">
-          <p className="text-destructive font-medium">Akses Ditolak</p>
-          <p className="text-muted-foreground mt-2">Anda tidak memiliki akses untuk mengedit data anak ini.</p>
-        </div>
-      );
-    }
-    return (
-      <div className="text-center py-12">
-        <p className="text-destructive font-medium">Terjadi Kesalahan</p>
-        <p className="text-muted-foreground mt-2">{result.error || 'Gagal memuat data anak'}</p>
-      </div>
-    );
+  if (!result.success || !result.data) {
+    notFound();
   }
 
   const anak = result.data;
-  if (!anak) {
-    return (
-      <div className="text-center py-12">
-        <p className="text-destructive font-medium">Data Tidak Ditemukan</p>
-        <p className="text-muted-foreground mt-2">Data anak tidak ditemukan atau telah dihapus.</p>
-      </div>
-    );
-  }
 
   // Transform database data to match schema types
   const initialData: any = {
@@ -81,15 +56,24 @@ async function AnakEditForm({ id }: { id: string }) {
   );
 }
 
-export default function EditAnakPage({
+export default async function EditAnakPage({
   params,
 }: {
-  params: { id: string };
+  params: Promise<{ id: string }>;
 }) {
+  const { id } = await params;
+  const session = await auth();
+  const userRole = session?.user?.id_group_user || 1;
+  
+  // RBAC check: Korwil cannot edit anak (read-only access)
+  if (userRole === 9) {
+    notFound();
+  }
+  
   return (
     <div className="space-y-6">
       <div className="flex items-center gap-4">
-        <Link href={`/dashboard/anak/${params.id}`}>
+        <Link href={`/dashboard/anak/${id}`}>
           <Button variant="ghost" size="icon">
             <ArrowLeft className="h-4 w-4" />
           </Button>
@@ -100,7 +84,7 @@ export default function EditAnakPage({
         />
       </div>
 
-      <AnakEditForm id={params.id} />
+      <AnakEditForm id={id} />
     </div>
   );
 }

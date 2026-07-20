@@ -9,8 +9,9 @@ import { Users, Search, Plus } from "lucide-react";
 import { getAnakList } from "@/app/actions/anak";
 import { Suspense } from "react";
 import Link from "next/link";
+import { auth } from "@/auth";
 
-async function AnakTable({ searchParams }: { searchParams: { page?: string; search?: string; field?: string; direction?: string } }) {
+async function AnakTable({ searchParams, userRole }: { searchParams: { page?: string; search?: string; field?: string; direction?: string }, userRole: number }) {
   const page = parseInt(searchParams.page || '1');
   const search = searchParams.search;
   
@@ -35,6 +36,10 @@ async function AnakTable({ searchParams }: { searchParams: { page?: string; sear
       />
     );
   }
+
+  // Determine permissions based on user role
+  const canEdit = userRole !== 9; // Korwil cannot edit anak
+  const canDelete = userRole !== 9; // Korwil cannot delete anak
 
   return (
     <>
@@ -90,7 +95,7 @@ async function AnakTable({ searchParams }: { searchParams: { page?: string; sear
                   </span>
                 </TableCell>
                 <TableCell className="text-right">
-                  <AnakActions id={Number(anak.id)} />
+                  <AnakActions id={Number(anak.id)} canEdit={canEdit} canDelete={canDelete} />
                 </TableCell>
               </TableRow>
             ))}
@@ -138,6 +143,11 @@ export default async function AnakPage({
   searchParams: Promise<{ page?: string; search?: string }>;
 }) {
   const resolvedSearchParams = await searchParams;
+  const session = await auth();
+  const userRole = session?.user?.id_group_user || 1;
+  
+  // Determine if user can create anak
+  const canCreate = userRole !== 9; // Korwil cannot create anak
 
   return (
     <div className="space-y-6">
@@ -150,12 +160,14 @@ export default async function AnakPage({
         <CardHeader>
           <div className="flex items-center justify-between">
             <CardTitle>Daftar Anak</CardTitle>
-            <Link href="/dashboard/anak/new">
-              <Button>
-                <Plus className="h-4 w-4 mr-2" />
-                Tambah Anak
-              </Button>
-            </Link>
+            {canCreate && (
+              <Link href="/dashboard/anak/new">
+                <Button>
+                  <Plus className="h-4 w-4 mr-2" />
+                  Tambah Anak
+                </Button>
+              </Link>
+            )}
           </div>
         </CardHeader>
         <CardContent>
@@ -178,7 +190,7 @@ export default async function AnakPage({
           </form>
           
           <Suspense fallback={<div className="text-center py-8">Memuat data...</div>}>
-            <AnakTable searchParams={resolvedSearchParams} />
+            <AnakTable searchParams={resolvedSearchParams} userRole={userRole} />
           </Suspense>
         </CardContent>
       </Card>

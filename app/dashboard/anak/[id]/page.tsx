@@ -6,8 +6,9 @@ import Link from "next/link";
 import { getAnakDetail } from "@/app/actions/anak";
 import { notFound } from "next/navigation";
 import { AnakActions } from "@/components/anak/anak-actions";
+import { auth } from "@/auth";
 
-async function AnakDetail({ id }: { id: string }) {
+async function AnakDetail({ id, userRole }: { id: string; userRole: number }) {
   // Validate id is a valid number
   const idNumber = parseInt(id);
   if (isNaN(idNumber)) {
@@ -48,6 +49,10 @@ async function AnakDetail({ id }: { id: string }) {
     );
   }
 
+  // Determine permissions based on user role
+  const canEdit = userRole !== 9; // Korwil cannot edit anak
+  const canDelete = userRole !== 9; // Korwil cannot delete anak
+
   return (
     <div className="space-y-6">
       <div className="flex items-center justify-between">
@@ -56,13 +61,15 @@ async function AnakDetail({ id }: { id: string }) {
           <p className="text-muted-foreground">{anak.kodeAnak} - {anak.nik}</p>
         </div>
         <div className="flex gap-2">
-          <Link href={`/dashboard/anak/${id}/edit`}>
-            <Button variant="outline">
-              <Edit className="h-4 w-4 mr-2" />
-              Edit
-            </Button>
-          </Link>
-          <AnakActions id={Number(anak.id)} />
+          {canEdit && (
+            <Link href={`/dashboard/anak/${id}/edit`}>
+              <Button variant="outline">
+                <Edit className="h-4 w-4 mr-2" />
+                Edit
+              </Button>
+            </Link>
+          )}
+          <AnakActions id={Number(anak.id)} canEdit={canEdit} canDelete={canDelete} />
         </div>
       </div>
 
@@ -175,11 +182,15 @@ async function AnakDetail({ id }: { id: string }) {
   );
 }
 
-export default function AnakDetailPage({
+export default async function AnakDetailPage({
   params,
 }: {
-  params: { id: string };
+  params: Promise<{ id: string }>;
 }) {
+  const { id } = await params;
+  const session = await auth();
+  const userRole = session?.user?.id_group_user || 1;
+  
   return (
     <div className="space-y-6">
       <div className="flex items-center gap-4">
@@ -196,7 +207,7 @@ export default function AnakDetailPage({
 
       <Card>
         <CardContent className="pt-6">
-          <AnakDetail id={params.id} />
+          <AnakDetail id={id} userRole={userRole} />
         </CardContent>
       </Card>
     </div>

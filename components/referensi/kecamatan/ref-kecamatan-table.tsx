@@ -12,9 +12,11 @@ interface RefKecamatanTableProps {
   total: number;
   currentPage: number;
   totalPages: number;
+  canEdit?: boolean;
+  canDelete?: boolean;
 }
 
-export function RefKecamatanTable({ data, total, currentPage, totalPages }: RefKecamatanTableProps) {
+export function RefKecamatanTable({ data, total, currentPage, totalPages, canEdit = true, canDelete = true }: RefKecamatanTableProps) {
   const pageSize = 20;
   const startRow = (currentPage - 1) * pageSize + 1;
   const endRow = Math.min(currentPage * pageSize, total);
@@ -53,7 +55,7 @@ export function RefKecamatanTable({ data, total, currentPage, totalPages }: RefK
                     </Badge>
                   </TableCell>
                   <TableCell className="text-right">
-                    <RefKecamatanActions id={Number(item.id)} />
+                    <RefKecamatanActions id={Number(item.id)} canEdit={canEdit} canDelete={canDelete} />
                   </TableCell>
                 </TableRow>
               ))

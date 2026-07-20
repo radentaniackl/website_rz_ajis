@@ -5,6 +5,7 @@ import { RefPropinsiTableSkeleton } from '@/components/referensi/propinsi/ref-pr
 import { Button } from '@/components/ui/button';
 import { Plus } from 'lucide-react';
 import Link from 'next/link';
+import { auth } from '@/auth';
 
 interface PageProps {
   searchParams: Promise<{
@@ -18,11 +19,17 @@ interface PageProps {
 
 export default async function RefPropinsiPage(props: PageProps) {
   const searchParams = await props.searchParams;
+  const session = await auth();
+  const userRole = session?.user?.id_group_user || 1;
+  
   const page = parseInt(searchParams.page || '1');
   const search = searchParams.search;
   const aktif = searchParams.aktif;
   const field = searchParams.field;
   const direction = searchParams.direction;
+
+  // Determine if user can create reference data
+  const canCreate = userRole !== 9; // Korwil cannot create reference data
 
   return (
     <div className="space-y-6">
@@ -33,12 +40,14 @@ export default async function RefPropinsiPage(props: PageProps) {
             Kelola data provinsi untuk sistem
           </p>
         </div>
-        <Button asChild>
-          <Link href="/dashboard/referensi/propinsi/new">
-            <Plus className="mr-2 h-4 w-4" />
-            Tambah Propinsi
-          </Link>
-        </Button>
+        {canCreate && (
+          <Button asChild>
+            <Link href="/dashboard/referensi/propinsi/new">
+              <Plus className="mr-2 h-4 w-4" />
+              Tambah Propinsi
+            </Link>
+          </Button>
+        )}
       </div>
 
       <Suspense fallback={<RefPropinsiTableSkeleton />}>
@@ -48,6 +57,7 @@ export default async function RefPropinsiPage(props: PageProps) {
           aktif={aktif}
           field={field}
           direction={direction}
+          userRole={userRole}
         />
       </Suspense>
     </div>
@@ -60,12 +70,14 @@ async function RefPropinsiList({
   aktif,
   field,
   direction,
+  userRole,
 }: {
   page: number;
   search?: string;
   aktif?: 'y' | 'n';
   field?: string;
   direction?: 'asc' | 'desc';
+  userRole: number;
 }) {
   const result = await getRefPropinsiList({
     page,
@@ -84,12 +96,17 @@ async function RefPropinsiList({
     );
   }
 
+  const canEdit = userRole !== 9; // Korwil cannot edit reference data
+  const canDelete = userRole !== 9; // Korwil cannot delete reference data
+
   return (
     <RefPropinsiTable
       data={result.data.data}
       total={result.data.total}
       currentPage={page}
       totalPages={result.data.totalPages}
+      canEdit={canEdit}
+      canDelete={canDelete}
     />
   );
 }

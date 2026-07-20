@@ -12,9 +12,11 @@ interface RefKabupatenTableProps {
   total: number;
   currentPage: number;
   totalPages: number;
+  canEdit?: boolean;
+  canDelete?: boolean;
 }
 
-export function RefKabupatenTable({ data, total, currentPage, totalPages }: RefKabupatenTableProps) {
+export function RefKabupatenTable({ data, total, currentPage, totalPages, canEdit = true, canDelete = true }: RefKabupatenTableProps) {
   const pageSize = 20;
   const startRow = (currentPage - 1) * pageSize + 1;
   const endRow = Math.min(currentPage * pageSize, total);
@@ -53,7 +55,7 @@ export function RefKabupatenTable({ data, total, currentPage, totalPages }: RefK
                     </Badge>
                   </TableCell>
                   <TableCell className="text-right">
-                    <RefKabupatenActions id={Number(item.id)} />
+                    <RefKabupatenActions id={Number(item.id)} canEdit={canEdit} canDelete={canDelete} />
                   </TableCell>
                 </TableRow>
               ))

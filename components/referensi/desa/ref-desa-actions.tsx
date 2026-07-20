@@ -11,9 +11,11 @@ import { toast } from 'sonner';
 
 interface RefDesaActionsProps {
   id: number;
+  canEdit?: boolean;
+  canDelete?: boolean;
 }
 
-export function RefDesaActions({ id }: RefDesaActionsProps) {
+export function RefDesaActions({ id, canEdit = true, canDelete = true }: RefDesaActionsProps) {
   const [isDeleteDialogOpen, setIsDeleteDialogOpen] = useState(false);
   const [isDeleting, setIsDeleting] = useState(false);
 
@@ -49,16 +51,20 @@ export function RefDesaActions({ id }: RefDesaActionsProps) {
               Detail
             </Link>
           </DropdownMenuItem>
-          <DropdownMenuItem>
-            <Link href={`/dashboard/referensi/desa/${id}/edit`} className="flex items-center w-full">
-              <Pencil className="mr-2 h-4 w-4" />
-              Edit
-            </Link>
-          </DropdownMenuItem>
-          <DropdownMenuItem onClick={() => setIsDeleteDialogOpen(true)} className="text-destructive">
-            <Trash2 className="mr-2 h-4 w-4" />
-            Hapus
-          </DropdownMenuItem>
+          {canEdit && (
+            <DropdownMenuItem>
+              <Link href={`/dashboard/referensi/desa/${id}/edit`} className="flex items-center w-full">
+                <Pencil className="mr-2 h-4 w-4" />
+                Edit
+              </Link>
+            </DropdownMenuItem>
+          )}
+          {canDelete && (
+            <DropdownMenuItem onClick={() => setIsDeleteDialogOpen(true)} className="text-destructive">
+              <Trash2 className="mr-2 h-4 w-4" />
+              Hapus
+            </DropdownMenuItem>
+          )}
         </DropdownMenuContent>
       </DropdownMenu>
 

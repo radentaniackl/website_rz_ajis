@@ -4,7 +4,7 @@ import { Session } from 'next-auth';
 import { useEffect, useState } from 'react';
 import { Sheet, SheetContent, SheetTrigger } from '@/components/ui/sheet';
 import { Button } from '@/components/ui/button';
-import { Menu, LogOut, User as UserIcon, Lock } from 'lucide-react';
+import { Menu, LogOut, User as UserIcon, Lock, PanelLeft } from 'lucide-react';
 import { AppSidebar } from './app-sidebar';
 import {
   DropdownMenu,
@@ -21,9 +21,10 @@ import Link from 'next/link';
 
 interface AppHeaderProps {
   session: Session | null;
+  onSidebarToggle?: () => void;
 }
 
-export function AppHeader({ session }: AppHeaderProps) {
+export function AppHeader({ session, onSidebarToggle }: AppHeaderProps) {
   const pathname = usePathname();
   const [mounted, setMounted] = useState(false);
 
@@ -38,6 +39,7 @@ export function AppHeader({ session }: AppHeaderProps) {
   return (
     <header className="flex h-14 items-center gap-4 border-b bg-muted/40 px-4 lg:h-[60px] lg:px-6 justify-between sticky top-0 z-10 backdrop-blur-md">
       <div className="flex items-center gap-4">
+        {/* Mobile menu */}
         <Sheet>
           <SheetTrigger>
             <div className="flex h-9 w-9 items-center justify-center rounded-md border border-input bg-background hover:bg-accent hover:text-accent-foreground md:hidden shrink-0">
@@ -49,6 +51,17 @@ export function AppHeader({ session }: AppHeaderProps) {
             <AppSidebar session={session} />
           </SheetContent>
         </Sheet>
+
+        {/* Desktop sidebar toggle */}
+        <Button
+          variant="ghost"
+          size="icon"
+          className="hidden md:flex"
+          onClick={onSidebarToggle}
+        >
+          <PanelLeft className="h-5 w-5" />
+          <span className="sr-only">Toggle sidebar</span>
+        </Button>
         
         {/* Breadcrumb - Simple implementation for now */}
         <div suppressHydrationWarning className="hidden md:flex text-sm text-muted-foreground items-center gap-1">

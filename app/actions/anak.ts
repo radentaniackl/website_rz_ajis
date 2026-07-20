@@ -141,13 +141,6 @@ export async function updateAnakAction(id: number, data: AnakUpdateInput) {
       return { success: false, error: 'Unauthorized' };
     }
 
-    // Check if anak exists and user has access
-    const existing = await getAnakById(id);
-    if (!existing) {
-      return { success: false, error: 'Anak not found' };
-    }
-
-    // RBAC check: ensure user can edit this anak
     const user = {
       id: session.user.id,
       id_group_user: session.user.id_group_user,
@@ -155,23 +148,34 @@ export async function updateAnakAction(id: number, data: AnakUpdateInput) {
       wilayah_ids: session.user.id_wilayah_pembinaan,
     };
 
-    // Super Admin can edit all anak
-    if (user.id_group_user === 1) {
-      // Proceed with update
-    }
-    // Branch Admin can edit anak in their kantor or wilayah
-    else if (user.id_group_user === 2) {
-      const canEdit = 
-        (user.kantor_id && existing.kantorId === user.kantor_id) ||
-        (user.wilayah_ids && user.wilayah_ids.includes(Number(existing.wilayahPembinaanId)));
-      
-      if (!canEdit) {
-        return { success: false, error: 'Forbidden - You do not have permission to edit this anak' };
-      }
-    }
-    // Korwil cannot edit anak (read-only access)
-    else if (user.id_group_user === 9) {
+    // RBAC check: Korwil cannot edit anak (read-only access per PRD)
+    if (user.id_group_user === 9) {
       return { success: false, error: 'Forbidden - Korwil has read-only access to anak data' };
+    }
+
+    // Check if anak exists
+    const existing = await getAnakById(id);
+    if (!existing) {
+      return { success: false, error: 'Anak not found' };
+    }
+
+    // RBAC check using centralized filter for Branch Admin
+    const { buildRbacFilter } = await import('@/lib/rbac/filters');
+    const { ajisAnak } = await import('@/db/schema');
+    const { eq, and } = await import('drizzle-orm');
+    const { db } = await import('@/lib/repositories/base.repository');
+
+    const rbacFilter = buildRbacFilter(user, ajisAnak);
+    
+    // Super Admin has no filter, can edit all
+    if (user.id_group_user !== 1) {
+      // For Branch Admin, verify the anak matches their filter
+      if (rbacFilter) {
+        const match = await db.select().from(ajisAnak).where(and(rbacFilter, eq(ajisAnak.id, BigInt(id)))).limit(1);
+        if (!match.length) {
+          return { success: false, error: 'Forbidden - You do not have permission to edit this anak' };
+        }
+      }
     }
 
     // Validate input

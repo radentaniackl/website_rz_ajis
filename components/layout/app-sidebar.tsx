@@ -21,9 +21,10 @@ import { Session } from 'next-auth';
 
 interface AppSidebarProps {
   session: Session | null;
+  isCollapsed?: boolean;
 }
 
-export function AppSidebar({ session }: AppSidebarProps) {
+export function AppSidebar({ session, isCollapsed = false }: AppSidebarProps) {
   const pathname = usePathname();
   const [mounted, setMounted] = useState(false);
 
@@ -144,7 +145,10 @@ export function AppSidebar({ session }: AppSidebarProps) {
 
   // Always render the sidebar structure even if there are issues
   return (
-    <aside className="flex flex-col border-r bg-white w-64" style={{ minHeight: '100vh', minWidth: '16rem' }}>
+    <aside className={cn(
+      "flex flex-col border-r bg-white transition-all duration-300 ease-in-out",
+      isCollapsed ? "w-0 opacity-0 overflow-hidden" : "w-64 opacity-100"
+    )}>
       <div className="flex h-14 items-center border-b px-4 lg:h-[60px] lg:px-6">
         <Link href="/dashboard" className="flex items-center gap-2 font-semibold">
           <span className="text-xl font-bold text-primary">RZ AJIS</span>

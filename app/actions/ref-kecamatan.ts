@@ -49,7 +49,15 @@ export async function getActiveRefKecamatanList() {
 export async function createRefKecamatan(data: RefKecamatanInput) {
   try {
     const session = await requireAuth();
-    if (session.user.id_group_user !== 1) {
+    const user = {
+      id: session.user.id,
+      id_group_user: session.user.id_group_user,
+      kantor_id: session.user.kantor_id,
+      wilayah_ids: session.user.id_wilayah_pembinaan,
+    };
+
+    // RBAC check: Korwil cannot create reference data (read-only access)
+    if (user.id_group_user === 9) {
       return { success: false, error: 'Anda tidak memiliki izin untuk menambah data referensi' };
     }
 
@@ -69,7 +77,15 @@ export async function createRefKecamatan(data: RefKecamatanInput) {
 export async function updateRefKecamatan(id: number, data: RefKecamatanUpdateInput) {
   try {
     const session = await requireAuth();
-    if (session.user.id_group_user !== 1) {
+    const user = {
+      id: session.user.id,
+      id_group_user: session.user.id_group_user,
+      kantor_id: session.user.kantor_id,
+      wilayah_ids: session.user.id_wilayah_pembinaan,
+    };
+
+    // RBAC check: Korwil cannot update reference data (read-only access)
+    if (user.id_group_user === 9) {
       return { success: false, error: 'Anda tidak memiliki izin untuk mengubah data referensi' };
     }
 
@@ -90,7 +106,15 @@ export async function updateRefKecamatan(id: number, data: RefKecamatanUpdateInp
 export async function softDeleteRefKecamatan(id: number) {
   try {
     const session = await requireAuth();
-    if (session.user.id_group_user !== 1) {
+    const user = {
+      id: session.user.id,
+      id_group_user: session.user.id_group_user,
+      kantor_id: session.user.kantor_id,
+      wilayah_ids: session.user.id_wilayah_pembinaan,
+    };
+
+    // RBAC check: Korwil cannot delete reference data (read-only access)
+    if (user.id_group_user === 9) {
       return { success: false, error: 'Anda tidak memiliki izin untuk menghapus data referensi' };
     }
 
@@ -110,7 +134,15 @@ export async function softDeleteRefKecamatan(id: number) {
 export async function deleteRefKecamatan(id: number) {
   try {
     const session = await requireAuth();
-    if (session.user.id_group_user !== 1) {
+    const user = {
+      id: session.user.id,
+      id_group_user: session.user.id_group_user,
+      kantor_id: session.user.kantor_id,
+      wilayah_ids: session.user.id_wilayah_pembinaan,
+    };
+
+    // RBAC check: Korwil cannot delete reference data (read-only access)
+    if (user.id_group_user === 9) {
       return { success: false, error: 'Anda tidak memiliki izin untuk menghapus data referensi' };
     }
 

@@ -23,9 +23,11 @@ import { toast } from 'sonner';
 
 interface RefPropinsiActionsProps {
   id: number;
+  canEdit?: boolean;
+  canDelete?: boolean;
 }
 
-export function RefPropinsiActions({ id }: RefPropinsiActionsProps) {
+export function RefPropinsiActions({ id, canEdit = true, canDelete = true }: RefPropinsiActionsProps) {
   const [isDeleteDialogOpen, setIsDeleteDialogOpen] = useState(false);
   const [isDeleting, setIsDeleting] = useState(false);
 
@@ -61,19 +63,23 @@ export function RefPropinsiActions({ id }: RefPropinsiActionsProps) {
               Detail
             </Link>
           </DropdownMenuItem>
-          <DropdownMenuItem>
-            <Link href={`/dashboard/referensi/propinsi/${id}/edit`} className="flex items-center w-full">
-              <Pencil className="mr-2 h-4 w-4" />
-              Edit
-            </Link>
-          </DropdownMenuItem>
-          <DropdownMenuItem
-            onClick={() => setIsDeleteDialogOpen(true)}
-            className="text-destructive"
-          >
-            <Trash2 className="mr-2 h-4 w-4" />
-            Hapus
-          </DropdownMenuItem>
+          {canEdit && (
+            <DropdownMenuItem>
+              <Link href={`/dashboard/referensi/propinsi/${id}/edit`} className="flex items-center w-full">
+                <Pencil className="mr-2 h-4 w-4" />
+                Edit
+              </Link>
+            </DropdownMenuItem>
+          )}
+          {canDelete && (
+            <DropdownMenuItem
+              onClick={() => setIsDeleteDialogOpen(true)}
+              className="text-destructive"
+            >
+              <Trash2 className="mr-2 h-4 w-4" />
+              Hapus
+            </DropdownMenuItem>
+          )}
         </DropdownMenuContent>
       </DropdownMenu>
 

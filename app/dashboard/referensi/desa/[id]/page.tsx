@@ -5,6 +5,7 @@ import { Badge } from '@/components/ui/badge';
 import { ArrowLeft, Edit } from 'lucide-react';
 import Link from 'next/link';
 import { notFound } from 'next/navigation';
+import { auth } from '@/auth';
 
 interface PageProps {
   params: Promise<{ id: string }>;
@@ -13,10 +14,14 @@ interface PageProps {
 export default async function RefDesaDetailPage(props: PageProps) {
   const params = await props.params;
   const id = parseInt(params.id);
+  const session = await auth();
+  const userRole = session?.user?.id_group_user || 1;
 
   if (isNaN(id)) {
     notFound();
   }
+
+  const canEdit = userRole !== 9; // Korwil cannot edit reference data
 
   return (
     <div className="space-y-6">
@@ -33,12 +38,14 @@ export default async function RefDesaDetailPage(props: PageProps) {
             <p className="text-sm text-muted-foreground">Informasi lengkap desa/kelurahan</p>
           </div>
         </div>
-        <Button asChild>
-          <Link href={`/dashboard/referensi/desa/${id}/edit`}>
-            <Edit className="mr-2 h-4 w-4" />
-            Edit
-          </Link>
-        </Button>
+        {canEdit && (
+          <Button asChild>
+            <Link href={`/dashboard/referensi/desa/${id}/edit`}>
+              <Edit className="mr-2 h-4 w-4" />
+              Edit
+            </Link>
+          </Button>
+        )}
       </div>
 
       <Suspense fallback={<div className="p-4">Loading...</div>}>

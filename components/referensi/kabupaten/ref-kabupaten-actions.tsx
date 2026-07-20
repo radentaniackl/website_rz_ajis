@@ -11,9 +11,11 @@ import { toast } from 'sonner';
 
 interface RefKabupatenActionsProps {
   id: number;
+  canEdit?: boolean;
+  canDelete?: boolean;
 }
 
-export function RefKabupatenActions({ id }: RefKabupatenActionsProps) {
+export function RefKabupatenActions({ id, canEdit = true, canDelete = true }: RefKabupatenActionsProps) {
   const [isDeleteDialogOpen, setIsDeleteDialogOpen] = useState(false);
   const [isDeleting, setIsDeleting] = useState(false);
 
@@ -49,16 +51,20 @@ export function RefKabupatenActions({ id }: RefKabupatenActionsProps) {
               Detail
             </Link>
           </DropdownMenuItem>
-          <DropdownMenuItem>
-            <Link href={`/dashboard/referensi/kabupaten/${id}/edit`} className="flex items-center w-full">
-              <Pencil className="mr-2 h-4 w-4" />
-              Edit
-            </Link>
-          </DropdownMenuItem>
-          <DropdownMenuItem onClick={() => setIsDeleteDialogOpen(true)} className="text-destructive">
-            <Trash2 className="mr-2 h-4 w-4" />
-            Hapus
-          </DropdownMenuItem>
+          {canEdit && (
+            <DropdownMenuItem>
+              <Link href={`/dashboard/referensi/kabupaten/${id}/edit`} className="flex items-center w-full">
+                <Pencil className="mr-2 h-4 w-4" />
+                Edit
+              </Link>
+            </DropdownMenuItem>
+          )}
+          {canDelete && (
+            <DropdownMenuItem onClick={() => setIsDeleteDialogOpen(true)} className="text-destructive">
+              <Trash2 className="mr-2 h-4 w-4" />
+              Hapus
+            </DropdownMenuItem>
+          )}
         </DropdownMenuContent>
       </DropdownMenu>
 

@@ -49,7 +49,10 @@ export async function listAnak(params: ListAnakParams) {
   const { page, pageSize, search, rbacFilter, aktif = 'y', field, direction = 'desc' } = params;
 
   return safeQuery(`listAnak(page=${page}, search=${search ?? '-'})`, async () => {
-    const conditions: SQL[] = [eq(ajisAnak.aktif, aktif)];
+    const conditions: SQL[] = [];
+
+    // Comment out aktif filter temporarily to see all data
+    // if (aktif) conditions.push(eq(ajisAnak.aktif, aktif));
 
     if (rbacFilter) conditions.push(rbacFilter);
     if (search) {
@@ -59,7 +62,7 @@ export async function listAnak(params: ListAnakParams) {
       );
     }
 
-    const where = and(...conditions);
+    const where = conditions.length > 0 ? and(...conditions) : undefined;
 
     // Determine sort column and direction
     let orderBy;

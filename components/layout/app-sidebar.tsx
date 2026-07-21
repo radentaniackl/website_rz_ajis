@@ -15,7 +15,8 @@ import {
   FileText, 
   Award,
   Settings,
-  Database
+  Database,
+  Heart
 } from 'lucide-react';
 import { Session } from 'next-auth';
 
@@ -79,6 +80,12 @@ export function AppSidebar({ session, isCollapsed = false }: AppSidebarProps) {
       roles: [1, 2, 9],
     },
     {
+      label: 'Donatur',
+      icon: Heart,
+      href: '/dashboard/donatur',
+      roles: [1], // Super Admin only based on our Donatur Action RBAC
+    },
+    {
       label: 'Kantor',
       icon: Building2,
       href: '/dashboard/kantor',
@@ -89,6 +96,18 @@ export function AppSidebar({ session, isCollapsed = false }: AppSidebarProps) {
       icon: Map,
       href: '/dashboard/wilayah',
       roles: [1, 2], // Super, Branch
+    },
+    {
+      label: 'Semester',
+      icon: CalendarDays,
+      href: '/dashboard/semester',
+      roles: [1], // Super only
+    },
+    {
+      label: 'Dokumentasi',
+      icon: FileText,
+      href: '/dashboard/pembinaan-dokumentasi',
+      roles: [1, 2, 9], // Super, Branch, Korwil
     },
     {
       label: 'Users',

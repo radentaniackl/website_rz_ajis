@@ -1,7 +1,7 @@
 'use server';
 
 import { db } from '@/lib/repositories/base.repository';
-import { refDesa, ajisWilayahPembinaan, ajisKantor, ajisSdmWilayah } from '@/db/schema';
+import { refDesa, ajisWilayahPembinaan, ajisKantor, ajisSdmWilayah, ajisSemester, donatur } from '@/db/schema';
 import { eq } from 'drizzle-orm';
 
 export async function getDesaOptions() {
@@ -77,5 +77,46 @@ export async function getSdmWilayahOptions() {
   } catch (error) {
     console.error('Error fetching sdm wilayah options:', error);
     return { success: false, error: 'Failed to fetch sdm wilayah options' };
+  }
+}
+
+export async function getSemesterOptions() {
+  try {
+    const semester = await db
+      .select({
+        id: ajisSemester.id,
+        nama: ajisSemester.nama,
+        kodeLama: ajisSemester.kodeLama,
+      })
+      .from(ajisSemester)
+      .orderBy(ajisSemester.nama);
+    
+    return { success: true, data: semester.map(s => ({ value: Number(s.id), label: `${s.nama}` })) };
+  } catch (error) {
+    console.error('Error fetching semester options:', error);
+    return { success: false, error: 'Failed to fetch semester options' };
+  }
+}
+
+export async function getDonaturOptions() {
+  try {
+    const donaturData = await db
+      .select({
+        id: donatur.id,
+        namaLengkap: donatur.namaLengkap,
+        namaPublikasi: donatur.namaPublikasi,
+        statusDonatur: donatur.statusDonatur,
+      })
+      .from(donatur)
+      .where(eq(donatur.aktif, 'y'))
+      .orderBy(donatur.namaLengkap);
+    
+    return { success: true, data: donaturData.map(d => ({ 
+      value: Number(d.id), 
+      label: `${d.namaPublikasi || d.namaLengkap} (${d.statusDonatur})` 
+    })) };
+  } catch (error) {
+    console.error('Error fetching donatur options:', error);
+    return { success: false, error: 'Failed to fetch donatur options' };
   }
 }

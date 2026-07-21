@@ -1,31 +1,50 @@
-import { PageHeader } from "@/components/shared/page-header";
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
-import { EmptyState } from "@/components/shared/empty-state";
-import { CalendarDays } from "lucide-react";
+import { Suspense } from 'react';
+import { getPembinaanList } from '@/app/actions/pembinaan';
+import { PembinaanTable } from './pembinaan-table';
+import { Button } from '@/components/ui/button';
+import { Plus } from 'lucide-react';
+import Link from 'next/link';
 
-export default function SesiPage() {
+export const metadata = {
+  title: 'Sesi Pembinaan - AJIS',
+  description: 'Daftar sesi pembinaan anak',
+};
+
+export default async function PembinaanPage({
+  searchParams,
+}: {
+  searchParams: { page?: string; pageSize?: string; search?: string };
+}) {
+  const page = parseInt(searchParams.page || '1');
+  const pageSize = parseInt(searchParams.pageSize || '20');
+  const search = searchParams.search || '';
+
+  const result = await getPembinaanList({ page, pageSize, search });
+
   return (
-    <div className="space-y-6">
-      <PageHeader 
-        title="Sesi Pembinaan" 
-        description="Kelola data sesi pembinaan"
-      />
+    <div className="container mx-auto py-6">
+      <div className="flex justify-between items-center mb-6">
+        <div>
+          <h1 className="text-3xl font-bold">Sesi Pembinaan</h1>
+          <p className="text-muted-foreground">Kelola sesi pembinaan anak</p>
+        </div>
+        <Button asChild>
+          <Link href="/dashboard/sesi/new">
+            <Plus className="mr-2 h-4 w-4" />
+            Tambah Sesi
+          </Link>
+        </Button>
+      </div>
 
-      <Card>
-        <CardHeader>
-          <CardTitle>Manajemen Sesi Pembinaan</CardTitle>
-          <CardDescription>
-            Modul ini sedang dalam pengembangan. Fitur akan segera tersedia.
-          </CardDescription>
-        </CardHeader>
-        <CardContent>
-          <EmptyState 
-            icon={CalendarDays}
-            title="Modul Sesi Pembinaan" 
-            description="Fitur manajemen data sesi pembinaan sedang dalam pengembangan. Silakan kembali nanti."
-          />
-        </CardContent>
-      </Card>
+      <Suspense fallback={<div>Loading...</div>}>
+        <PembinaanTable 
+          data={result.success ? result.data : []}
+          total={result.success ? result.total : 0}
+          page={page}
+          pageSize={pageSize}
+          search={search}
+        />
+      </Suspense>
     </div>
   );
 }

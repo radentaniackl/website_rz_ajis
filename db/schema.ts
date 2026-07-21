@@ -329,7 +329,7 @@ export const ajisAnak = pgTable("ajis_anak", {
 	statusOrtu: varchar("status_ortu", { length: 50 }),
 	statusSurvey: varchar("status_survey", { length: 1 }).default('n').notNull(),
 	statusKelayakan: varchar("status_kelayakan", { length: 1 }).default('n').notNull(),
-	statusAnakJuara: varchar("status_anak_juara", { length: 3 }),
+	statusAnakJuara: varchar("status_anak_juara", { length: 10 }),
 	statusTersantuni: varchar("status_tersantuni", { length: 2 }),
 	statusPinjam: varchar("status_pinjam", { length: 1 }).default('n').notNull(),
 	statusMentor: varchar("status_mentor", { length: 1 }).default('n').notNull(),

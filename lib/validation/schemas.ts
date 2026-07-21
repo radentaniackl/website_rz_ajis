@@ -494,6 +494,66 @@ const anakObjectSchema = z.object({
 export const anakSchema = z.preprocess(cleanAnakFormValues, anakObjectSchema);
 export const anakUpdateSchema = z.preprocess(cleanAnakFormValues, anakObjectSchema.partial());
 
+// Pembinaan (Sesi Pembinaan) Schemas
+const pembinaanObjectSchema = z.object({
+  kodePembinaan: z.string().max(100, 'Kode pembinaan maksimal 100 karakter').optional(),
+  tglPembinaan: z.string().min(1, 'Tanggal pembinaan wajib diisi'),
+  semesterId: z.number().int().positive('Semester ID harus positif').optional(),
+  bulan: z.number().int().min(1).max(12).optional(),
+  tahun: z.number().int().min(2000).max(2100).optional(),
+  jenisPembinaan: z.string().max(255, 'Jenis pembinaan maksimal 255 karakter').optional(),
+  p3a: z.string().max(255, 'P3A maksimal 255 karakter').optional(),
+  judulMateri: z.string().max(255, 'Judul materi maksimal 255 karakter').optional(),
+  anakId: z.number().int().positive('Anak ID harus positif'),
+  kehadiran: z.string().max(15, 'Kehadiran maksimal 15 karakter').optional(),
+  keterangan: z.string().max(50, 'Keterangan maksimal 50 karakter').optional(),
+  wilayahPembinaanId: z.number().int().positive('Wilayah pembinaan ID harus positif').optional(),
+  kantorId: z.number().int().positive('Kantor ID harus positif').optional(),
+  pemateri: z.string().max(255, 'Pemateri maksimal 255 karakter').optional(),
+  pemateriPersonal: z.string().max(255, 'Pemateri personal maksimal 255 karakter').optional(),
+  ortuHadir: z.string().max(50, 'Ortu hadir maksimal 50 karakter').optional(),
+  donaturId: z.number().int().positive('Donatur ID harus positif').optional(),
+  programDonasi: z.string().max(50, 'Program donasi maksimal 50 karakter').optional(),
+  tampil: z.enum(['y', 'n']).default('y'),
+  viaInput: z.string().max(50, 'Via input maksimal 50 karakter').optional(),
+  image: z.string().max(500, 'URL gambar maksimal 500 karakter').optional(),
+  capaianTilawah: z.string().max(50, 'Capaian tilawah maksimal 50 karakter').optional(),
+  capaianTahfidz: z.string().max(50, 'Capaian tahfidz maksimal 50 karakter').optional(),
+  capaianTahfidzHalaman: z.string().max(50, 'Capaian tahfidz halaman maksimal 50 karakter').optional(),
+  pembiasaanShalatWajib: z.number().int().min(1).max(5).optional(),
+  pembiasaanTilawah: z.number().int().min(1).max(5).optional(),
+  pembiasaanSedekah: z.number().int().min(1).max(5).optional(),
+  membantuOrtu: z.number().int().min(1).max(5).optional(),
+});
+
+export const pembinaanSchema = z.preprocess(cleanAnakFormValues, pembinaanObjectSchema);
+export const pembinaanUpdateSchema = z.preprocess(cleanAnakFormValues, pembinaanObjectSchema.partial());
+
+export type PembinaanInput = z.infer<typeof pembinaanSchema>;
+export type PembinaanUpdateInput = z.infer<typeof pembinaanUpdateSchema>;
+
+// Semester Schemas
+const semesterObjectSchema = z.object({
+  kodeLama: z.string().max(50, 'Kode lama maksimal 50 karakter').optional(),
+  nama: z.string().min(1, 'Nama semester wajib diisi').max(100, 'Nama semester maksimal 100 karakter'),
+  tglAwal: z.string().optional(),
+  tglAkhir: z.string().optional(),
+  onprogress: z.enum(['y', 'n']).default('n'),
+  tglAwalDonasi: z.string().optional(),
+  tglAkhirDonasi: z.string().optional(),
+  tglAwalSaldo: z.string().optional(),
+  tglAkhirSaldo: z.string().optional(),
+  jenis: z.string().max(10, 'Jenis semester maksimal 10 karakter').optional(),
+  tahun: z.number().int().min(2000).max(2100).optional(),
+  lapsem: z.enum(['y', 'n']).default('y'),
+});
+
+export const semesterSchema = z.preprocess(cleanAnakFormValues, semesterObjectSchema);
+export const semesterUpdateSchema = z.preprocess(cleanAnakFormValues, semesterObjectSchema.partial());
+
+export type SemesterInput = z.infer<typeof semesterSchema>;
+export type SemesterUpdateInput = z.infer<typeof semesterUpdateSchema>;
+
 // Kantor Schemas
 export const kantorSchema = z.object({
   kode: z
@@ -677,3 +737,69 @@ export type WilayahInput = z.infer<typeof wilayahSchema>;
 export type WilayahUpdateInput = z.infer<typeof wilayahUpdateSchema>;
 export type UserInput = z.infer<typeof userSchema>;
 export type UserUpdateInput = z.infer<typeof userUpdateSchema>;
+
+// Donatur Schemas
+const STATUS_DONATUR_VALUES = [
+  'individu', 'corporate', 'komunitas', 'lembaga', 'masjid',
+  'sekolah', 'yayasan', 'instansi', 'organisasi', 'media', 'lainnya',
+] as const;
+
+const donaturObjectSchema = z.object({
+  kodeLama: z.string().max(30, 'Kode lama maksimal 30 karakter').optional(),
+  namaLengkap: z.string().min(1, 'Nama lengkap wajib diisi').max(100, 'Nama lengkap maksimal 100 karakter'),
+  namaPublikasi: z.string().max(100, 'Nama publikasi maksimal 100 karakter').optional(),
+  tglLahir: z.string().optional(),
+  jenisKelamin: z.enum(['l', 'p', 't'], {
+    errorMap: () => ({ message: 'Jenis kelamin harus L, P, atau T (tidak diketahui)' }),
+  }).optional(),
+  alamatLengkap: z.string().max(500, 'Alamat lengkap maksimal 500 karakter').optional(),
+  alamatSilaturahmi: z.string().max(500, 'Alamat silaturahmi maksimal 500 karakter').optional(),
+  kecamatanDomisiliId: z.number().int().positive('Kecamatan domisili ID harus positif').optional().nullable(),
+  kecamatanSilaturahmiId: z.number().int().positive('Kecamatan silaturahmi ID harus positif').optional().nullable(),
+  statusDonatur: z.string().min(1, 'Status donatur wajib dipilih').max(10, 'Status donatur maksimal 10 karakter'),
+  tglRegistrasi: z.string().optional(),
+  aktif: z.enum(['y', 'n', 'p'], {
+    errorMap: () => ({ message: 'Status harus Aktif (y), Nonaktif (n), atau Pending (p)' }),
+  }).default('y'),
+  kirimSms: z.enum(['y', 'n'], {
+    errorMap: () => ({ message: 'Kirim SMS harus Ya atau Tidak' }),
+  }).default('n'),
+  telp: z.string().max(30, 'Telepon maksimal 30 karakter').optional(),
+  fax: z.string().max(15, 'Fax maksimal 15 karakter').optional(),
+  hp: z.string().max(30, 'HP maksimal 30 karakter').optional(),
+  email: z.string().email('Email tidak valid').max(100, 'Email maksimal 100 karakter').or(z.literal('')).optional(),
+  website: z.string().max(100, 'Website maksimal 100 karakter').optional(),
+  namaKontak: z.string().max(50, 'Nama kontak maksimal 50 karakter').optional(),
+  telpKontak: z.string().max(30, 'Telepon kontak maksimal 30 karakter').optional(),
+  emailKontak: z.string().email('Email kontak tidak valid').max(100, 'Email kontak maksimal 100 karakter').or(z.literal('')).optional(),
+  jabatanKontak: z.string().max(50, 'Jabatan kontak maksimal 50 karakter').optional(),
+  namaBank: z.string().max(50, 'Nama bank maksimal 50 karakter').optional(),
+  noRekening: z.string().max(30, 'No rekening maksimal 30 karakter').optional(),
+  kantorDonaturId: z.number().int().positive('Kantor donatur ID harus positif').optional().nullable(),
+  niaRfo: z.string().max(15, 'NIA RFO maksimal 15 karakter').optional(),
+  namaRfo: z.string().max(50, 'Nama RFO maksimal 50 karakter').optional(),
+  tipePelayanan: z.string().max(30, 'Tipe pelayanan maksimal 30 karakter').optional(),
+  npwp: z.string().max(30, 'NPWP maksimal 30 karakter').optional(),
+});
+
+export const donaturSchema = z.preprocess(cleanAnakFormValues, donaturObjectSchema);
+export const donaturUpdateSchema = z.preprocess(cleanAnakFormValues, donaturObjectSchema.partial());
+
+export type DonaturInput = z.infer<typeof donaturSchema>;
+export type DonaturUpdateInput = z.infer<typeof donaturUpdateSchema>;
+
+// Pembinaan Dokumentasi Schemas
+const pembinaanDokumentasiObjectSchema = z.object({
+  semesterId: z.number().int().positive('Semester ID harus positif').optional(),
+  kantorId: z.number().int().positive('Kantor ID harus positif').optional(),
+  wilayahPembinaanId: z.number().int().positive('Wilayah pembinaan ID harus positif').optional(),
+  image: z.string().max(500, 'URL gambar maksimal 500 karakter').optional(),
+  nama: z.string().min(1, 'Nama dokumentasi wajib diisi').max(100, 'Nama dokumentasi maksimal 100 karakter'),
+  uploadGdrive: z.string().max(50, 'Upload Google Drive maksimal 50 karakter').optional(),
+});
+
+export const pembinaanDokumentasiSchema = z.preprocess(cleanAnakFormValues, pembinaanDokumentasiObjectSchema);
+export const pembinaanDokumentasiUpdateSchema = z.preprocess(cleanAnakFormValues, pembinaanDokumentasiObjectSchema.partial());
+
+export type PembinaanDokumentasiInput = z.infer<typeof pembinaanDokumentasiSchema>;
+export type PembinaanDokumentasiUpdateInput = z.infer<typeof pembinaanDokumentasiUpdateSchema>;

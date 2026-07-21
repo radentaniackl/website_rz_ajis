@@ -16,6 +16,8 @@ import { seedOrganization } from './organization';
 import { seedAnak } from './anak';
 import { seedUsers } from './users';
 import { seedSdm } from './sdm';
+import { seedSemester } from './semester';
+import { seedDonatur } from './donatur';
 
 export async function seedDatabase() {
   try {
@@ -26,6 +28,8 @@ export async function seedDatabase() {
     const sdmData = await seedSdm(db, organizationData);
     await seedAnak(db, geographicData, organizationData, sdmData);
     await seedUsers(db, organizationData);
+    await seedSemester();
+    await seedDonatur();
 
     console.log('🎉 Database seeding completed successfully');
   } catch (error) {

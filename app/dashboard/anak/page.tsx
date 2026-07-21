@@ -41,12 +41,15 @@ async function AnakTable({ searchParams, userRole }: { searchParams: { page?: st
   const canEdit = userRole !== 9; // Korwil cannot edit anak
   const canDelete = userRole !== 9; // Korwil cannot delete anak
 
+  const startRow = (page - 1) * 20 + 1;
+
   return (
     <>
       <div className="rounded-md border">
         <Table>
           <TableHeader>
             <TableRow>
+              <TableHead className="w-16">No</TableHead>
               <TableHead>
                 <Link 
                   href={`/dashboard/anak?${new URLSearchParams({ ...searchParams, field: 'kodeAnak', direction: searchParams.direction === 'asc' ? 'desc' : 'asc' }).toString()}`}
@@ -78,8 +81,9 @@ async function AnakTable({ searchParams, userRole }: { searchParams: { page?: st
             </TableRow>
           </TableHeader>
           <TableBody>
-            {data.map((anak) => (
+            {data.map((anak, index) => (
               <TableRow key={anak.id}>
+                <TableCell className="font-medium">{startRow + index}</TableCell>
                 <TableCell className="font-medium">{anak.kodeAnak}</TableCell>
                 <TableCell>{anak.nik}</TableCell>
                 <TableCell>{anak.namaLengkap}</TableCell>

@@ -498,6 +498,170 @@ export const anakSchema = z.object({
 
 export const anakUpdateSchema = anakSchema.partial();
 
+// Kantor Schemas
+export const kantorSchema = z.object({
+  kode: z
+    .string()
+    .min(1, 'Kode wajib diisi')
+    .max(10, 'Kode maksimal 10 karakter'),
+  nama: z
+    .string()
+    .min(1, 'Nama wajib diisi')
+    .max(150, 'Nama maksimal 150 karakter'),
+  alamat: z
+    .string()
+    .max(200, 'Alamat maksimal 200 karakter')
+    .optional(),
+  noTelp: z
+    .string()
+    .max(20, 'No telepon maksimal 20 karakter')
+    .optional(),
+  parentId: z
+    .number()
+    .int()
+    .positive('Parent ID harus positif')
+    .optional()
+    .nullable(),
+  parentSecondId: z
+    .number()
+    .int()
+    .positive('Parent Second ID harus positif')
+    .optional()
+    .nullable(),
+  kodeProgramRz: z
+    .string()
+    .max(50, 'Kode program RZ maksimal 50 karakter')
+    .optional(),
+  jenis: z
+    .string()
+    .max(50, 'Jenis maksimal 50 karakter')
+    .optional(),
+  kodeKantorLegacy: z
+    .string()
+    .max(20, 'Kode kantor legacy maksimal 20 karakter')
+    .optional(),
+  aktif: z
+    .enum(['y', 'n'], {
+      errorMap: () => ({ message: 'Status harus Aktif atau Nonaktif' }),
+    })
+    .default('y'),
+});
+
+export const kantorUpdateSchema = kantorSchema.partial();
+
+// Wilayah Pembinaan Schemas
+export const wilayahSchema = z.object({
+  kodeLama: z
+    .number()
+    .int()
+    .positive('Kode lama harus positif')
+    .optional(),
+  namaWilayah: z
+    .string()
+    .min(1, 'Nama wilayah wajib diisi')
+    .max(150, 'Nama wilayah maksimal 150 karakter'),
+  alamatWilayah: z
+    .string()
+    .max(500, 'Alamat wilayah maksimal 500 karakter')
+    .optional(),
+  kantorId: z
+    .number()
+    .int()
+    .positive('Kantor ID harus positif')
+    .optional()
+    .nullable(),
+  desaId: z
+    .number()
+    .int()
+    .positive('Desa ID harus positif')
+    .optional()
+    .nullable(),
+  statusApprove: z
+    .enum(['y', 't'], {
+      errorMap: () => ({ message: 'Status approve harus y atau t' }),
+    })
+    .optional(),
+  aktif: z
+    .enum(['y', 'n'], {
+      errorMap: () => ({ message: 'Status harus Aktif atau Nonaktif' }),
+    })
+    .default('y'),
+  userInsert: z
+    .string()
+    .max(50, 'User insert maksimal 50 karakter')
+    .optional(),
+});
+
+export const wilayahUpdateSchema = wilayahSchema.partial();
+
+// User Schemas
+export const userSchema = z.object({
+  kodeLama: z
+    .number()
+    .int()
+    .positive('Kode lama harus positif')
+    .optional(),
+  username: z
+    .string()
+    .min(1, 'Username wajib diisi')
+    .max(100, 'Username maksimal 100 karakter'),
+  email: z
+    .string()
+    .email('Email tidak valid')
+    .max(255, 'Email maksimal 255 karakter')
+    .optional(),
+  passwordHash: z
+    .string()
+    .min(1, 'Password hash wajib diisi')
+    .max(255, 'Password hash maksimal 255 karakter'),
+  mustResetPassword: z
+    .boolean()
+    .default(true),
+  failedLoginAttempts: z
+    .number()
+    .int()
+    .min(0, 'Failed login attempts tidak boleh negatif')
+    .default(0),
+  lockedUntil: z
+    .string()
+    .optional(),
+  nik: z
+    .string()
+    .max(20, 'NIK maksimal 20 karakter')
+    .optional(),
+  kantorId: z
+    .number()
+    .int()
+    .positive('Kantor ID harus positif')
+    .optional()
+    .nullable(),
+  groupUserId: z
+    .number()
+    .int()
+    .positive('Group User ID harus positif')
+    .optional()
+    .nullable(),
+  aktif: z
+    .enum(['y', 'n'], {
+      errorMap: () => ({ message: 'Status harus Aktif atau Nonaktif' }),
+    })
+    .default('y'),
+  userInsert: z
+    .string()
+    .max(50, 'User insert maksimal 50 karakter')
+    .optional(),
+});
+
+export const userUpdateSchema = userSchema
+  .partial()
+  .omit({
+    passwordHash: true,
+    failedLoginAttempts: true,
+    lockedUntil: true,
+    userInsert: true,
+    dateInsert: true,
+  });
+
 export type LoginInput = z.infer<typeof loginSchema>;
 export type PasswordResetInput = z.infer<typeof passwordResetSchema>;
 export type NewPasswordInput = z.infer<typeof newPasswordSchema>;
@@ -511,3 +675,9 @@ export type RefDesaInput = z.infer<typeof refDesaSchema>;
 export type RefDesaUpdateInput = z.infer<typeof refDesaUpdateSchema>;
 export type AnakInput = z.infer<typeof anakSchema>;
 export type AnakUpdateInput = z.infer<typeof anakUpdateSchema>;
+export type KantorInput = z.infer<typeof kantorSchema>;
+export type KantorUpdateInput = z.infer<typeof kantorUpdateSchema>;
+export type WilayahInput = z.infer<typeof wilayahSchema>;
+export type WilayahUpdateInput = z.infer<typeof wilayahUpdateSchema>;
+export type UserInput = z.infer<typeof userSchema>;
+export type UserUpdateInput = z.infer<typeof userUpdateSchema>;

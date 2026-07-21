@@ -1,39 +1,78 @@
 import { ajisAnak } from '@/db/schema';
 import { eq } from 'drizzle-orm';
+import type { PostgresJsDatabase } from 'drizzle-orm/postgres-js';
 
-export async function seedAnak(db: any, geographicData: any, organizationData: any, sdmData: any) {
+interface DesaData {
+  id: number | bigint;
+  kode: string;
+  [key: string]: unknown;
+}
+
+interface KantorData {
+  id: number | bigint;
+  kode: string;
+  [key: string]: unknown;
+}
+
+interface WilayahData {
+  id: number | bigint;
+  kodeLama: number;
+  [key: string]: unknown;
+}
+
+interface SdmData {
+  id: number | bigint;
+  kodeLama: number;
+  [key: string]: unknown;
+}
+
+interface GeographicData {
+  desa: DesaData[];
+}
+
+interface OrganizationData {
+  kantor: KantorData[];
+  wilayah: WilayahData[];
+}
+
+export async function seedAnak(
+  db: PostgresJsDatabase,
+  geographicData: GeographicData,
+  organizationData: OrganizationData,
+  sdmData: SdmData[]
+) {
   console.log('👶 Seeding anak data...');
 
   const { desa } = geographicData;
   const { kantor, wilayah } = organizationData;
 
   // Create maps for ID lookup
-  const desaByKode = new Map(desa.map((d: any) => [d.kode, d]));
-  const kantorByKode = new Map(kantor.map((k: any) => [k.kode, k]));
-  const wilayahByKodeLama = new Map(wilayah.map((w: any) => [w.kodeLama, w]));
-  const sdmByKodeLama = new Map(sdmData.map((s: any) => [s.kodeLama, s]));
+  const desaByKode = new Map(desa.map((d: DesaData) => [d.kode, d]));
+  const kantorByKode = new Map(kantor.map((k: KantorData) => [k.kode, k]));
+  const wilayahByKodeLama = new Map(wilayah.map((w: WilayahData) => [w.kodeLama, w]));
+  const sdmByKodeLama = new Map(sdmData.map((s: SdmData) => [s.kodeLama, s]));
 
   // Helper functions
   const getDesaId = (kode: string) => {
-    const d = desaByKode.get(kode) as any;
+    const d = desaByKode.get(kode);
     if (!d) throw new Error(`Desa with kode ${kode} not found`);
     return Number(d.id);
   };
 
   const getKantorId = (kode: string) => {
-    const k = kantorByKode.get(kode) as any;
+    const k = kantorByKode.get(kode);
     if (!k) throw new Error(`Kantor with kode ${kode} not found`);
     return Number(k.id);
   };
 
   const getWilayahId = (kodeLama: number) => {
-    const w = wilayahByKodeLama.get(kodeLama) as any;
+    const w = wilayahByKodeLama.get(kodeLama);
     if (!w) throw new Error(`Wilayah with kodeLama ${kodeLama} not found`);
     return Number(w.id);
   };
 
   const getSdmId = (kodeLama: number) => {
-    const s = sdmByKodeLama.get(kodeLama) as any;
+    const s = sdmByKodeLama.get(kodeLama);
     if (!s) throw new Error(`SDM with kodeLama ${kodeLama} not found`);
     return Number(s.id);
   };

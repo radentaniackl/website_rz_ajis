@@ -4,10 +4,9 @@ import { ArrowLeft } from "lucide-react";
 import Link from "next/link";
 import { AnakForm } from "@/components/anak/anak-form";
 import { getAnakDetail } from "@/app/actions/anak";
-import { updateAnakAction } from "@/app/actions/anak";
 import { notFound } from "next/navigation";
-import { redirect } from "next/navigation";
 import { auth } from "@/auth";
+import { mapAnakToFormValues } from "@/lib/validation/anak-helpers";
 
 async function AnakEditForm({ id }: { id: string }) {
   // Validate id is a valid number
@@ -23,35 +22,13 @@ async function AnakEditForm({ id }: { id: string }) {
   }
 
   const anak = result.data;
-
-  // Transform database data to match schema types
-  const initialData: any = {
-    ...anak,
-    jnsKel: anak.jnsKel as "L" | "P",
-    tglLahir: anak.tglLahir || "",
-    tglTerdaftar: anak.tglTerdaftar || "",
-    tglPengajuan: anak.tglPengajuan || "",
-    tglKematianAyah: anak.tglKematianAyah || "",
-    tglKematianIbu: anak.tglKematianIbu || "",
-    tglPeminjaman: anak.tglPeminjaman || "",
-    tglExpired: anak.tglExpired || "",
-    penghasilanAyah: anak.penghasilanAyah ? Number(anak.penghasilanAyah) : undefined,
-    penghasilanIbu: anak.penghasilanIbu ? Number(anak.penghasilanIbu) : undefined,
-    penghasilanWali: anak.penghasilanWali ? Number(anak.penghasilanWali) : undefined,
-    penghasilanTinggal: anak.penghasilanTinggal ? Number(anak.penghasilanTinggal) : undefined,
-    // Handle enum fields with proper validation
-    statusSurvey: (anak.statusSurvey === 'y' || anak.statusSurvey === 'n') ? anak.statusSurvey : 'n',
-    statusKelayakan: (anak.statusKelayakan === 'y' || anak.statusKelayakan === 'n') ? anak.statusKelayakan : 'n',
-    statusPinjam: (anak.statusPinjam === 'y' || anak.statusPinjam === 'n') ? anak.statusPinjam : 'n',
-    statusMentor: (anak.statusMentor === 'y' || anak.statusMentor === 'n') ? anak.statusMentor : 'n',
-    aktif: (anak.aktif === 'y' || anak.aktif === 'n') ? anak.aktif : 'y',
-  };
+  const initialData = mapAnakToFormValues(anak as unknown as Record<string, unknown>);
 
   return (
     <AnakForm 
       initialData={initialData} 
       isEdit={true}
-      anakId={parseInt(id)}
+      anakId={idNumber}
     />
   );
 }

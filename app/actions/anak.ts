@@ -5,6 +5,8 @@ import { listAnakByUser, getAnakById } from '@/lib/services/anak.service';
 import * as anakRepo from '@/lib/repositories/anak.repository';
 import { deleteAnakForUser } from '@/lib/services/anak.service';
 import { anakSchema, anakUpdateSchema, type AnakInput, type AnakUpdateInput } from '@/lib/validation/schemas';
+import { prepareAnakForDb } from '@/lib/validation/anak-helpers';
+import { ZodError } from 'zod';
 import { redirect } from 'next/navigation';
 import { revalidatePath } from 'next/cache';
 
@@ -90,45 +92,64 @@ export async function createAnakAction(data: AnakInput) {
       return { success: false, error: 'Forbidden - Korwil has read-only access to anak data' };
     }
 
-    // Validate input
     const validatedData = anakSchema.parse(data);
 
-    // Keep date fields as strings (DB/Drizzle schema expects string date fields)
-    const processedData = {
-      ...validatedData,
-      tglLahir: validatedData.tglLahir,
-      tglTerdaftar: validatedData.tglTerdaftar ?? undefined,
-      tglPengajuan: validatedData.tglPengajuan ?? undefined,
-      tglKematianAyah: validatedData.tglKematianAyah ?? undefined,
-      tglKematianIbu: validatedData.tglKematianIbu ?? undefined,
-      tglPeminjaman: validatedData.tglPeminjaman ?? undefined,
-      tglExpired: validatedData.tglExpired ?? undefined,
-      // Set RBAC fields based on user role
-      kantorId: session.user.kantor_id,
-      wilayahPembinaanId: session.user.id_wilayah_pembinaan?.[0], // TODO: Handle multiple wilayah
-    };
-    // Convert numeric penghasilan fields to strings to match DB insert types
-    if (validatedData.penghasilanAyah !== undefined) {
-      // @ts-ignore
-      processedData.penghasilanAyah = String(validatedData.penghasilanAyah);
+    // Foreign key validation
+    if (validatedData.wilayahPembinaanId) {
+      const wilayah = await anakRepo.findWilayahById(validatedData.wilayahPembinaanId);
+      if (!wilayah) {
+        return { success: false, error: 'Wilayah pembinaan tidak ditemukan' };
+      }
     }
-    if (validatedData.penghasilanIbu !== undefined) {
-      // @ts-ignore
-      processedData.penghasilanIbu = String(validatedData.penghasilanIbu);
+    if (validatedData.kantorId) {
+      const kantor = await anakRepo.findKantorById(validatedData.kantorId);
+      if (!kantor) {
+        return { success: false, error: 'Kantor tidak ditemukan' };
+      }
     }
-    if (validatedData.penghasilanWali !== undefined) {
-      // @ts-ignore
-      processedData.penghasilanWali = String(validatedData.penghasilanWali);
+    if (validatedData.desaId) {
+      const desa = await anakRepo.findDesaById(validatedData.desaId);
+      if (!desa) {
+        return { success: false, error: 'Desa tidak ditemukan' };
+      }
+    }
+    if (validatedData.desaAyahId) {
+      const desa = await anakRepo.findDesaById(validatedData.desaAyahId);
+      if (!desa) {
+        return { success: false, error: 'Desa ayah tidak ditemukan' };
+      }
+    }
+    if (validatedData.desaIbuId) {
+      const desa = await anakRepo.findDesaById(validatedData.desaIbuId);
+      if (!desa) {
+        return { success: false, error: 'Desa ibu tidak ditemukan' };
+      }
+    }
+    if (validatedData.desaWaliId) {
+      const desa = await anakRepo.findDesaById(validatedData.desaWaliId);
+      if (!desa) {
+        return { success: false, error: 'Desa wali tidak ditemukan' };
+      }
     }
 
-    const anak = await anakRepo.createAnak(processedData as unknown as anakRepo.NewAnak);
-    
+    const processedData = prepareAnakForDb({
+      ...validatedData,
+      kantorId: validatedData.kantorId || session.user.kantor_id || undefined,
+      wilayahPembinaanId:
+        validatedData.wilayahPembinaanId || session.user.id_wilayah_pembinaan?.[0] || undefined,
+    });
+
+    const anak = await anakRepo.createAnak(processedData as anakRepo.NewAnak);
+
     revalidatePath('/dashboard/anak');
     return { success: true, data: anak };
-  } catch (error: any) {
+  } catch (error: unknown) {
     console.error('Error creating anak:', error);
-    if (error.name === 'ZodError') {
+    if (error instanceof ZodError) {
       return { success: false, error: 'Validation error', details: error.errors };
+    }
+    if (error instanceof Error && error.message) {
+      return { success: false, error: error.message };
     }
     return { success: false, error: 'Failed to create anak' };
   }
@@ -153,23 +174,19 @@ export async function updateAnakAction(id: number, data: AnakUpdateInput) {
       return { success: false, error: 'Forbidden - Korwil has read-only access to anak data' };
     }
 
-    // Check if anak exists
     const existing = await getAnakById(id);
     if (!existing) {
       return { success: false, error: 'Anak not found' };
     }
 
-    // RBAC check using centralized filter for Branch Admin
     const { buildRbacFilter } = await import('@/lib/rbac/filters');
     const { ajisAnak } = await import('@/db/schema');
     const { eq, and } = await import('drizzle-orm');
     const { db } = await import('@/lib/repositories/base.repository');
 
     const rbacFilter = buildRbacFilter(user, ajisAnak);
-    
-    // Super Admin has no filter, can edit all
+
     if (user.id_group_user !== 1) {
-      // For Branch Admin, verify the anak matches their filter
       if (rbacFilter) {
         const match = await db.select().from(ajisAnak).where(and(rbacFilter, eq(ajisAnak.id, BigInt(id)))).limit(1);
         if (!match.length) {
@@ -178,36 +195,62 @@ export async function updateAnakAction(id: number, data: AnakUpdateInput) {
       }
     }
 
-    // Validate input
     const validatedData = anakUpdateSchema.parse(data);
 
-    // Keep date strings as-is to match repository/DB types
-    const processedData: any = { ...validatedData };
-    if (validatedData.tglLahir) processedData.tglLahir = validatedData.tglLahir;
-    if (validatedData.tglTerdaftar) processedData.tglTerdaftar = validatedData.tglTerdaftar;
-    if (validatedData.tglPengajuan) processedData.tglPengajuan = validatedData.tglPengajuan;
-    if (validatedData.tglKematianAyah) processedData.tglKematianAyah = validatedData.tglKematianAyah;
-    if (validatedData.tglKematianIbu) processedData.tglKematianIbu = validatedData.tglKematianIbu;
-    if (validatedData.tglPeminjaman) processedData.tglPeminjaman = validatedData.tglPeminjaman;
-    if (validatedData.tglExpired) processedData.tglExpired = validatedData.tglExpired;
-    // convert numeric penghasilan fields to strings
-    if (validatedData.penghasilanAyah !== undefined) processedData.penghasilanAyah = String(validatedData.penghasilanAyah);
-    if (validatedData.penghasilanIbu !== undefined) processedData.penghasilanIbu = String(validatedData.penghasilanIbu);
-    if (validatedData.penghasilanWali !== undefined) processedData.penghasilanWali = String(validatedData.penghasilanWali);
+    if (validatedData.wilayahPembinaanId) {
+      const wilayah = await anakRepo.findWilayahById(validatedData.wilayahPembinaanId);
+      if (!wilayah) {
+        return { success: false, error: 'Wilayah pembinaan tidak ditemukan' };
+      }
+    }
+    if (validatedData.kantorId) {
+      const kantor = await anakRepo.findKantorById(validatedData.kantorId);
+      if (!kantor) {
+        return { success: false, error: 'Kantor tidak ditemukan' };
+      }
+    }
+    if (validatedData.desaId) {
+      const desa = await anakRepo.findDesaById(validatedData.desaId);
+      if (!desa) {
+        return { success: false, error: 'Desa tidak ditemukan' };
+      }
+    }
+    if (validatedData.desaAyahId) {
+      const desa = await anakRepo.findDesaById(validatedData.desaAyahId);
+      if (!desa) {
+        return { success: false, error: 'Desa ayah tidak ditemukan' };
+      }
+    }
+    if (validatedData.desaIbuId) {
+      const desa = await anakRepo.findDesaById(validatedData.desaIbuId);
+      if (!desa) {
+        return { success: false, error: 'Desa ibu tidak ditemukan' };
+      }
+    }
+    if (validatedData.desaWaliId) {
+      const desa = await anakRepo.findDesaById(validatedData.desaWaliId);
+      if (!desa) {
+        return { success: false, error: 'Desa wali tidak ditemukan' };
+      }
+    }
 
+    const processedData = prepareAnakForDb(validatedData);
     const anak = await anakRepo.updateAnak(id, processedData);
-    
+
     if (!anak) {
       return { success: false, error: 'Anak not found' };
     }
-    
+
     revalidatePath('/dashboard/anak');
     revalidatePath(`/dashboard/anak/${id}`);
     return { success: true, data: anak };
-  } catch (error: any) {
+  } catch (error: unknown) {
     console.error('Error updating anak:', error);
-    if (error.name === 'ZodError') {
+    if (error instanceof ZodError) {
       return { success: false, error: 'Validation error', details: error.errors };
+    }
+    if (error instanceof Error && error.message) {
+      return { success: false, error: error.message };
     }
     return { success: false, error: 'Failed to update anak' };
   }

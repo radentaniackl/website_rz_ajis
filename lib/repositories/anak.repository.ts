@@ -1,5 +1,5 @@
 import { eq, ilike, and, count, desc, asc, sql, type SQL } from 'drizzle-orm';
-import { ajisAnak } from '@/db/schema';
+import { ajisAnak, ajisWilayahPembinaan, ajisKantor, refDesa } from '@/db/schema';
 import { db, getOffset, safeQuery, type ListParams } from './base.repository';
 
 /**
@@ -129,5 +129,40 @@ export async function deleteAnak(id: number): Promise<AnakRow | null> {
   return safeQuery(`deleteAnak(${id})`, async () => {
     const [deleted] = await db.delete(ajisAnak).where(eq(ajisAnak.id, BigInt(id))).returning();
     return deleted ?? null;
+  });
+}
+
+// ─── FOREIGN KEY VALIDATION ──────────────────────────────────────────────────────
+
+export async function findWilayahById(id: number) {
+  return safeQuery('findWilayahById', async () => {
+    const [wilayah] = await db
+      .select()
+      .from(ajisWilayahPembinaan)
+      .where(eq(ajisWilayahPembinaan.id, BigInt(id)))
+      .limit(1);
+    return wilayah || null;
+  });
+}
+
+export async function findKantorById(id: number) {
+  return safeQuery('findKantorById', async () => {
+    const [kantor] = await db
+      .select()
+      .from(ajisKantor)
+      .where(eq(ajisKantor.id, BigInt(id)))
+      .limit(1);
+    return kantor || null;
+  });
+}
+
+export async function findDesaById(id: number) {
+  return safeQuery('findDesaById', async () => {
+    const [desa] = await db
+      .select()
+      .from(refDesa)
+      .where(eq(refDesa.id, BigInt(id)))
+      .limit(1);
+    return desa || null;
   });
 }

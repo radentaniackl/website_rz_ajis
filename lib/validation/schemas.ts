@@ -1,4 +1,5 @@
 import { z } from 'zod';
+import { cleanAnakFormValues } from '@/lib/validation/anak-helpers';
 
 export const loginSchema = z.object({
   username: z.string().min(1, 'Username is required'),
@@ -124,20 +125,19 @@ export const refDesaSchema = z.object({
 export const refDesaUpdateSchema = refDesaSchema.partial();
 
 // Anak Schemas (simplified for MVP - focusing on essential fields)
-export const anakSchema = z.object({
+const anakObjectSchema = z.object({
   kodeAnak: z
     .string()
     .min(1, 'Kode anak wajib diisi')
     .max(25, 'Kode anak maksimal 25 karakter'),
   nik: z
     .string()
-    .min(1, 'NIK wajib diisi')
-    .max(50, 'NIK maksimal 50 karakter')
+    .min(16, 'NIK harus 16 digit')
+    .max(16, 'NIK harus 16 digit')
     .regex(/^[0-9]+$/, 'NIK harus berupa angka'),
   namaLengkap: z
     .string()
-    .min(1, 'Nama lengkap wajib diisi')
-    .max(200, 'Nama lengkap maksimal 200 karakter'),
+    .min(1, 'Nama lengkap wajib diisi'),
   namaPanggilan: z
     .string()
     .max(50, 'Nama panggilan maksimal 50 karakter')
@@ -161,13 +161,17 @@ export const anakSchema = z.object({
   anakKe: z
     .number()
     .int()
-    .min(1, 'Anak ke harus minimal 1')
-    .optional(),
+    .min(0, 'Anak ke tidak boleh negatif')
+    .max(32767, 'Anak ke maksimal 32767')
+    .optional()
+    .nullable(),
   dariSaudara: z
     .number()
     .int()
-    .min(1, 'Dari saudara harus minimal 1')
-    .optional(),
+    .min(0, 'Dari saudara tidak boleh negatif')
+    .max(32767, 'Dari saudara maksimal 32767')
+    .optional()
+    .nullable(),
   alamat: z
     .string()
     .max(150, 'Alamat maksimal 150 karakter')
@@ -187,11 +191,9 @@ export const anakSchema = z.object({
     .optional(),
   namaSekolah: z
     .string()
-    .max(200, 'Nama sekolah maksimal 200 karakter')
     .optional(),
   alamatSekolah: z
     .string()
-    .max(200, 'Alamat sekolah maksimal 200 karakter')
     .optional(),
   jurusan: z
     .string()
@@ -205,15 +207,15 @@ export const anakSchema = z.object({
     .optional(),
   namaPt: z
     .string()
-    .max(200, 'Nama PT maksimal 200 karakter')
     .optional(),
   alamatPt: z
     .string()
-    .max(200, 'Alamat PT maksimal 200 karakter')
     .optional(),
   noRekening: z
     .string()
-    .max(30, 'No rekening maksimal 30 karakter')
+    .min(10, 'No rekening minimal 10 digit')
+    .max(16, 'No rekening maksimal 16 digit')
+    .regex(/^[0-9]+$/, 'No rekening harus berupa angka')
     .optional(),
   pemilikRekening: z
     .string()
@@ -225,11 +227,11 @@ export const anakSchema = z.object({
     .optional(),
   foto: z
     .string()
-    .url('Foto harus berupa URL valid')
     .optional(),
   nilai: z
-    .string()
-    .max(50, 'Nilai maksimal 50 karakter')
+    .enum(['A', 'B', 'C', 'D', 'F'], {
+      errorMap: () => ({ message: 'Nilai harus A, B, C, D, atau F' }),
+    })
     .optional(),
   pelajaranFavorit: z
     .string()
@@ -245,15 +247,15 @@ export const anakSchema = z.object({
     .optional(),
   hobi: z
     .string()
-    .max(500, 'Hobi maksimal 500 karakter')
     .optional(),
   prestasi: z
     .string()
-    .max(500, 'Prestasi maksimal 500 karakter')
     .optional(),
   noKartuKeluarga: z
     .string()
-    .max(30, 'No Kartu Keluarga maksimal 30 karakter')
+    .min(16, 'No Kartu Keluarga harus 16 digit')
+    .max(16, 'No Kartu Keluarga harus 16 digit')
+    .regex(/^[0-9]+$/, 'No Kartu Keluarga harus berupa angka')
     .optional(),
   asnaf: z
     .string()
@@ -346,11 +348,10 @@ export const anakSchema = z.object({
     .optional(),
   pekerjaanAyah: z
     .string()
-    .max(200, 'Pekerjaan ayah maksimal 200 karakter')
     .optional(),
   penghasilanAyah: z
-    .number()
-    .positive('Penghasilan ayah harus positif')
+    .string()
+    .refine((val) => !val || !isNaN(parseFloat(val)), 'Penghasilan ayah harus berupa angka')
     .optional(),
   tglKematianAyah: z
     .string()
@@ -375,11 +376,10 @@ export const anakSchema = z.object({
     .optional(),
   pekerjaanIbu: z
     .string()
-    .max(200, 'Pekerjaan ibu maksimal 200 karakter')
     .optional(),
   penghasilanIbu: z
-    .number()
-    .positive('Penghasilan ibu harus positif')
+    .string()
+    .refine((val) => !val || !isNaN(parseFloat(val)), 'Penghasilan ibu harus berupa angka')
     .optional(),
   tglKematianIbu: z
     .string()
@@ -404,15 +404,16 @@ export const anakSchema = z.object({
     .optional(),
   pekerjaanWali: z
     .string()
-    .max(200, 'Pekerjaan wali maksimal 200 karakter')
     .optional(),
   penghasilanWali: z
-    .number()
-    .positive('Penghasilan wali harus positif')
+    .string()
+    .refine((val) => !val || !isNaN(parseFloat(val)), 'Penghasilan wali harus berupa angka')
     .optional(),
   telpDihubungi: z
     .string()
-    .max(20, 'No telepon maksimal 20 karakter')
+    .min(10, 'No telepon minimal 10 digit')
+    .max(14, 'No telepon maksimal 14 digit')
+    .regex(/^[0-9]+$/, 'No telepon harus berupa angka')
     .optional(),
   atasNama: z
     .string()
@@ -432,7 +433,6 @@ export const anakSchema = z.object({
     .optional(),
   kodeProgramRz: z
     .string()
-    .max(50, 'Kode program RZ maksimal 50 karakter')
     .optional(),
   niaRfoBook: z
     .string()
@@ -460,23 +460,18 @@ export const anakSchema = z.object({
     .optional(),
   tinggalBersama: z
     .string()
-    .max(200, 'Tinggal bersama maksimal 200 karakter')
     .optional(),
   namaTinggal: z
     .string()
-    .max(200, 'Nama tinggal maksimal 200 karakter')
     .optional(),
   ketTinggal: z
     .string()
-    .max(500, 'Keterangan tinggal maksimal 500 karakter')
     .optional(),
   penghasilanTinggal: z
     .string()
-    .max(200, 'Penghasilan tinggal maksimal 200 karakter')
     .optional(),
   pekerjaanTinggal: z
     .string()
-    .max(200, 'Pekerjaan tinggal maksimal 200 karakter')
     .optional(),
   tidakSerumahOrtu: z
     .string()
@@ -496,7 +491,8 @@ export const anakSchema = z.object({
     .optional(),
 });
 
-export const anakUpdateSchema = anakSchema.partial();
+export const anakSchema = z.preprocess(cleanAnakFormValues, anakObjectSchema);
+export const anakUpdateSchema = z.preprocess(cleanAnakFormValues, anakObjectSchema.partial());
 
 // Kantor Schemas
 export const kantorSchema = z.object({

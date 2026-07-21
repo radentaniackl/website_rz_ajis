@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
@@ -16,6 +16,8 @@ import { anakSchema, type AnakInput, type AnakUpdateInput } from "@/lib/validati
 import { toast } from "sonner";
 import { useRouter } from "next/navigation";
 import { createAnakAction, updateAnakAction } from "@/app/actions/anak";
+import { getDesaOptions, getWilayahOptions, getKantorOptions, getSdmWilayahOptions } from "@/app/actions/dropdown-data";
+import { uploadFoto } from "@/app/actions/upload";
 
 interface AnakFormProps {
   initialData?: Partial<AnakInput>;
@@ -25,7 +27,34 @@ interface AnakFormProps {
 
 export function AnakForm({ initialData, isEdit = false, anakId }: AnakFormProps) {
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [previewFoto, setPreviewFoto] = useState<string | null>(null);
+  const [fotoFile, setFotoFile] = useState<File | null>(null);
   const router = useRouter();
+  const [desaOptions, setDesaOptions] = useState<{ value: number; label: string }[]>([]);
+  const [wilayahOptions, setWilayahOptions] = useState<{ value: number; label: string }[]>([]);
+  const [kantorOptions, setKantorOptions] = useState<{ value: number; label: string }[]>([]);
+  const [sdmOptions, setSdmOptions] = useState<{ value: number; label: string }[]>([]);
+
+  useEffect(() => {
+    async function fetchDropdownData() {
+      const [desa, wilayah, kantor, sdm] = await Promise.all([
+        getDesaOptions(),
+        getWilayahOptions(),
+        getKantorOptions(),
+        getSdmWilayahOptions(),
+      ]);
+      if (desa.success) setDesaOptions(desa.data);
+      if (wilayah.success) setWilayahOptions(wilayah.data);
+      if (kantor.success) setKantorOptions(kantor.data);
+      if (sdm.success) setSdmOptions(sdm.data);
+    }
+    fetchDropdownData();
+
+    // Set initial foto preview if editing
+    if (initialData?.foto) {
+      setPreviewFoto(initialData.foto as string);
+    }
+  }, [initialData]);
 
   const form = useForm<z.infer<typeof anakSchema>>({
     resolver: zodResolver(anakSchema),
@@ -53,6 +82,7 @@ export function AnakForm({ initialData, isEdit = false, anakId }: AnakFormProps)
       noRekening: "",
       pemilikRekening: "",
       namaBank: "",
+      foto: "",
       nilai: "",
       pelajaranFavorit: "",
       jarakRumah: "",
@@ -123,11 +153,49 @@ export function AnakForm({ initialData, isEdit = false, anakId }: AnakFormProps)
   const handleSubmit = async (data: z.infer<typeof anakSchema>) => {
     setIsSubmitting(true);
     try {
+      // Validate required fields before submission
+      const requiredFields = [
+        { field: 'kodeAnak', label: 'Kode Anak' },
+        { field: 'nik', label: 'NIK' },
+        { field: 'namaLengkap', label: 'Nama Lengkap' },
+        { field: 'jnsKel', label: 'Jenis Kelamin' },
+        { field: 'tglLahir', label: 'Tanggal Lahir' },
+      ];
+
+      const missingFields = requiredFields.filter(
+        ({ field }) => !data[field as keyof typeof data]
+      );
+
+      if (missingFields.length > 0) {
+        const missingFieldNames = missingFields.map(f => f.label).join(', ');
+        toast.error(`Field wajib yang belum diisi: ${missingFieldNames}`);
+        setIsSubmitting(false);
+        return;
+      }
+
+      // Handle foto upload if file is selected
+      let fotoUrl = data.foto;
+      if (data.foto === "FILE_UPLOAD_PENDING" && fotoFile) {
+        const uploadResult = await uploadFoto(fotoFile);
+        if (!uploadResult.success) {
+          toast.error(uploadResult.error || 'Gagal mengupload foto');
+          setIsSubmitting(false);
+          return;
+        }
+        fotoUrl = uploadResult.url;
+      } else if (data.foto === "FILE_UPLOAD_PENDING") {
+        // File was removed, set to empty
+        fotoUrl = "";
+      }
+
+      // Update data with uploaded foto URL
+      const submitData = { ...data, foto: fotoUrl };
+
       let result;
       if (isEdit && anakId) {
-        result = await updateAnakAction(anakId, data);
+        result = await updateAnakAction(anakId, submitData);
       } else {
-        result = await createAnakAction(data);
+        result = await createAnakAction(submitData);
       }
       
       if (result.success) {
@@ -138,6 +206,7 @@ export function AnakForm({ initialData, isEdit = false, anakId }: AnakFormProps)
         toast.error(result.error || "Terjadi kesalahan");
       }
     } catch (error) {
+      console.error('Form submission error:', error);
       toast.error("Terjadi kesalahan saat menyimpan data");
     } finally {
       setIsSubmitting(false);
@@ -172,14 +241,23 @@ export function AnakForm({ initialData, isEdit = false, anakId }: AnakFormProps)
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                 <div className="space-y-2">
                   <Label htmlFor="kodeAnak">Kode Anak *</Label>
-                  <Input id="kodeAnak" {...form.register("kodeAnak")} />
+                  <Input 
+                    id="kodeAnak" 
+                    {...form.register("kodeAnak")}
+                    className={form.formState.errors.kodeAnak ? "border-red-500" : ""}
+                  />
                   {form.formState.errors.kodeAnak && (
                     <p className="text-sm text-destructive">{form.formState.errors.kodeAnak.message}</p>
                   )}
                 </div>
                 <div className="space-y-2">
                   <Label htmlFor="nik">NIK *</Label>
-                  <Input id="nik" {...form.register("nik")} maxLength={16} />
+                  <Input 
+                    id="nik" 
+                    {...form.register("nik")} 
+                    maxLength={16}
+                    className={form.formState.errors.nik ? "border-red-500" : ""}
+                  />
                   {form.formState.errors.nik && (
                     <p className="text-sm text-destructive">{form.formState.errors.nik.message}</p>
                   )}
@@ -188,7 +266,11 @@ export function AnakForm({ initialData, isEdit = false, anakId }: AnakFormProps)
 
               <div className="space-y-2">
                 <Label htmlFor="namaLengkap">Nama Lengkap *</Label>
-                <Input id="namaLengkap" {...form.register("namaLengkap")} />
+                <Input 
+                  id="namaLengkap" 
+                  {...form.register("namaLengkap")}
+                  className={form.formState.errors.namaLengkap ? "border-red-500" : ""}
+                />
                 {form.formState.errors.namaLengkap && (
                   <p className="text-sm text-destructive">{form.formState.errors.namaLengkap.message}</p>
                 )}
@@ -201,8 +283,8 @@ export function AnakForm({ initialData, isEdit = false, anakId }: AnakFormProps)
                 </div>
                 <div className="space-y-2">
                   <Label htmlFor="agama">Agama</Label>
-                  <Select onValueChange={(value) => form.setValue("agama", value)} defaultValue={form.watch("agama")}>
-                    <SelectTrigger>
+                  <Select onValueChange={(value) => form.setValue("agama", value)} value={form.watch("agama") || ""}>
+                    <SelectTrigger id="agama">
                       <SelectValue placeholder="Pilih agama" />
                     </SelectTrigger>
                     <SelectContent>
@@ -220,8 +302,14 @@ export function AnakForm({ initialData, isEdit = false, anakId }: AnakFormProps)
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                 <div className="space-y-2">
                   <Label htmlFor="jnsKel">Jenis Kelamin *</Label>
-                  <Select onValueChange={(value) => form.setValue("jnsKel", value as "L" | "P")} defaultValue={form.watch("jnsKel")}>
-                    <SelectTrigger>
+                  <Select 
+                    onValueChange={(value) => form.setValue("jnsKel", value as "L" | "P")} 
+                    value={form.watch("jnsKel") || ""}
+                  >
+                    <SelectTrigger 
+                      id="jnsKel"
+                      className={form.formState.errors.jnsKel ? "border-red-500" : ""}
+                    >
                       <SelectValue placeholder="Pilih jenis kelamin" />
                     </SelectTrigger>
                     <SelectContent>
@@ -235,7 +323,12 @@ export function AnakForm({ initialData, isEdit = false, anakId }: AnakFormProps)
                 </div>
                 <div className="space-y-2">
                   <Label htmlFor="tglLahir">Tanggal Lahir *</Label>
-                  <Input id="tglLahir" type="date" {...form.register("tglLahir")} />
+                  <Input 
+                    id="tglLahir" 
+                    type="date" 
+                    {...form.register("tglLahir")}
+                    className={form.formState.errors.tglLahir ? "border-red-500" : ""}
+                  />
                   {form.formState.errors.tglLahir && (
                     <p className="text-sm text-destructive">{form.formState.errors.tglLahir.message}</p>
                   )}
@@ -249,24 +342,106 @@ export function AnakForm({ initialData, isEdit = false, anakId }: AnakFormProps)
                 </div>
                 <div className="space-y-2">
                   <Label htmlFor="anakKe">Anak Ke-</Label>
-                  <Input id="anakKe" type="number" {...form.register("anakKe", { valueAsNumber: true })} />
+                  <Input 
+                    id="anakKe" 
+                    type="number" 
+                    {...form.register("anakKe", { 
+                      valueAsNumber: true,
+                      setValueAs: (v) => v === "" ? undefined : Number(v)
+                    })} 
+                  />
                 </div>
               </div>
 
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                 <div className="space-y-2">
                   <Label htmlFor="dariSaudara">Dari Saudara</Label>
-                  <Input id="dariSaudara" type="number" {...form.register("dariSaudara", { valueAsNumber: true })} />
+                  <Input 
+                    id="dariSaudara" 
+                    type="number" 
+                    {...form.register("dariSaudara", { 
+                      valueAsNumber: true,
+                      setValueAs: (v) => v === "" ? undefined : Number(v)
+                    })} 
+                  />
                 </div>
                 <div className="space-y-2">
                   <Label htmlFor="desaId">Desa</Label>
-                  <Input id="desaId" type="number" {...form.register("desaId", { valueAsNumber: true })} />
+                  <Select onValueChange={(value) => form.setValue("desaId", Number(value))} value={form.watch("desaId")?.toString() || ""}>
+                    <SelectTrigger id="desaId">
+                      <SelectValue placeholder="Pilih desa" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      {desaOptions.map((option) => (
+                        <SelectItem key={option.value} value={option.value.toString()}>
+                          {option.label}
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
                 </div>
               </div>
 
               <div className="space-y-2">
                 <Label htmlFor="alamat">Alamat</Label>
                 <Textarea id="alamat" {...form.register("alamat")} rows={3} />
+              </div>
+
+              <div className="space-y-2">
+                <Label htmlFor="foto">Foto</Label>
+                <div className="space-y-3">
+                  {previewFoto && (
+                    <div className="relative w-32 h-32 mx-auto">
+                      <img
+                        src={previewFoto}
+                        alt="Preview Foto"
+                        className="w-full h-full object-cover rounded-lg border"
+                      />
+                      <button
+                        type="button"
+                        onClick={() => {
+                          setPreviewFoto(null);
+                          setFotoFile(null);
+                          form.setValue("foto", "");
+                        }}
+                        className="absolute top-0 right-0 bg-red-500 text-white rounded-full w-6 h-6 flex items-center justify-center text-xs hover:bg-red-600"
+                      >
+                        ×
+                      </button>
+                    </div>
+                  )}
+                  <Input
+                    id="foto"
+                    type="file"
+                    accept=".png,.jpg,.jpeg"
+                    onChange={(e) => {
+                      const file = e.target.files?.[0];
+                      if (file) {
+                        // Validate file size (max 5MB)
+                        if (file.size > 5 * 1024 * 1024) {
+                          toast.error("Ukuran foto maksimal 5MB");
+                          return;
+                        }
+                        // Validate file type
+                        if (!["image/png", "image/jpeg", "image/jpg"].includes(file.type)) {
+                          toast.error("Format foto harus PNG, JPG, atau JPEG");
+                          return;
+                        }
+                        // Create preview
+                        const reader = new FileReader();
+                        reader.onloadend = () => {
+                          setPreviewFoto(reader.result as string);
+                        };
+                        reader.readAsDataURL(file);
+                        // Store file for upload
+                        setFotoFile(file);
+                        // Set marker for upload (will be replaced with URL during submit)
+                        form.setValue("foto", "FILE_UPLOAD_PENDING");
+                      }
+                    }}
+                  />
+                  <p className="text-xs text-slate-500">Format: PNG, JPG, JPEG. Maksimal 5MB</p>
+                </div>
               </div>
             </CardContent>
           </Card>
@@ -340,8 +515,8 @@ export function AnakForm({ initialData, isEdit = false, anakId }: AnakFormProps)
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                 <div className="space-y-2">
                   <Label htmlFor="asnaf">Asnaf</Label>
-                  <Select onValueChange={(value) => form.setValue("asnaf", value)} defaultValue={form.watch("asnaf")}>
-                    <SelectTrigger>
+                  <Select onValueChange={(value) => form.setValue("asnaf", value)} value={form.watch("asnaf") || ""}>
+                    <SelectTrigger id="asnaf">
                       <SelectValue placeholder="Pilih asnaf" />
                     </SelectTrigger>
                     <SelectContent>
@@ -355,8 +530,8 @@ export function AnakForm({ initialData, isEdit = false, anakId }: AnakFormProps)
                 </div>
                 <div className="space-y-2">
                   <Label htmlFor="statusOrtu">Status Orang Tua</Label>
-                  <Select onValueChange={(value) => form.setValue("statusOrtu", value)} defaultValue={form.watch("statusOrtu")}>
-                    <SelectTrigger>
+                  <Select onValueChange={(value) => form.setValue("statusOrtu", value)} value={form.watch("statusOrtu") || ""}>
+                    <SelectTrigger id="statusOrtu">
                       <SelectValue placeholder="Pilih status orang tua" />
                     </SelectTrigger>
                     <SelectContent>
@@ -392,7 +567,18 @@ export function AnakForm({ initialData, isEdit = false, anakId }: AnakFormProps)
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                 <div className="space-y-2">
                   <Label htmlFor="desaAyahId">Desa Ayah</Label>
-                  <Input id="desaAyahId" type="number" {...form.register("desaAyahId", { valueAsNumber: true })} />
+                  <Select onValueChange={(value) => form.setValue("desaAyahId", Number(value))} value={form.watch("desaAyahId")?.toString() || ""}>
+                    <SelectTrigger id="desaAyahId">
+                      <SelectValue placeholder="Pilih desa ayah" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      {desaOptions.map((option) => (
+                        <SelectItem key={option.value} value={option.value.toString()}>
+                          {option.label}
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
                 </div>
                 <div className="space-y-2">
                   <Label htmlFor="pekerjaanAyah">Pekerjaan Ayah</Label>
@@ -403,7 +589,14 @@ export function AnakForm({ initialData, isEdit = false, anakId }: AnakFormProps)
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                 <div className="space-y-2">
                   <Label htmlFor="penghasilanAyah">Penghasilan Ayah</Label>
-                  <Input id="penghasilanAyah" type="number" {...form.register("penghasilanAyah", { valueAsNumber: true })} />
+                  <Input 
+                    id="penghasilanAyah" 
+                    type="number" 
+                    {...form.register("penghasilanAyah", { 
+                      valueAsNumber: true,
+                      setValueAs: (v) => v === "" ? undefined : Number(v)
+                    })} 
+                  />
                 </div>
                 <div className="space-y-2">
                   <Label htmlFor="tglKematianAyah">Tanggal Kematian Ayah</Label>
@@ -439,7 +632,18 @@ export function AnakForm({ initialData, isEdit = false, anakId }: AnakFormProps)
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                 <div className="space-y-2">
                   <Label htmlFor="desaIbuId">Desa Ibu</Label>
-                  <Input id="desaIbuId" type="number" {...form.register("desaIbuId", { valueAsNumber: true })} />
+                  <Select onValueChange={(value) => form.setValue("desaIbuId", Number(value))} value={form.watch("desaIbuId")?.toString() || ""}>
+                    <SelectTrigger id="desaIbuId">
+                      <SelectValue placeholder="Pilih desa ibu" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      {desaOptions.map((option) => (
+                        <SelectItem key={option.value} value={option.value.toString()}>
+                          {option.label}
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
                 </div>
                 <div className="space-y-2">
                   <Label htmlFor="pekerjaanIbu">Pekerjaan Ibu</Label>
@@ -450,7 +654,14 @@ export function AnakForm({ initialData, isEdit = false, anakId }: AnakFormProps)
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                 <div className="space-y-2">
                   <Label htmlFor="penghasilanIbu">Penghasilan Ibu</Label>
-                  <Input id="penghasilanIbu" type="number" {...form.register("penghasilanIbu", { valueAsNumber: true })} />
+                  <Input 
+                    id="penghasilanIbu" 
+                    type="number" 
+                    {...form.register("penghasilanIbu", { 
+                      valueAsNumber: true,
+                      setValueAs: (v) => v === "" ? undefined : Number(v)
+                    })} 
+                  />
                 </div>
                 <div className="space-y-2">
                   <Label htmlFor="tglKematianIbu">Tanggal Kematian Ibu</Label>
@@ -486,7 +697,18 @@ export function AnakForm({ initialData, isEdit = false, anakId }: AnakFormProps)
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                 <div className="space-y-2">
                   <Label htmlFor="desaWaliId">Desa Wali</Label>
-                  <Input id="desaWaliId" type="number" {...form.register("desaWaliId", { valueAsNumber: true })} />
+                  <Select onValueChange={(value) => form.setValue("desaWaliId", Number(value))} value={form.watch("desaWaliId")?.toString() || ""}>
+                    <SelectTrigger id="desaWaliId">
+                      <SelectValue placeholder="Pilih desa wali" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      {desaOptions.map((option) => (
+                        <SelectItem key={option.value} value={option.value.toString()}>
+                          {option.label}
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
                 </div>
                 <div className="space-y-2">
                   <Label htmlFor="pekerjaanWali">Pekerjaan Wali</Label>
@@ -496,7 +718,14 @@ export function AnakForm({ initialData, isEdit = false, anakId }: AnakFormProps)
 
               <div className="space-y-2">
                 <Label htmlFor="penghasilanWali">Penghasilan Wali</Label>
-                <Input id="penghasilanWali" type="number" {...form.register("penghasilanWali", { valueAsNumber: true })} />
+                <Input 
+                  id="penghasilanWali" 
+                  type="number" 
+                  {...form.register("penghasilanWali", { 
+                    valueAsNumber: true,
+                    setValueAs: (v) => v === "" ? undefined : Number(v)
+                  })} 
+                />
               </div>
             </CardContent>
           </Card>
@@ -540,6 +769,7 @@ export function AnakForm({ initialData, isEdit = false, anakId }: AnakFormProps)
                   <Input id="namaBank" {...form.register("namaBank")} />
                 </div>
               </div>
+
             </CardContent>
           </Card>
         </TabsContent>
@@ -553,7 +783,18 @@ export function AnakForm({ initialData, isEdit = false, anakId }: AnakFormProps)
             <CardContent className="space-y-4">
               <div className="space-y-2">
                 <Label htmlFor="nilai">Nilai</Label>
-                <Input id="nilai" {...form.register("nilai")} />
+                <Select onValueChange={(value) => form.setValue("nilai", value)} value={form.watch("nilai") || ""}>
+                  <SelectTrigger id="nilai">
+                    <SelectValue placeholder="Pilih nilai" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="A">A</SelectItem>
+                    <SelectItem value="B">B</SelectItem>
+                    <SelectItem value="C">C</SelectItem>
+                    <SelectItem value="D">D</SelectItem>
+                    <SelectItem value="F">F</SelectItem>
+                  </SelectContent>
+                </Select>
               </div>
 
               <div className="space-y-2">
@@ -595,8 +836,8 @@ export function AnakForm({ initialData, isEdit = false, anakId }: AnakFormProps)
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                 <div className="space-y-2">
                   <Label htmlFor="statusSurvey">Status Survey</Label>
-                  <Select onValueChange={(value) => form.setValue("statusSurvey", value)} defaultValue={form.watch("statusSurvey")}>
-                    <SelectTrigger>
+                  <Select onValueChange={(value) => form.setValue("statusSurvey", value)} value={form.watch("statusSurvey") || ""}>
+                    <SelectTrigger id="statusSurvey">
                       <SelectValue placeholder="Pilih status survey" />
                     </SelectTrigger>
                     <SelectContent>
@@ -608,8 +849,8 @@ export function AnakForm({ initialData, isEdit = false, anakId }: AnakFormProps)
                 </div>
                 <div className="space-y-2">
                   <Label htmlFor="statusKelayakan">Status Kelayakan</Label>
-                  <Select onValueChange={(value) => form.setValue("statusKelayakan", value)} defaultValue={form.watch("statusKelayakan")}>
-                    <SelectTrigger>
+                  <Select onValueChange={(value) => form.setValue("statusKelayakan", value)} value={form.watch("statusKelayakan") || ""}>
+                    <SelectTrigger id="statusKelayakan">
                       <SelectValue placeholder="Pilih status kelayakan" />
                     </SelectTrigger>
                     <SelectContent>
@@ -624,8 +865,8 @@ export function AnakForm({ initialData, isEdit = false, anakId }: AnakFormProps)
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                 <div className="space-y-2">
                   <Label htmlFor="statusAnakJuara">Status Anak Juara</Label>
-                  <Select onValueChange={(value) => form.setValue("statusAnakJuara", value)} defaultValue={form.watch("statusAnakJuara")}>
-                    <SelectTrigger>
+                  <Select onValueChange={(value) => form.setValue("statusAnakJuara", value)} value={form.watch("statusAnakJuara") || ""}>
+                    <SelectTrigger id="statusAnakJuara">
                       <SelectValue placeholder="Pilih status anak juara" />
                     </SelectTrigger>
                     <SelectContent>
@@ -637,8 +878,8 @@ export function AnakForm({ initialData, isEdit = false, anakId }: AnakFormProps)
                 </div>
                 <div className="space-y-2">
                   <Label htmlFor="statusTersantuni">Status Tersantuni</Label>
-                  <Select onValueChange={(value) => form.setValue("statusTersantuni", value)} defaultValue={form.watch("statusTersantuni")}>
-                    <SelectTrigger>
+                  <Select onValueChange={(value) => form.setValue("statusTersantuni", value)} value={form.watch("statusTersantuni") || ""}>
+                    <SelectTrigger id="statusTersantuni">
                       <SelectValue placeholder="Pilih status tersantuni" />
                     </SelectTrigger>
                     <SelectContent>
@@ -653,8 +894,8 @@ export function AnakForm({ initialData, isEdit = false, anakId }: AnakFormProps)
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                 <div className="space-y-2">
                   <Label htmlFor="statusPinjam">Status Pinjam</Label>
-                  <Select onValueChange={(value) => form.setValue("statusPinjam", value)} defaultValue={form.watch("statusPinjam")}>
-                    <SelectTrigger>
+                  <Select onValueChange={(value) => form.setValue("statusPinjam", value)} value={form.watch("statusPinjam") || ""}>
+                    <SelectTrigger id="statusPinjam">
                       <SelectValue placeholder="Pilih status pinjam" />
                     </SelectTrigger>
                     <SelectContent>
@@ -666,8 +907,8 @@ export function AnakForm({ initialData, isEdit = false, anakId }: AnakFormProps)
                 </div>
                 <div className="space-y-2">
                   <Label htmlFor="statusMentor">Status Mentor</Label>
-                  <Select onValueChange={(value) => form.setValue("statusMentor", value)} defaultValue={form.watch("statusMentor")}>
-                    <SelectTrigger>
+                  <Select onValueChange={(value) => form.setValue("statusMentor", value)} value={form.watch("statusMentor") || ""}>
+                    <SelectTrigger id="statusMentor">
                       <SelectValue placeholder="Pilih status mentor" />
                     </SelectTrigger>
                     <SelectContent>
@@ -682,8 +923,8 @@ export function AnakForm({ initialData, isEdit = false, anakId }: AnakFormProps)
               <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
                 <div className="space-y-2">
                   <Label htmlFor="aktif">Aktif</Label>
-                  <Select onValueChange={(value) => form.setValue("aktif", value as "y" | "n")} defaultValue={form.watch("aktif")}>
-                    <SelectTrigger>
+                  <Select onValueChange={(value) => form.setValue("aktif", value as "y" | "n")} value={form.watch("aktif") || ""}>
+                    <SelectTrigger id="aktif">
                       <SelectValue />
                     </SelectTrigger>
                     <SelectContent>
@@ -694,8 +935,8 @@ export function AnakForm({ initialData, isEdit = false, anakId }: AnakFormProps)
                 </div>
                 <div className="space-y-2">
                   <Label htmlFor="alumniJuara">Alumni Juara</Label>
-                  <Select onValueChange={(value) => form.setValue("alumniJuara", value)} defaultValue={form.watch("alumniJuara")}>
-                    <SelectTrigger>
+                  <Select onValueChange={(value) => form.setValue("alumniJuara", value)} value={form.watch("alumniJuara") || ""}>
+                    <SelectTrigger id="alumniJuara">
                       <SelectValue placeholder="Pilih status alumni" />
                     </SelectTrigger>
                     <SelectContent>
@@ -706,8 +947,8 @@ export function AnakForm({ initialData, isEdit = false, anakId }: AnakFormProps)
                 </div>
                 <div className="space-y-2">
                   <Label htmlFor="juara">Juara</Label>
-                  <Select onValueChange={(value) => form.setValue("juara", value)} defaultValue={form.watch("juara")}>
-                    <SelectTrigger>
+                  <Select onValueChange={(value) => form.setValue("juara", value)} value={form.watch("juara") || ""}>
+                    <SelectTrigger id="juara">
                       <SelectValue placeholder="Pilih status juara" />
                     </SelectTrigger>
                     <SelectContent>
@@ -731,18 +972,51 @@ export function AnakForm({ initialData, isEdit = false, anakId }: AnakFormProps)
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                 <div className="space-y-2">
                   <Label htmlFor="wilayahPembinaanId">Wilayah Pembinaan</Label>
-                  <Input id="wilayahPembinaanId" type="number" {...form.register("wilayahPembinaanId", { valueAsNumber: true })} />
+                  <Select onValueChange={(value) => form.setValue("wilayahPembinaanId", Number(value))} value={form.watch("wilayahPembinaanId")?.toString() || ""}>
+                    <SelectTrigger id="wilayahPembinaanId">
+                      <SelectValue placeholder="Pilih wilayah pembinaan" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      {wilayahOptions.map((option) => (
+                        <SelectItem key={option.value} value={option.value.toString()}>
+                          {option.label}
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
                 </div>
                 <div className="space-y-2">
                   <Label htmlFor="kantorId">Kantor</Label>
-                  <Input id="kantorId" type="number" {...form.register("kantorId", { valueAsNumber: true })} />
+                  <Select onValueChange={(value) => form.setValue("kantorId", Number(value))} value={form.watch("kantorId")?.toString() || ""}>
+                    <SelectTrigger id="kantorId">
+                      <SelectValue placeholder="Pilih kantor" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      {kantorOptions.map((option) => (
+                        <SelectItem key={option.value} value={option.value.toString()}>
+                          {option.label}
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
                 </div>
               </div>
 
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                 <div className="space-y-2">
                   <Label htmlFor="sdmWilayahId">SDM Wilayah (Mentor)</Label>
-                  <Input id="sdmWilayahId" type="number" {...form.register("sdmWilayahId", { valueAsNumber: true })} />
+                  <Select onValueChange={(value) => form.setValue("sdmWilayahId", Number(value))} value={form.watch("sdmWilayahId")?.toString() || ""}>
+                    <SelectTrigger id="sdmWilayahId">
+                      <SelectValue placeholder="Pilih SDM wilayah" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      {sdmOptions.map((option) => (
+                        <SelectItem key={option.value} value={option.value.toString()}>
+                          {option.label}
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
                 </div>
                 <div className="space-y-2">
                   <Label htmlFor="namaMentorManual">Nama Mentor Manual</Label>
@@ -833,7 +1107,14 @@ export function AnakForm({ initialData, isEdit = false, anakId }: AnakFormProps)
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                 <div className="space-y-2">
                   <Label htmlFor="penghasilanTinggal">Penghasilan Tinggal</Label>
-                  <Input id="penghasilanTinggal" type="number" {...form.register("penghasilanTinggal", { valueAsNumber: true })} />
+                  <Input 
+                    id="penghasilanTinggal" 
+                    type="number" 
+                    {...form.register("penghasilanTinggal", { 
+                      valueAsNumber: true,
+                      setValueAs: (v) => v === "" ? undefined : Number(v)
+                    })} 
+                  />
                 </div>
                 <div className="space-y-2">
                   <Label htmlFor="pekerjaanTinggal">Pekerjaan Tinggal</Label>

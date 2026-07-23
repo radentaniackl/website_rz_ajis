@@ -82,7 +82,7 @@ export async function createPembinaanDokumentasiAction(data: PembinaanDokumentas
     }
 
     // RBAC: Hanya Super Admin dan Branch Admin yang bisa create dokumentasi
-    if (session.user.role !== '1' && session.user.role !== '2') {
+    if (session.user.id_group_user !== 1 && session.user.id_group_user !== 2) {
       return { success: false, error: 'Anda tidak memiliki izin untuk menambah dokumentasi' };
     }
 
@@ -112,7 +112,7 @@ export async function updatePembinaanDokumentasiAction(id: number, data: Pembina
     }
 
     // RBAC: Hanya Super Admin dan Branch Admin yang bisa update dokumentasi
-    if (session.user.role !== '1' && session.user.role !== '2') {
+    if (session.user.id_group_user !== 1 && session.user.id_group_user !== 2) {
       return { success: false, error: 'Anda tidak memiliki izin untuk mengubah dokumentasi' };
     }
 
@@ -142,7 +142,7 @@ export async function deletePembinaanDokumentasiAction(id: number) {
       return { success: false, error: 'Unauthorized' };
     }
 
-    if (session.user.role !== '1' && session.user.role !== '2') {
+    if (session.user.id_group_user !== 1 && session.user.id_group_user !== 2) {
       return { success: false, error: 'Anda tidak memiliki izin untuk menghapus pembinaan dokumentasi' };
     }
 

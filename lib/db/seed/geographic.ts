@@ -1,4 +1,4 @@
-import { refPropinsi, refKabupaten, refKecamatan, refDesa } from '@/db/schema';
+import { refPropinsi, refKabupaten, refKecamatan, refDesa } from '@/lib/db/schema';
 import { eq } from 'drizzle-orm';
 
 export async function seedGeographic(db: any) {

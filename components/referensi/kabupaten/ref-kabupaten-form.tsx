@@ -33,6 +33,8 @@ export function RefKabupatenForm({ mode, initialData, propinsiOptions }: RefKabu
     initialData?.propinsiId.toString() ?? ''
   );
 
+  console.log('RefKabupatenForm rendered with:', { mode, initialData, propinsiOptions });
+
   const {
     register,
     handleSubmit,
@@ -58,6 +60,8 @@ export function RefKabupatenForm({ mode, initialData, propinsiOptions }: RefKabu
           aktif: 'y',
         },
   });
+
+  console.log('RefKabupatenForm form initialized');
 
   useEffect(() => {
     if (initialData) {

@@ -75,7 +75,7 @@ export async function createSemesterAction(data: SemesterInput) {
     }
 
     // RBAC: Hanya Super Admin yang bisa create semester
-    if (session.user.role !== '1') {
+    if (session.user.id_group_user !== 1) {
       return { success: false, error: 'Anda tidak memiliki izin untuk menambah semester' };
     }
 
@@ -112,7 +112,7 @@ export async function updateSemesterAction(id: number, data: SemesterUpdateInput
     }
 
     // RBAC: Hanya Super Admin yang bisa update semester
-    if (session.user.role !== '1') {
+    if (session.user.id_group_user !== 1) {
       return { success: false, error: 'Anda tidak memiliki izin untuk mengubah semester' };
     }
 
@@ -150,7 +150,7 @@ export async function deleteSemesterAction(id: number) {
     }
 
     // RBAC: Hanya Super Admin yang bisa delete semester
-    if (session.user.role !== '1') {
+    if (session.user.id_group_user !== 1) {
       return { success: false, error: 'Anda tidak memiliki izin untuk menghapus semester' };
     }
 
@@ -183,7 +183,7 @@ export async function setActiveSemesterAction(id: number) {
     }
 
     // RBAC: Hanya Super Admin yang bisa set active semester
-    if (session.user.role !== '1') {
+    if (session.user.id_group_user !== 1) {
       return { success: false, error: 'Anda tidak memiliki izin untuk mengubah semester aktif' };
     }
 

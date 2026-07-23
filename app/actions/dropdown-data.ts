@@ -1,7 +1,7 @@
 'use server';
 
 import { db } from '@/lib/repositories/base.repository';
-import { refDesa, ajisWilayahPembinaan, ajisKantor, ajisSdmWilayah, ajisSemester, donatur } from '@/db/schema';
+import { refDesa, ajisWilayahPembinaan, ajisKantor, ajisSdmWilayah, ajisSemester, donatur } from '@/lib/db/schema';
 import { eq } from 'drizzle-orm';
 
 export async function getDesaOptions() {

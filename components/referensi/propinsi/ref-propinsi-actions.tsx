@@ -35,13 +35,17 @@ export function RefPropinsiActions({ id, canEdit = true, canDelete = true }: Ref
     setIsDeleting(true);
     try {
       const result = await deleteRefPropinsi(id);
+      console.log('Delete result:', result);
       if (result.success) {
         toast.success('Propinsi berhasil dihapus (permanen)');
         setIsDeleteDialogOpen(false);
+        window.location.reload();
       } else {
+        console.error('Delete error:', result.error);
         toast.error(result.error || 'Gagal menghapus propinsi');
       }
     } catch (error) {
+      console.error('Delete exception:', error);
       toast.error('Terjadi kesalahan saat menghapus propinsi');
     } finally {
       setIsDeleting(false);

@@ -1,4 +1,4 @@
-import { donatur } from '@/db/schema';
+import { donatur } from '@/lib/db/schema';
 import { db } from '@/lib/repositories/base.repository';
 
 export async function seedDonatur() {

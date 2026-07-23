@@ -1,5 +1,5 @@
 import { db } from '@/lib/db';
-import { refKabupaten, refKecamatan } from '@/db/schema';
+import { refKabupaten, refKecamatan } from '@/lib/db/schema';
 import { eq } from 'drizzle-orm';
 import { refKabupatenRepository } from '@/lib/repositories/ref-kabupaten.repository';
 import type { RefKabupatenInsert } from '@/lib/repositories/ref-kabupaten.repository';

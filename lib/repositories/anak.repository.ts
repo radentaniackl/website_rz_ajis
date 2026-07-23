@@ -1,5 +1,5 @@
 import { eq, ilike, and, count, desc, asc, sql, type SQL } from 'drizzle-orm';
-import { ajisAnak, ajisWilayahPembinaan, ajisKantor, refDesa } from '@/db/schema';
+import { ajisAnak, ajisWilayahPembinaan, ajisKantor, refDesa } from '@/lib/db/schema';
 import { db, getOffset, safeQuery, type ListParams } from './base.repository';
 
 /**

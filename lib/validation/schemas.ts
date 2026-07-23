@@ -803,3 +803,34 @@ export const pembinaanDokumentasiUpdateSchema = z.preprocess(cleanAnakFormValues
 
 export type PembinaanDokumentasiInput = z.infer<typeof pembinaanDokumentasiSchema>;
 export type PembinaanDokumentasiUpdateInput = z.infer<typeof pembinaanDokumentasiUpdateSchema>;
+
+// SDM Wilayah Schemas
+const sdmWilayahObjectSchema = z.object({
+  kodeLama: z.number().int().optional(),
+  nik: z.string().max(20, 'NIK maksimal 20 karakter').optional().or(z.literal('')),
+  namaLengkap: z.string().min(1, 'Nama lengkap wajib diisi').max(100, 'Maksimal 100 karakter'),
+  jenisKelamin: z.string().length(1).optional().or(z.literal('')),
+  alamat: z.string().max(200).optional().or(z.literal('')),
+  desaId: z.number().int().positive().optional(),
+  jenjangPendidikan: z.string().max(10).optional().or(z.literal('')),
+  tglBergabung: z.string().optional().or(z.literal('')),
+  tglKeluar: z.string().optional().or(z.literal('')),
+  telp: z.string().max(20).optional().or(z.literal('')),
+  hp: z.string().max(20).optional().or(z.literal('')),
+  email: z.string().email('Format email tidak valid').max(100).optional().or(z.literal('')),
+  keterangan: z.string().max(200).optional().or(z.literal('')),
+  keaktifanEdukasi: z.string().length(1).optional().or(z.literal('')),
+  foto: z.string().max(200).optional().or(z.literal('')),
+  aktif: z.string().max(10).default('y'),
+  penugasanWilayahId: z.number().int().positive().optional(),
+  penugasanKantorId: z.number().int().positive().optional(),
+  penugasanFungsiStruktur: z.string().max(16).optional().or(z.literal('')),
+  penugasanKeaktifanEdukasi: z.string().length(1).optional().or(z.literal('')),
+});
+
+// Use preprocess if necessary for empty strings turning to null or omitting
+export const sdmWilayahSchema = z.preprocess(cleanAnakFormValues, sdmWilayahObjectSchema);
+export const sdmWilayahUpdateSchema = z.preprocess(cleanAnakFormValues, sdmWilayahObjectSchema.partial());
+
+export type SdmWilayahInput = z.infer<typeof sdmWilayahSchema>;
+export type SdmWilayahUpdateInput = z.infer<typeof sdmWilayahUpdateSchema>;

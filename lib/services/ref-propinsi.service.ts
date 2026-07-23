@@ -1,5 +1,5 @@
 import { refPropinsiRepository } from '../repositories/ref-propinsi.repository';
-import { refKabupaten } from '@/db/schema';
+import { refKabupaten } from '@/lib/db/schema';
 import { db } from '@/lib/db';
 import { eq } from 'drizzle-orm';
 import type { RefPropinsiInsert } from '../repositories/ref-propinsi.repository';

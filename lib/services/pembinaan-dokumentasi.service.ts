@@ -1,5 +1,5 @@
 import * as dokumentasiRepo from '@/lib/repositories/pembinaan-dokumentasi.repository';
-import { pembinaanDokumentasi } from '@/db/schema';
+import { pembinaanDokumentasi } from '@/lib/db/schema';
 import { db } from '@/lib/repositories/base.repository';
 import { buildRbacFilter } from '@/lib/rbac/filters';
 import { eq, and } from 'drizzle-orm';

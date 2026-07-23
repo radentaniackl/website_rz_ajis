@@ -1,9 +1,9 @@
 "use server";
 
+import { auth } from '@/auth';
 import { refPropinsiRepository } from '@/lib/repositories/ref-propinsi.repository';
 import { refPropinsiService } from '@/lib/services/ref-propinsi.service';
 import { refPropinsiSchema, refPropinsiUpdateSchema, type RefPropinsiInput, type RefPropinsiUpdateInput } from '@/lib/validation/schemas';
-import { requireAuth } from '@/lib/auth/utils';
 import { revalidatePath } from 'next/cache';
 
 /**
@@ -18,7 +18,9 @@ export async function getRefPropinsiList(params: {
   direction?: 'asc' | 'desc';
 }) {
   try {
+    console.log('getRefPropinsiList called with params:', params);
     const result = await refPropinsiRepository.findMany(params);
+    console.log('getRefPropinsiList repository result:', result);
     return { success: true, data: result };
   } catch (error) {
     console.error('Error fetching ref propinsi list:', error);
@@ -73,8 +75,11 @@ export async function searchRefPropinsiByName(query: string, limit = 10) {
  */
 export async function createRefPropinsi(data: RefPropinsiInput) {
   try {
-    // Validasi RBAC
-    const session = await requireAuth();
+    const session = await auth();
+    if (!session?.user) {
+      return { success: false, error: 'Unauthorized' };
+    }
+
     const user = {
       id: session.user.id,
       id_group_user: session.user.id_group_user,
@@ -111,8 +116,11 @@ export async function createRefPropinsi(data: RefPropinsiInput) {
  */
 export async function updateRefPropinsi(id: number, data: RefPropinsiUpdateInput) {
   try {
-    // Validasi RBAC
-    const session = await requireAuth();
+    const session = await auth();
+    if (!session?.user) {
+      return { success: false, error: 'Unauthorized' };
+    }
+
     const user = {
       id: session.user.id,
       id_group_user: session.user.id_group_user,
@@ -150,8 +158,11 @@ export async function updateRefPropinsi(id: number, data: RefPropinsiUpdateInput
  */
 export async function softDeleteRefPropinsi(id: number) {
   try {
-    // Validasi RBAC
-    const session = await requireAuth();
+    const session = await auth();
+    if (!session?.user) {
+      return { success: false, error: 'Unauthorized' };
+    }
+
     const user = {
       id: session.user.id,
       id_group_user: session.user.id_group_user,
@@ -186,8 +197,11 @@ export async function softDeleteRefPropinsi(id: number) {
  */
 export async function deleteRefPropinsi(id: number) {
   try {
-    // Validasi RBAC
-    const session = await requireAuth();
+    const session = await auth();
+    if (!session?.user) {
+      return { success: false, error: 'Unauthorized' };
+    }
+
     const user = {
       id: session.user.id,
       id_group_user: session.user.id_group_user,

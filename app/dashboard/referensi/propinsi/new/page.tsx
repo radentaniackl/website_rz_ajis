@@ -4,6 +4,8 @@ import { ArrowLeft } from 'lucide-react';
 import Link from 'next/link';
 
 export default function NewRefPropinsiPage() {
+  console.log('NewRefPropinsiPage rendered');
+
   return (
     <div className="space-y-6">
       <div className="flex items-center gap-4">
@@ -19,6 +21,10 @@ export default function NewRefPropinsiPage() {
             Isi form di bawah untuk menambah data propinsi baru
           </p>
         </div>
+      </div>
+
+      <div className="border border-blue-200 bg-blue-50 p-4 rounded-lg">
+        <p className="text-blue-600">Debug: About to render form...</p>
       </div>
 
       <RefPropinsiForm mode="create" />

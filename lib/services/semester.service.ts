@@ -1,8 +1,8 @@
 import * as semesterRepo from '@/lib/repositories/semester.repository';
-import { ajisSemester } from '@/db/schema';
+import { ajisSemester } from '@/lib/db/schema';
 import { db } from '@/lib/repositories/base.repository';
 import { count, sql } from 'drizzle-orm';
-import { pembinaan, laporanSemester, laporanSemesterPembinaan } from '@/db/schema';
+import { pembinaan, laporanSemester, laporanSemesterPembinaan } from '@/lib/db/schema';
 
 export type UserSession = {
   id: number;

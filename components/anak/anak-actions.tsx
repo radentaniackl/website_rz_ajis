@@ -20,6 +20,8 @@ import Link from 'next/link';
 import { useState } from 'react';
 import { forceDeleteAnakAction } from '@/app/actions/anak';
 import { toast } from 'sonner';
+import { ClipboardList } from 'lucide-react';
+import { SurveyForm } from './survey-form';
 
 interface AnakActionsProps {
   id: number;
@@ -31,6 +33,7 @@ interface AnakActionsProps {
 export function AnakActions({ id, canEdit = true, canDelete = true }: AnakActionsProps) {
   const [isDeleteDialogOpen, setIsDeleteDialogOpen] = useState(false);
   const [isDeleting, setIsDeleting] = useState(false);
+  const [isSurveyOpen, setIsSurveyOpen] = useState(false);
 
   const handleDelete = async () => {
     setIsDeleting(true);
@@ -73,12 +76,18 @@ export function AnakActions({ id, canEdit = true, canDelete = true }: AnakAction
             </Link>
           </DropdownMenuItem>
           {canEdit && (
-            <DropdownMenuItem>
-              <Link href={`/dashboard/anak/${id}/edit`} className="flex items-center w-full">
-                <Pencil className="mr-2 h-4 w-4" />
-                Edit
-              </Link>
-            </DropdownMenuItem>
+            <>
+              <DropdownMenuItem onClick={() => setIsSurveyOpen(true)}>
+                <ClipboardList className="mr-2 h-4 w-4" />
+                Isi Survey
+              </DropdownMenuItem>
+              <DropdownMenuItem>
+                <Link href={`/dashboard/anak/${id}/edit`} className="flex items-center w-full">
+                  <Pencil className="mr-2 h-4 w-4" />
+                  Edit
+                </Link>
+              </DropdownMenuItem>
+            </>
           )}
           {canDelete && (
             <DropdownMenuItem
@@ -118,6 +127,15 @@ export function AnakActions({ id, canEdit = true, canDelete = true }: AnakAction
           </DialogFooter>
         </DialogContent>
       </Dialog>
+
+      <SurveyForm
+        anakId={id}
+        open={isSurveyOpen}
+        onOpenChange={setIsSurveyOpen}
+        onSubmitSuccess={() => {
+          // You could optionally refresh data or trigger router.refresh() here
+        }}
+      />
     </>
   );
 }

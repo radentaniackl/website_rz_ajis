@@ -4,7 +4,7 @@ import { signIn, signOut } from '@/auth';
 import { loginSchema, LoginInput, resetPasswordSchema, ResetPasswordInput } from '@/lib/validations/auth';
 import { AuthError } from 'next-auth';
 import { db } from '@/lib/db';
-import { ajisUser } from '@/db/schema';
+import { ajisUser } from '@/lib/db/schema';
 import { eq } from 'drizzle-orm';
 import { hashPassword } from '@/lib/auth/password';
 

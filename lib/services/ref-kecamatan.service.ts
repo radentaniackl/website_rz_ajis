@@ -1,5 +1,5 @@
 import { db } from '@/lib/db';
-import { refKecamatan, refDesa } from '@/db/schema';
+import { refKecamatan, refDesa } from '@/lib/db/schema';
 import { eq } from 'drizzle-orm';
 import { refKecamatanRepository } from '@/lib/repositories/ref-kecamatan.repository';
 import type { RefKecamatanInsert } from '@/lib/repositories/ref-kecamatan.repository';

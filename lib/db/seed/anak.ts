@@ -1,4 +1,4 @@
-import { ajisAnak } from '@/db/schema';
+import { ajisAnak } from '@/lib/db/schema';
 import { eq } from 'drizzle-orm';
 import type { PostgresJsDatabase } from 'drizzle-orm/postgres-js';
 

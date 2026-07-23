@@ -1,5 +1,5 @@
 import * as anakRepo from '@/lib/repositories/anak.repository';
-import { ajisAnak } from '@/db/schema';
+import { ajisAnak } from '@/lib/db/schema';
 import { buildRbacFilter } from '@/lib/rbac/filters';
 import { db } from '@/lib/repositories/base.repository';
 import { count, sql, and, eq } from 'drizzle-orm';
@@ -15,7 +15,7 @@ import {
   laporanPrestasi,
   prestasiAnak,
   pembinaan,
-} from '@/db/schema';
+} from '@/lib/db/schema';
 
 /**
  * Anak Service

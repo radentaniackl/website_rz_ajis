@@ -1,5 +1,5 @@
 import { eq, ilike, and, count, desc, asc, type SQL } from 'drizzle-orm';
-import { ajisUser } from '@/db/schema';
+import { ajisUser } from '@/lib/db/schema';
 import { db, getOffset, safeQuery, type ListParams } from './base.repository';
 
 /**

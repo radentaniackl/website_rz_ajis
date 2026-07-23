@@ -60,7 +60,7 @@ export async function createDonaturAction(data: DonaturInput) {
     }
 
     // RBAC: Hanya Super Admin yang bisa create donatur
-    if (session.user.role !== '1') {
+    if (session.user.id_group_user !== 1) {
       return { success: false, error: 'Anda tidak memiliki izin untuk menambah donatur' };
     }
 
@@ -97,7 +97,7 @@ export async function updateDonaturAction(id: number, data: DonaturUpdateInput) 
     }
 
     // RBAC: Hanya Super Admin yang bisa update donatur
-    if (session.user.role !== '1') {
+    if (session.user.id_group_user !== 1) {
       return { success: false, error: 'Anda tidak memiliki izin untuk mengubah donatur' };
     }
 
@@ -135,7 +135,7 @@ export async function deleteDonaturAction(id: number) {
     }
 
     // RBAC: Hanya Super Admin yang bisa delete donatur
-    if (session.user.role !== '1') {
+    if (session.user.id_group_user !== 1) {
       return { success: false, error: 'Anda tidak memiliki izin untuk menghapus donatur' };
     }
 

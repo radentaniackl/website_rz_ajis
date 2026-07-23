@@ -16,186 +16,273 @@ import {
   Award,
   Settings,
   Database,
-  Heart
+  Heart,
+  ChevronDown,
+  GraduationCap,
+  UserCog,
+  Contact
 } from 'lucide-react';
 import { Session } from 'next-auth';
+
+import { useTabs } from '@/hooks/use-tabs';
 
 interface AppSidebarProps {
   session: Session | null;
   isCollapsed?: boolean;
+  onClose?: () => void; // Added for mobile overlay
 }
 
-export function AppSidebar({ session, isCollapsed = false }: AppSidebarProps) {
+export function AppSidebar({ session, isCollapsed = false, onClose }: AppSidebarProps) {
   const pathname = usePathname();
   const [mounted, setMounted] = useState(false);
+  const [openGroups, setOpenGroups] = useState<Record<string, boolean>>({});
+  const { addTab } = useTabs();
 
   useEffect(() => {
     setMounted(true);
   }, []);
 
-  const activePath = mounted ? pathname : '';
   const role = session?.user?.id_group_user;
 
-  const routes = [
+  const SECTIONS = [
     {
-      label: 'Dashboard',
+      key: "dashboard",
+      title: "Dashboard",
       icon: LayoutDashboard,
-      href: '/dashboard',
-      roles: [1, 2, 9], // Super, Branch, Korwil
+      standalone: true,
+      items: [{ href: "/dashboard", label: "Ringkasan", icon: LayoutDashboard, iconName: "LayoutDashboard", roles: [1, 2, 9] }],
     },
     {
-      label: 'Referensi',
+      key: "referensi",
+      title: "Referensi Wilayah",
       icon: Database,
-      href: '/dashboard/referensi',
-      roles: [1, 2, 9],
+      items: [
+        { href: "/dashboard/referensi", label: "Overview", icon: Database, iconName: "Database", roles: [1, 2, 9] },
+        { href: "/dashboard/referensi/propinsi", label: "Propinsi", icon: Map, iconName: "Map", roles: [1, 2, 9] },
+        { href: "/dashboard/referensi/kabupaten", label: "Kabupaten", icon: Map, iconName: "Map", roles: [1, 2, 9] },
+        { href: "/dashboard/referensi/kecamatan", label: "Kecamatan", icon: Map, iconName: "Map", roles: [1, 2, 9] },
+        { href: "/dashboard/referensi/desa", label: "Desa", icon: Map, iconName: "Map", roles: [1, 2, 9] },
+      ],
     },
     {
-      label: 'Propinsi',
-      icon: Map,
-      href: '/dashboard/referensi/propinsi',
-      roles: [1, 2, 9],
-    },
-    {
-      label: 'Kabupaten',
-      icon: Map,
-      href: '/dashboard/referensi/kabupaten',
-      roles: [1, 2, 9],
-    },
-    {
-      label: 'Kecamatan',
-      icon: Map,
-      href: '/dashboard/referensi/kecamatan',
-      roles: [1, 2, 9],
-    },
-    {
-      label: 'Desa',
-      icon: Map,
-      href: '/dashboard/referensi/desa',
-      roles: [1, 2, 9],
-    },
-    {
-      label: 'Anak',
-      icon: Users,
-      href: '/dashboard/anak',
-      roles: [1, 2, 9],
-    },
-    {
-      label: 'Donatur',
-      icon: Heart,
-      href: '/dashboard/donatur',
-      roles: [1], // Super Admin only based on our Donatur Action RBAC
-    },
-    {
-      label: 'Kantor',
+      key: "master",
+      title: "Master Data",
       icon: Building2,
-      href: '/dashboard/kantor',
-      roles: [1], // Super only
+      items: [
+        { href: "/dashboard/kantor", label: "Kantor", icon: Building2, iconName: "Building2", roles: [1] },
+        { href: "/dashboard/wilayah", label: "Wilayah Pembinaan", icon: Map, iconName: "Map", roles: [1, 2] },
+        { href: "/dashboard/semester", label: "Semester", icon: CalendarDays, iconName: "CalendarDays", roles: [1] },
+        { href: "/dashboard/sdm", label: "SDM/Fasilitator", icon: Contact, iconName: "Contact", roles: [1, 2] },
+      ],
     },
     {
-      label: 'Wilayah',
-      icon: Map,
-      href: '/dashboard/wilayah',
-      roles: [1, 2], // Super, Branch
-    },
-    {
-      label: 'Semester',
-      icon: CalendarDays,
-      href: '/dashboard/semester',
-      roles: [1], // Super only
-    },
-    {
-      label: 'Dokumentasi',
-      icon: FileText,
-      href: '/dashboard/pembinaan-dokumentasi',
-      roles: [1, 2, 9], // Super, Branch, Korwil
-    },
-    {
-      label: 'Users',
+      key: "anak",
+      title: "Data Anak",
       icon: Users,
-      href: '/dashboard/users',
-      roles: [1, 2],
+      items: [
+        { href: "/dashboard/anak", label: "Data Anak", icon: Users, iconName: "Users", roles: [1, 2, 9] },
+        { href: "/dashboard/donatur", label: "Donatur", icon: Heart, iconName: "Heart", roles: [1] },
+      ],
     },
     {
-      label: 'Sesi Pembinaan',
-      icon: CalendarDays,
-      href: '/dashboard/sesi',
-      roles: [1, 2, 9],
-    },
-    {
-      label: 'Hafalan',
+      key: "pembinaan",
+      title: "Aktivitas Pembinaan",
       icon: BookOpen,
-      href: '/dashboard/hafalan',
-      roles: [1, 2, 9],
+      items: [
+        { href: "/dashboard/sesi", label: "Sesi Pembinaan", icon: CalendarDays, iconName: "CalendarDays", roles: [1, 2, 9] },
+        { href: "/dashboard/hafalan", label: "Hafalan", icon: BookOpen, iconName: "BookOpen", roles: [1, 2, 9] },
+        { href: "/dashboard/evaluasi", label: "Evaluasi", icon: FileCheck2, iconName: "FileCheck2", roles: [1, 2, 9] },
+        { href: "/dashboard/pembinaan-dokumentasi", label: "Dokumentasi", icon: FileText, iconName: "FileText", roles: [1, 2, 9] },
+      ],
     },
     {
-      label: 'Evaluasi',
-      icon: FileCheck2,
-      href: '/dashboard/evaluasi',
-      roles: [1, 2, 9],
-    },
-    {
-      label: 'Laporan Semester',
+      key: "laporan",
+      title: "Laporan",
       icon: FileText,
-      href: '/dashboard/laporan',
-      roles: [1, 2, 9],
+      items: [
+        { href: "/dashboard/laporan", label: "Laporan Semester", icon: FileText, iconName: "FileText", roles: [1, 2, 9] },
+        { href: "/dashboard/prestasi", label: "Laporan Prestasi", icon: Award, iconName: "Award", roles: [1, 2, 9] },
+      ],
     },
     {
-      label: 'Laporan Prestasi',
-      icon: Award,
-      href: '/dashboard/prestasi',
-      roles: [1, 2, 9],
+      key: "pengguna",
+      title: "Pengguna",
+      icon: Users,
+      items: [
+        { href: "/dashboard/users", label: "Users", icon: Users, iconName: "Users", roles: [1, 2] },
+      ],
     },
     {
-      label: 'Settings',
+      key: "sistem",
+      title: "Sistem",
       icon: Settings,
-      href: '/dashboard/settings',
-      roles: [1],
-    },
+      items: [
+        { href: "/dashboard/settings", label: "Settings", icon: Settings, iconName: "Settings", roles: [1] },
+      ],
+    }
   ];
 
-  // Show all routes if role is not available (fallback for production issues)
-  const filteredRoutes = role ? routes.filter(route => route.roles.includes(role)) : routes;
+  // Auto-open active group
+  useEffect(() => {
+    if (!mounted) return;
+    const next: Record<string, boolean> = {};
+    for (const sec of SECTIONS) {
+      if (sec.items.some((it) => pathname === it.href || pathname.startsWith(it.href + "/"))) {
+        next[sec.key] = true;
+      }
+    }
+    setOpenGroups((prev) => ({ ...prev, ...next }));
+  }, [pathname, mounted]);
 
-  // Debug: log to check if routes are being filtered
+  const toggleGroup = (key: string) => setOpenGroups((s) => ({ ...s, [key]: !s[key] }));
+
+  // Debug role (from original code)
   if (process.env.NODE_ENV === 'development') {
-    console.log('Session role:', role);
-    console.log('Filtered routes:', filteredRoutes);
+    // console.log('Session role:', role);
   }
 
-  // Always render the sidebar structure even if there are issues
+  const activePath = mounted ? pathname : '';
+
   return (
     <aside className={cn(
-      "flex flex-col border-r bg-white transition-all duration-300 ease-in-out",
-      isCollapsed ? "w-0 opacity-0 overflow-hidden" : "w-64 opacity-100"
+      "flex flex-col border-r border-sidebar-border bg-sidebar transition-all duration-300 ease-in-out lg:h-screen lg:sticky lg:top-0",
+      isCollapsed ? "w-0 opacity-0 overflow-hidden lg:w-0" : "w-64 opacity-100"
     )}>
-      <div className="flex h-14 items-center border-b px-4 lg:h-[60px] lg:px-6">
-        <Link href="/dashboard" className="flex items-center gap-2 font-semibold">
-          <span className="text-xl font-bold text-primary">RZ AJIS</span>
+      {/* Header Sidebar */}
+      <div className="flex h-16 items-center gap-2.5 border-b border-sidebar-border px-5 shrink-0">
+        <Link href="/dashboard" className="flex items-center gap-2.5 outline-none" onClick={onClose}>
+          <div className="flex h-9 w-9 items-center justify-center rounded-lg bg-primary text-primary-foreground shadow-sm">
+            <GraduationCap className="h-5 w-5" />
+          </div>
+          <div className="leading-tight">
+            <div className="text-base font-extrabold text-sidebar-foreground">AJIS</div>
+            <div className="text-[10px] font-semibold uppercase tracking-wider text-muted-foreground">
+              Anak Juara IS
+            </div>
+          </div>
         </Link>
       </div>
-      <div className="flex-1 overflow-auto py-2">
-        <nav className="grid items-start px-2 text-sm font-medium lg:px-4 space-y-1">
-          {filteredRoutes.map((route) => (
-            <Link
-              key={route.href}
-              href={route.href}
-              className={cn(
-                'flex items-center gap-3 rounded-lg px-3 py-2 transition-all hover:text-primary',
-                activePath === route.href || activePath.startsWith(`${route.href}/`)
-                  ? 'bg-muted text-primary'
-                  : 'text-muted-foreground'
+
+      {/* Navigasi Menu */}
+      <nav className="flex-1 space-y-0.5 overflow-y-auto p-3">
+        {SECTIONS.map((sec) => {
+          // Filter out items not allowed by role (or if role is undefined, allow them initially or gracefully)
+          const items = sec.items.filter(it => !role || it.roles.includes(role));
+          if (items.length === 0) return null;
+
+          const isActiveSection = mounted && items.some(
+            (it) => activePath === it.href || activePath.startsWith(it.href + "/")
+          );
+
+          // Standalone (Dashboard)
+          if (sec.standalone) {
+            const it = items[0];
+            const active = activePath === it.href;
+            return (
+              <Link
+                key={sec.key}
+                href={it.href}
+                onClick={() => {
+                  onClose?.();
+                  addTab({ path: it.href, label: it.label, iconName: it.iconName });
+                }}
+                className={cn(
+                  "flex items-center gap-3 rounded-md px-3 py-2.5 text-sm font-bold transition-colors",
+                  active
+                    ? "bg-primary text-primary-foreground shadow-sm"
+                    : "text-sidebar-foreground hover:bg-sidebar-accent hover:text-sidebar-accent-foreground"
+                )}
+              >
+                <sec.icon className="h-4 w-4" />
+                <span>{sec.title}</span>
+              </Link>
+            );
+          }
+
+          const isOpen = openGroups[sec.key] ?? isActiveSection;
+
+          return (
+            <div key={sec.key}>
+              <button
+                type="button"
+                onClick={() => toggleGroup(sec.key)}
+                className={cn(
+                  "flex w-full items-center gap-3 rounded-md px-3 py-2.5 text-sm font-bold transition-colors",
+                  isActiveSection
+                    ? "text-primary"
+                    : "text-sidebar-foreground hover:bg-sidebar-accent hover:text-sidebar-accent-foreground"
+                )}
+              >
+                <sec.icon className="h-4 w-4" />
+                <span className="flex-1 text-left">{sec.title}</span>
+                <ChevronDown
+                  className={cn(
+                    "h-4 w-4 text-muted-foreground transition-transform",
+                    isOpen && "rotate-180"
+                  )}
+                />
+              </button>
+              
+              {isOpen && (
+                <ul className="ml-4 mt-1 space-y-0.5 border-l border-sidebar-border/60 pl-2">
+                  {items.map((it) => {
+                    const active = mounted && (activePath === it.href || activePath.startsWith(it.href + "/"));
+                    return (
+                      <li key={it.href}>
+                        <Link
+                          href={it.href}
+                          onClick={() => {
+                            onClose?.();
+                            addTab({ path: it.href, label: it.label, iconName: it.iconName });
+                          }}
+                          className={cn(
+                            "flex items-center gap-2.5 rounded-md px-3 py-2 text-[13px] font-semibold transition-colors",
+                            active
+                              ? "bg-primary/10 text-primary"
+                              : "text-muted-foreground hover:bg-sidebar-accent hover:text-sidebar-accent-foreground"
+                          )}
+                        >
+                          <span
+                            className={cn(
+                              "h-1.5 w-1.5 rounded-full shrink-0",
+                              active ? "bg-primary" : "bg-muted-foreground/40"
+                            )}
+                          />
+                          <it.icon className="h-3.5 w-3.5 shrink-0" />
+                          <span>{it.label}</span>
+                        </Link>
+                      </li>
+                    );
+                  })}
+                </ul>
               )}
-            >
-              <route.icon className="h-4 w-4" />
-              {route.label}
-            </Link>
-          ))}
-          {filteredRoutes.length === 0 && (
-            <div className="px-4 py-2 text-sm text-muted-foreground">
-              No routes available for your role
             </div>
-          )}
-        </nav>
+          );
+        })}
+
+        {/* Fallback when no routes */}
+        {mounted && SECTIONS.flatMap(s => s.items.filter(it => !role || it.roles.includes(role))).length === 0 && (
+          <div className="px-4 py-2 text-sm text-muted-foreground">
+            No routes available for your role
+          </div>
+        )}
+      </nav>
+
+      {/* Profil Bawah */}
+      <div className="border-t border-sidebar-border p-4 shrink-0">
+        <div className="flex items-center gap-3 rounded-lg bg-muted/60 p-3">
+          <div className="flex h-9 w-9 items-center justify-center rounded-full bg-primary/15 text-primary shrink-0">
+            <UserCog className="h-4 w-4" />
+          </div>
+          <div className="min-w-0 flex-1 leading-tight">
+            <div className="truncate text-xs font-bold text-foreground">
+              {mounted ? session?.user?.username || 'User' : 'User'}
+            </div>
+            <div className="truncate text-[10px] text-muted-foreground">
+              {role === 1 ? 'Super Admin' : role === 2 ? 'Branch Admin' : role === 9 ? 'Korwil' : 'Pengguna'}
+            </div>
+          </div>
+        </div>
       </div>
     </aside>
   );

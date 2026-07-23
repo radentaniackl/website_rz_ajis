@@ -1,9 +1,9 @@
 "use server";
 
+import { auth } from '@/auth';
 import { refDesaRepository } from '@/lib/repositories/ref-desa.repository';
 import { refDesaService } from '@/lib/services/ref-desa.service';
 import { refDesaSchema, refDesaUpdateSchema, type RefDesaInput, type RefDesaUpdateInput } from '@/lib/validation/schemas';
-import { requireAuth } from '@/lib/auth/utils';
 import { revalidatePath } from 'next/cache';
 
 export async function getRefDesaList(params: {
@@ -53,7 +53,11 @@ export async function getActiveRefDesaList() {
 
 export async function createRefDesa(data: RefDesaInput) {
   try {
-    const session = await requireAuth();
+    const session = await auth();
+    if (!session?.user) {
+      return { success: false, error: 'Unauthorized' };
+    }
+
     const user = {
       id: session.user.id,
       id_group_user: session.user.id_group_user,
@@ -81,7 +85,11 @@ export async function createRefDesa(data: RefDesaInput) {
 
 export async function updateRefDesa(id: number, data: RefDesaUpdateInput) {
   try {
-    const session = await requireAuth();
+    const session = await auth();
+    if (!session?.user) {
+      return { success: false, error: 'Unauthorized' };
+    }
+
     const user = {
       id: session.user.id,
       id_group_user: session.user.id_group_user,
@@ -110,7 +118,11 @@ export async function updateRefDesa(id: number, data: RefDesaUpdateInput) {
 
 export async function softDeleteRefDesa(id: number) {
   try {
-    const session = await requireAuth();
+    const session = await auth();
+    if (!session?.user) {
+      return { success: false, error: 'Unauthorized' };
+    }
+
     const user = {
       id: session.user.id,
       id_group_user: session.user.id_group_user,
@@ -138,7 +150,11 @@ export async function softDeleteRefDesa(id: number) {
 
 export async function deleteRefDesa(id: number) {
   try {
-    const session = await requireAuth();
+    const session = await auth();
+    if (!session?.user) {
+      return { success: false, error: 'Unauthorized' };
+    }
+
     const user = {
       id: session.user.id,
       id_group_user: session.user.id_group_user,

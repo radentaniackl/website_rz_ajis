@@ -1,9 +1,9 @@
 "use server";
 
+import { auth } from '@/auth';
 import { refKabupatenRepository } from '@/lib/repositories/ref-kabupaten.repository';
 import { refKabupatenService } from '@/lib/services/ref-kabupaten.service';
 import { refKabupatenSchema, refKabupatenUpdateSchema, type RefKabupatenInput, type RefKabupatenUpdateInput } from '@/lib/validation/schemas';
-import { requireAuth } from '@/lib/auth/utils';
 import { revalidatePath } from 'next/cache';
 
 export async function getRefKabupatenList(params: {
@@ -48,7 +48,11 @@ export async function getActiveRefKabupatenList() {
 
 export async function createRefKabupaten(data: RefKabupatenInput) {
   try {
-    const session = await requireAuth();
+    const session = await auth();
+    if (!session?.user) {
+      return { success: false, error: 'Unauthorized' };
+    }
+
     const user = {
       id: session.user.id,
       id_group_user: session.user.id_group_user,
@@ -76,7 +80,11 @@ export async function createRefKabupaten(data: RefKabupatenInput) {
 
 export async function updateRefKabupaten(id: number, data: RefKabupatenUpdateInput) {
   try {
-    const session = await requireAuth();
+    const session = await auth();
+    if (!session?.user) {
+      return { success: false, error: 'Unauthorized' };
+    }
+
     const user = {
       id: session.user.id,
       id_group_user: session.user.id_group_user,
@@ -105,7 +113,11 @@ export async function updateRefKabupaten(id: number, data: RefKabupatenUpdateInp
 
 export async function softDeleteRefKabupaten(id: number) {
   try {
-    const session = await requireAuth();
+    const session = await auth();
+    if (!session?.user) {
+      return { success: false, error: 'Unauthorized' };
+    }
+
     const user = {
       id: session.user.id,
       id_group_user: session.user.id_group_user,
@@ -133,7 +145,11 @@ export async function softDeleteRefKabupaten(id: number) {
 
 export async function deleteRefKabupaten(id: number) {
   try {
-    const session = await requireAuth();
+    const session = await auth();
+    if (!session?.user) {
+      return { success: false, error: 'Unauthorized' };
+    }
+
     const user = {
       id: session.user.id,
       id_group_user: session.user.id_group_user,

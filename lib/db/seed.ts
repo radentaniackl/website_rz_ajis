@@ -3,7 +3,7 @@ config({ path: '.env.local' });
 
 import { drizzle } from 'drizzle-orm/neon-http';
 import { neon } from '@neondatabase/serverless';
-import { ajisGroupUser, ajisKantor, ajisUser } from '@/db/schema';
+import { ajisGroupUser, ajisKantor, ajisUser } from '@/lib/db/schema';
 import bcrypt from 'bcryptjs';
 
 if (!process.env.DATABASE_URL) {

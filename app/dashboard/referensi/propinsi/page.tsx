@@ -79,6 +79,8 @@ async function RefPropinsiList({
   direction?: 'asc' | 'desc';
   userRole: number;
 }) {
+  console.log('RefPropinsiList component started');
+
   const result = await getRefPropinsiList({
     page,
     pageSize: 20,
@@ -88,6 +90,8 @@ async function RefPropinsiList({
     direction,
   });
 
+  console.log('RefPropinsiList result:', result);
+
   if (!result.success || !result.data) {
     return (
       <div className="p-4 border border-red-200 bg-red-50 rounded-lg">
@@ -96,8 +100,11 @@ async function RefPropinsiList({
     );
   }
 
-  const canEdit = userRole !== 9; // Korwil cannot edit reference data
-  const canDelete = userRole !== 9; // Korwil cannot delete reference data
+  const canEdit = userRole !== 9;
+  const canDelete = userRole !== 9;
+
+  console.log('RefPropinsiList data:', result.data);
+  console.log('RefPropinsiList data.data:', result.data.data);
 
   return (
     <RefPropinsiTable

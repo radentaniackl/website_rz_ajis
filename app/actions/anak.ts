@@ -54,7 +54,7 @@ export async function getAnakDetail(id: number) {
 
     // RBAC check: ensure user can access this anak (database layer filter)
     const { buildRbacFilter } = await import('@/lib/rbac/filters');
-    const { ajisAnak } = await import('@/db/schema');
+    const { ajisAnak } = await import('@/lib/db/schema');
     const { eq, and } = await import('drizzle-orm');
     const { db } = await import('@/lib/repositories/base.repository');
 
@@ -180,7 +180,7 @@ export async function updateAnakAction(id: number, data: AnakUpdateInput) {
     }
 
     const { buildRbacFilter } = await import('@/lib/rbac/filters');
-    const { ajisAnak } = await import('@/db/schema');
+    const { ajisAnak } = await import('@/lib/db/schema');
     const { eq, and } = await import('drizzle-orm');
     const { db } = await import('@/lib/repositories/base.repository');
 

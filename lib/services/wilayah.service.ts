@@ -1,5 +1,5 @@
 import * as wilayahRepo from '@/lib/repositories/wilayah.repository';
-import { ajisWilayahPembinaan } from '@/db/schema';
+import { ajisWilayahPembinaan } from '@/lib/db/schema';
 import { buildRbacFilter } from '@/lib/rbac/filters';
 import { db } from '@/lib/repositories/base.repository';
 import { sql, count } from 'drizzle-orm';
@@ -75,7 +75,7 @@ export async function getWilayahById(id: number) {
 
 export async function checkWilayahDependencies(id: number) {
   // returns map of table -> count of referencing rows
-  const { ajisAnak } = await import('@/db/schema');
+  const { ajisAnak } = await import('@/lib/db/schema');
   const { eq } = await import('drizzle-orm');
   
   const checks = {

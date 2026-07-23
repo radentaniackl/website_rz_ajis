@@ -1,5 +1,5 @@
 import { db } from '@/lib/db';
-import { refDesa } from '@/db/schema';
+import { refDesa } from '@/lib/db/schema';
 import { eq } from 'drizzle-orm';
 import { refDesaRepository } from '@/lib/repositories/ref-desa.repository';
 import type { RefDesaInsert } from '@/lib/repositories/ref-desa.repository';

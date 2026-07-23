@@ -1,6 +1,6 @@
 #!/usr/bin/env tsx
 import { db } from '@/lib/db'
-import { ajisUser } from '@/db/schema'
+import { ajisUser } from '@/lib/db/schema'
 import { eq } from 'drizzle-orm'
 
 async function run() {

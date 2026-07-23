@@ -1,8 +1,41 @@
 import { pgTable, bigserial, varchar, index, foreignKey, bigint, smallint, text, date, jsonb, check } from "drizzle-orm/pg-core";
 import { sql } from "drizzle-orm";
 
-// Import existing tables from db/schema.ts
-import { ajisAnak, ajisWilayahPembinaan, ajisKantor, ajisSemester, donatur } from "@/db/schema";
+// Re-export core tables from db/schema.ts
+export {
+  ajisUser,
+  ajisAuditLog,
+  ajisUserWilayahPembinaan,
+  ajisGroupUser,
+  ajisKantor,
+  ajisWilayahPembinaan,
+  ajisAnak,
+  ajisSemester,
+  donatur,
+  refPropinsi,
+  refKabupaten,
+  refKecamatan,
+  refDesa,
+  ajisSdmWilayah,
+  ajisSdmWilayahRiwayat,
+  ajisSurvey,
+  program,
+  ajisSession,
+  ajisAccount,
+  ajisVerificationToken,
+  pemasangan,
+  donasiTransaksi,
+  penyaluran,
+  opnameSaldo,
+  pengajuanPergantianAnak,
+  peminjamanAjisAnak,
+  hafalanAnak,
+  penilaianAnak,
+  laporanSemester,
+  laporanSemesterPembinaan,
+  laporanPrestasi,
+  prestasiAnak,
+} from "@/db/schema";
 
 /**
  * Tabel Pembinaan (Sesi Pembinaan/Coaching Anak)

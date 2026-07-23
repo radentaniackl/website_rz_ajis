@@ -1,3 +1,5 @@
+"use client";
+
 import { PageHeader } from "@/components/shared/page-header";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { EmptyState } from "@/components/shared/empty-state";
@@ -5,8 +7,18 @@ import { Database } from "lucide-react";
 import Link from "next/link";
 import { Button } from "@/components/ui/button";
 import { ArrowRight } from "lucide-react";
+import { useTabs } from "@/hooks/use-tabs";
+import { useRouter } from "next/navigation";
 
 export default function ReferensiPage() {
+  const { addTab } = useTabs();
+  const router = useRouter();
+
+  const handleNavigate = (path: string, label: string, iconName: string) => {
+    addTab({ path, label, iconName });
+    router.push(path);
+  };
+
   return (
     <div className="space-y-6">
       <PageHeader 
@@ -26,12 +38,13 @@ export default function ReferensiPage() {
             </CardDescription>
           </CardHeader>
           <CardContent>
-            <Link href="/dashboard/referensi/propinsi">
-              <Button className="w-full">
-                Kelola Propinsi
-                <ArrowRight className="ml-2 h-4 w-4" />
-              </Button>
-            </Link>
+            <Button 
+              className="w-full"
+              onClick={() => handleNavigate("/dashboard/referensi/propinsi", "Propinsi", "Map")}
+            >
+              Kelola Propinsi
+              <ArrowRight className="ml-2 h-4 w-4" />
+            </Button>
           </CardContent>
         </Card>
 
@@ -46,12 +59,13 @@ export default function ReferensiPage() {
             </CardDescription>
           </CardHeader>
           <CardContent>
-            <Link href="/dashboard/referensi/kabupaten" className="w-full">
-              <Button className="w-full">
-                Kelola Kabupaten
-                <ArrowRight className="ml-2 h-4 w-4" />
-              </Button>
-            </Link>
+            <Button 
+              className="w-full"
+              onClick={() => handleNavigate("/dashboard/referensi/kabupaten", "Kabupaten", "Map")}
+            >
+              Kelola Kabupaten
+              <ArrowRight className="ml-2 h-4 w-4" />
+            </Button>
           </CardContent>
         </Card>
 
@@ -66,12 +80,13 @@ export default function ReferensiPage() {
             </CardDescription>
           </CardHeader>
           <CardContent>
-            <Link href="/dashboard/referensi/kecamatan" className="w-full">
-              <Button className="w-full">
-                Kelola Kecamatan
-                <ArrowRight className="ml-2 h-4 w-4" />
-              </Button>
-            </Link>
+            <Button 
+              className="w-full"
+              onClick={() => handleNavigate("/dashboard/referensi/kecamatan", "Kecamatan", "Map")}
+            >
+              Kelola Kecamatan
+              <ArrowRight className="ml-2 h-4 w-4" />
+            </Button>
           </CardContent>
         </Card>
 
@@ -86,12 +101,13 @@ export default function ReferensiPage() {
             </CardDescription>
           </CardHeader>
           <CardContent>
-            <Link href="/dashboard/referensi/desa" className="w-full">
-              <Button className="w-full">
-                Kelola Desa
-                <ArrowRight className="ml-2 h-4 w-4" />
-              </Button>
-            </Link>
+            <Button 
+              className="w-full"
+              onClick={() => handleNavigate("/dashboard/referensi/desa", "Desa", "Map")}
+            >
+              Kelola Desa
+              <ArrowRight className="ml-2 h-4 w-4" />
+            </Button>
           </CardContent>
         </Card>
       </div>

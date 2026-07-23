@@ -41,6 +41,8 @@ export function RefPropinsiTable({
   const startRow = (currentPage - 1) * pageSize + 1;
   const endRow = Math.min(currentPage * pageSize, total);
 
+  console.log('RefPropinsiTable rendered with:', { data, total, currentPage, totalPages, dataLength: data.length });
+
   return (
     <div className="space-y-4">
       <div className="border rounded-lg overflow-hidden">
@@ -63,22 +65,25 @@ export function RefPropinsiTable({
                 </TableCell>
               </TableRow>
             ) : (
-              data.map((item, index) => (
-                <TableRow key={item.id.toString()}>
-                  <TableCell className="font-medium">{startRow + index}</TableCell>
-                  <TableCell>{item.kode}</TableCell>
-                  <TableCell>{item.nama}</TableCell>
-                  <TableCell>{item.ibukota || '-'}</TableCell>
-                  <TableCell>
-                    <Badge variant={item.aktif === 'y' ? 'default' : 'secondary'}>
-                      {item.aktif === 'y' ? 'Aktif' : 'Nonaktif'}
-                    </Badge>
-                  </TableCell>
-                  <TableCell className="text-right">
-                    <RefPropinsiActions id={Number(item.id)} canEdit={canEdit} canDelete={canDelete} />
-                  </TableCell>
-                </TableRow>
-              ))
+              data.map((item, index) => {
+                console.log('Rendering item:', item);
+                return (
+                  <TableRow key={item.id.toString()}>
+                    <TableCell className="font-medium">{startRow + index}</TableCell>
+                    <TableCell>{item.kode}</TableCell>
+                    <TableCell>{item.nama}</TableCell>
+                    <TableCell>{item.ibukota || '-'}</TableCell>
+                    <TableCell>
+                      <Badge variant={item.aktif === 'y' ? 'default' : 'secondary'}>
+                        {item.aktif === 'y' ? 'Aktif' : 'Nonaktif'}
+                      </Badge>
+                    </TableCell>
+                    <TableCell className="text-right">
+                      <RefPropinsiActions id={Number(item.id)} canEdit={canEdit} canDelete={canDelete} />
+                    </TableCell>
+                  </TableRow>
+                );
+              })
             )}
           </TableBody>
         </Table>

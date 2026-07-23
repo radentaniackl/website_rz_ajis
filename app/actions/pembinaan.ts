@@ -151,7 +151,7 @@ export async function createPembinaanAction(data: PembinaanInput) {
 
     // Foreign key validation
     if (validatedData.anakId) {
-      const { ajisAnak } = await import('@/db/schema');
+      const { ajisAnak } = await import('@/lib/db/schema');
       const { eq } = await import('drizzle-orm');
       const { db } = await import('@/lib/repositories/base.repository');
       
@@ -162,7 +162,7 @@ export async function createPembinaanAction(data: PembinaanInput) {
     }
 
     if (validatedData.semesterId) {
-      const { ajisSemester } = await import('@/db/schema');
+      const { ajisSemester } = await import('@/lib/db/schema');
       const { eq } = await import('drizzle-orm');
       const { db } = await import('@/lib/repositories/base.repository');
       
@@ -240,7 +240,7 @@ export async function updatePembinaanAction(id: number, data: PembinaanUpdateInp
 
     // Foreign key validation
     if (validatedData.anakId) {
-      const { ajisAnak } = await import('@/db/schema');
+      const { ajisAnak } = await import('@/lib/db/schema');
       const { eq } = await import('drizzle-orm');
       const { db } = await import('@/lib/repositories/base.repository');
       
@@ -251,7 +251,7 @@ export async function updatePembinaanAction(id: number, data: PembinaanUpdateInp
     }
 
     if (validatedData.semesterId) {
-      const { ajisSemester } = await import('@/db/schema');
+      const { ajisSemester } = await import('@/lib/db/schema');
       const { eq } = await import('drizzle-orm');
       const { db } = await import('@/lib/repositories/base.repository');
       

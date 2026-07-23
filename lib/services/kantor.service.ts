@@ -1,5 +1,5 @@
 import * as kantorRepo from '@/lib/repositories/kantor.repository';
-import { ajisKantor } from '@/db/schema';
+import { ajisKantor } from '@/lib/db/schema';
 import { buildRbacFilter } from '@/lib/rbac/filters';
 import { db } from '@/lib/repositories/base.repository';
 import { count, sql, and, eq } from 'drizzle-orm';

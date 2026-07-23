@@ -1,4 +1,4 @@
-import { ajisSdmWilayah } from '@/db/schema';
+import { ajisSdmWilayah } from '@/lib/db/schema';
 import { eq } from 'drizzle-orm';
 
 export async function seedSdm(db: any, organizationData: any) {

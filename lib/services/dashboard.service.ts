@@ -1,5 +1,5 @@
 import { db } from '@/lib/db';
-import { ajisAnak } from '@/db/schema';
+import { ajisAnak } from '@/lib/db/schema';
 import { count, and, gte, sql } from 'drizzle-orm';
 import { UserContext } from '@/lib/rbac/filters';
 import { buildRbacFilter } from '@/lib/rbac/filters';

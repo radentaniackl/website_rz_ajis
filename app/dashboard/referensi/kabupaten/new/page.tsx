@@ -5,7 +5,11 @@ import Link from 'next/link';
 import { getActiveRefPropinsiList } from '@/app/actions/ref-propinsi';
 
 export default async function NewRefKabupatenPage() {
+  console.log('NewRefKabupatenPage started');
+
   const propinsiResult = await getActiveRefPropinsiList();
+
+  console.log('NewRefKabupatenPage propinsiResult:', propinsiResult);
 
   if (!propinsiResult.success || !propinsiResult.data) {
     return (
@@ -19,6 +23,8 @@ export default async function NewRefKabupatenPage() {
     id: Number(p.id),
     nama: p.nama,
   }));
+
+  console.log('NewRefKabupatenPage propinsiOptions:', propinsiOptions);
 
   return (
     <div className="space-y-6">
@@ -35,6 +41,10 @@ export default async function NewRefKabupatenPage() {
             Isi form untuk menambahkan kabupaten/kota baru
           </p>
         </div>
+      </div>
+
+      <div className="border border-blue-200 bg-blue-50 p-4 rounded-lg">
+        <p className="text-blue-600">Debug: About to render form with {propinsiOptions.length} propinsi options</p>
       </div>
 
       <RefKabupatenForm mode="create" propinsiOptions={propinsiOptions} />

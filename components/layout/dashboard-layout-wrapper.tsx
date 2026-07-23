@@ -2,6 +2,8 @@
 
 import { AppSidebar } from "./app-sidebar";
 import { AppHeader } from "./app-header";
+import { TabsBar } from "./tabs-bar";
+import { TabsHost } from "./tabs-host";
 import { cn } from "@/lib/utils";
 import React from "react";
 
@@ -33,8 +35,9 @@ export function DashboardLayoutWrapper({
       <div className="flex flex-1 flex-col">
         <AppHeader session={session} onSidebarToggle={toggleSidebar} />
         
-        <main className="flex-1 overflow-y-auto p-4 sm:px-6 sm:py-0 md:gap-8">
-          {children}
+        <TabsBar />
+        <main className="flex-1 overflow-y-auto p-4 sm:px-6 sm:py-0 md:gap-8 bg-muted/20">
+          <TabsHost>{children}</TabsHost>
         </main>
       </div>
     </div>

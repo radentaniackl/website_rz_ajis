@@ -1,4 +1,4 @@
-import { ajisWilayahPembinaan, ajisKantor, refDesa } from '@/db/schema';
+import { ajisWilayahPembinaan, ajisKantor, refDesa } from '@/lib/db/schema';
 import { db, getOffset, safeQuery, type ListParams } from './base.repository';
 import { eq, ilike, and, desc, or, sql } from 'drizzle-orm';
 import type { SQL } from 'drizzle-orm';

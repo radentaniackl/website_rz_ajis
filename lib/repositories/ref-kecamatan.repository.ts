@@ -1,5 +1,5 @@
 import { db, getOffset, safeQuery, type ListParams } from './base.repository';
-import { refKecamatan, refKabupaten } from '@/db/schema';
+import { refKecamatan, refKabupaten } from '@/lib/db/schema';
 import { eq, ilike, or, and, desc, asc, not } from 'drizzle-orm';
 
 type RefKecamatan = typeof refKecamatan.$inferSelect;

@@ -1,4 +1,4 @@
-import { ajisSemester } from '@/db/schema';
+import { ajisSemester } from '@/lib/db/schema';
 import { db } from '@/lib/repositories/base.repository';
 
 export async function seedSemester() {

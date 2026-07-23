@@ -1,4 +1,4 @@
-import { ajisGroupUser, ajisUser, ajisUserWilayahPembinaan, ajisWilayahPembinaan } from '@/db/schema';
+import { ajisGroupUser, ajisUser, ajisUserWilayahPembinaan, ajisWilayahPembinaan } from '@/lib/db/schema';
 import { hashPassword } from '@/lib/auth/password';
 import { sql, inArray } from 'drizzle-orm';
 

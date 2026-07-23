@@ -1,5 +1,5 @@
 import { db, getOffset, safeQuery, type ListParams } from './base.repository';
-import { refPropinsi } from '@/db/schema';
+import { refPropinsi } from '@/lib/db/schema';
 import { eq, ilike, or, and, desc, asc, not } from 'drizzle-orm';
 
 // Infer the type from the table schema
@@ -17,6 +17,8 @@ export class RefPropinsiRepository {
   async findMany(params: ListParams & { aktif?: 'y' | 'n' }) {
     const { page = 1, pageSize = 20, search, aktif, field = 'nama', direction = 'asc' } = params;
     const offset = getOffset(page, pageSize);
+
+    console.log('RefPropinsiRepository.findMany called with:', { page, pageSize, search, aktif, field, direction });
 
     // Build WHERE conditions
     const conditions = [];
@@ -52,12 +54,16 @@ export class RefPropinsiRepository {
         .limit(pageSize)
         .offset(offset);
 
+      console.log('RefPropinsiRepository data query result:', data);
+
       const totalCountResult = await db
         .select({ count: refPropinsi.id })
         .from(refPropinsi)
         .where(whereClause);
 
       const totalCount = Number(totalCountResult[0]?.count ?? 0);
+
+      console.log('RefPropinsiRepository total count:', totalCount);
 
       return {
         data,

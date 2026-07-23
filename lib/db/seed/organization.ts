@@ -1,4 +1,4 @@
-import { ajisKantor, ajisWilayahPembinaan } from '@/db/schema';
+import { ajisKantor, ajisWilayahPembinaan } from '@/lib/db/schema';
 import { eq } from 'drizzle-orm';
 
 export async function seedOrganization(db: any, desa: any) {

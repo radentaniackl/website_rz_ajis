@@ -1,13 +1,13 @@
 import * as donaturRepo from '@/lib/repositories/donatur.repository';
-import { donatur } from '@/db/schema';
+import { donatur } from '@/lib/db/schema';
 import { db } from '@/lib/repositories/base.repository';
 import { count, sql, and, eq } from 'drizzle-orm';
 import {
-  pemasangan,
+  pemasukan,
   donasiTransaksi,
   penyaluran,
   pembinaan,
-} from '@/db/schema';
+} from '@/lib/db/schema';
 
 /**
  * Donatur Service

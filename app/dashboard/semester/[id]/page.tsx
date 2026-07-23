@@ -1,5 +1,4 @@
 import { getSemesterDetail } from '@/app/actions/semester';
-import { PageHeader } from '@/components/shared/page-header';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
@@ -31,18 +30,18 @@ export default async function SemesterDetailPage({ params }: PageProps) {
 
   return (
     <div className="space-y-6">
-      <PageHeader
-        title="Detail Semester"
-        description="Informasi lengkap semester"
-        action={
-          <Button variant="outline" asChild>
-            <Link href="/dashboard/semester">
-              <ArrowLeft className="h-4 w-4 mr-2" />
-              Kembali
-            </Link>
-          </Button>
-        }
-      />
+      <div className="flex items-center gap-4">
+        <Button variant="outline" size="sm" asChild>
+          <Link href="/dashboard/semester">
+            <ArrowLeft className="mr-2 h-4 w-4" />
+            Kembali
+          </Link>
+        </Button>
+        <div>
+          <h1 className="text-2xl font-bold">Detail Semester</h1>
+          <p className="text-sm text-muted-foreground">Informasi lengkap semester</p>
+        </div>
+      </div>
 
       <Card>
         <CardHeader>

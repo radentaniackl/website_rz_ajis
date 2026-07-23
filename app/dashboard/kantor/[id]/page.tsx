@@ -1,11 +1,20 @@
 import { Suspense } from 'react';
 import { getKantorDetail } from '@/app/actions/kantor';
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
-import { ArrowLeft, Pencil } from 'lucide-react';
+import { ArrowLeft, CheckCircle, XCircle, Edit, Trash2 } from 'lucide-react';
 import Link from 'next/link';
 import { notFound } from 'next/navigation';
 import { auth } from '@/auth';
-import { Badge } from '@/components/ui/badge';
+import { deleteKantorAction } from '@/app/actions/kantor';
+import { redirect } from 'next/navigation';
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger,
+} from '@/components/ui/dropdown-menu';
 
 interface PageProps {
   params: Promise<{ id: string }>;
@@ -45,24 +54,17 @@ export default async function KantorDetailPage(props: PageProps) {
 
   return (
     <div className="space-y-6">
-      <div className="flex items-center justify-between">
-        <div className="flex items-center gap-4">
-          <Button variant="outline" size="sm" asChild>
-            <Link href="/dashboard/kantor">
-              <ArrowLeft className="mr-2 h-4 w-4" />
-              Kembali
-            </Link>
-          </Button>
-          <div>
-            <h1 className="text-2xl font-bold">Detail Kantor</h1>
-          </div>
-        </div>
-        <Button asChild>
-          <Link href={`/dashboard/kantor/${id}/edit`}>
-            <Pencil className="mr-2 h-4 w-4" />
-            Edit
+      <div className="flex items-center gap-4">
+        <Button variant="outline" size="sm" asChild>
+          <Link href="/dashboard/kantor">
+            <ArrowLeft className="mr-2 h-4 w-4" />
+            Kembali
           </Link>
         </Button>
+        <div>
+          <h1 className="text-2xl font-bold">Detail Kantor</h1>
+          <p className="text-sm text-muted-foreground">Informasi lengkap kantor</p>
+        </div>
       </div>
 
       <Suspense fallback={<div className="p-4">Loading...</div>}>
@@ -81,66 +83,116 @@ async function KantorDetail({ id }: { id: number }) {
 
   const kantor = result.data;
 
+  const formatDate = (date: Date | string | null) => {
+    if (!date) return '-';
+    const d = new Date(date);
+    return d.toLocaleDateString('id-ID', { day: '2-digit', month: 'long', year: 'numeric' });
+  };
+
   return (
-    <div className="grid gap-6 md:grid-cols-2">
-      <div className="space-y-4">
-        <div>
-          <h3 className="text-sm font-medium text-muted-foreground">Kode Kantor</h3>
-          <p className="text-lg font-semibold">{kantor.kode}</p>
-        </div>
-        <div>
-          <h3 className="text-sm font-medium text-muted-foreground">Nama Kantor</h3>
-          <p className="text-lg font-semibold">{kantor.nama}</p>
-        </div>
-        <div>
-          <h3 className="text-sm font-medium text-muted-foreground">Alamat</h3>
-          <p className="text-lg">{kantor.alamat || '-'}</p>
-        </div>
-        <div>
-          <h3 className="text-sm font-medium text-muted-foreground">No Telepon</h3>
-          <p className="text-lg">{kantor.noTelp || '-'}</p>
-        </div>
-      </div>
+    <>
+      <Card>
+        <CardHeader>
+          <CardTitle className="flex items-center justify-between">
+            <span>{kantor.nama}</span>
+            {kantor.aktif === 'y' ? (
+              <Badge className="bg-green-500">
+                <CheckCircle className="h-3 w-3 mr-1" />
+                Aktif
+              </Badge>
+            ) : (
+              <Badge variant="outline">
+                <XCircle className="h-3 w-3 mr-1" />
+                Nonaktif
+              </Badge>
+            )}
+          </CardTitle>
+        </CardHeader>
+        <CardContent>
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+            <div>
+              <h3 className="font-semibold text-sm text-muted-foreground mb-2">Informasi Umum</h3>
+              <div className="space-y-3">
+                <div>
+                  <label className="text-xs font-medium text-muted-foreground">Kode Kantor</label>
+                  <p className="text-sm">{kantor.kode || '-'}</p>
+                </div>
+                <div>
+                  <label className="text-xs font-medium text-muted-foreground">Nama Kantor</label>
+                  <p className="text-sm">{kantor.nama || '-'}</p>
+                </div>
+                <div>
+                  <label className="text-xs font-medium text-muted-foreground">Jenis</label>
+                  <p className="text-sm">{kantor.jenis || '-'}</p>
+                </div>
+                <div>
+                  <label className="text-xs font-medium text-muted-foreground">Kode Program RZ</label>
+                  <p className="text-sm">{kantor.kodeProgramRz || '-'}</p>
+                </div>
+                <div>
+                  <label className="text-xs font-medium text-muted-foreground">Kode Kantor Legacy</label>
+                  <p className="text-sm">{kantor.kodeKantorLegacy || '-'}</p>
+                </div>
+              </div>
+            </div>
 
-      <div className="space-y-4">
-        <div>
-          <h3 className="text-sm font-medium text-muted-foreground">Kode Program RZ</h3>
-          <p className="text-lg">{kantor.kodeProgramRz || '-'}</p>
-        </div>
-        <div>
-          <h3 className="text-sm font-medium text-muted-foreground">Jenis</h3>
-          <p className="text-lg">{kantor.jenis || '-'}</p>
-        </div>
-        <div>
-          <h3 className="text-sm font-medium text-muted-foreground">Kode Kantor Legacy</h3>
-          <p className="text-lg">{kantor.kodeKantorLegacy || '-'}</p>
-        </div>
-        <div>
-          <h3 className="text-sm font-medium text-muted-foreground">Status</h3>
-          <Badge variant={kantor.aktif === 'y' ? 'default' : 'secondary'}>
-            {kantor.aktif === 'y' ? 'Aktif' : 'Nonaktif'}
-          </Badge>
-        </div>
-      </div>
+            <div>
+              <h3 className="font-semibold text-sm text-muted-foreground mb-2">Kontak & Lokasi</h3>
+              <div className="space-y-3">
+                <div>
+                  <label className="text-xs font-medium text-muted-foreground">Alamat</label>
+                  <p className="text-sm">{kantor.alamat || '-'}</p>
+                </div>
+                <div>
+                  <label className="text-xs font-medium text-muted-foreground">No Telepon</label>
+                  <p className="text-sm">{kantor.noTelp || '-'}</p>
+                </div>
+                <div>
+                  <label className="text-xs font-medium text-muted-foreground">Parent ID</label>
+                  <p className="text-sm">{kantor.parentId ? String(kantor.parentId) : '-'}</p>
+                </div>
+                <div>
+                  <label className="text-xs font-medium text-muted-foreground">Parent Second ID</label>
+                  <p className="text-sm">{kantor.parentSecondId ? String(kantor.parentSecondId) : '-'}</p>
+                </div>
+              </div>
+            </div>
+          </div>
 
-      <div className="md:col-span-2 space-y-4 border-t pt-4">
-        <div>
-          <h3 className="text-sm font-medium text-muted-foreground">Parent ID</h3>
-          <p className="text-lg">{kantor.parentId ? String(kantor.parentId) : '-'}</p>
-        </div>
-        <div>
-          <h3 className="text-sm font-medium text-muted-foreground">Parent Second ID</h3>
-          <p className="text-lg">{kantor.parentSecondId ? String(kantor.parentSecondId) : '-'}</p>
-        </div>
-        <div>
-          <h3 className="text-sm font-medium text-muted-foreground">Dibuat pada</h3>
-          <p className="text-lg">{new Date(kantor.createdAt).toLocaleString('id-ID')}</p>
-        </div>
-        <div>
-          <h3 className="text-sm font-medium text-muted-foreground">Diperbarui pada</h3>
-          <p className="text-lg">{new Date(kantor.updatedAt).toLocaleString('id-ID')}</p>
-        </div>
+          <div className="border-t pt-6 mt-6">
+            <h3 className="font-semibold text-sm text-muted-foreground mb-2">Audit</h3>
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+              <div>
+                <label className="text-xs font-medium text-muted-foreground">Dibuat pada</label>
+                <p className="text-sm">{formatDate(kantor.createdAt)}</p>
+              </div>
+              <div>
+                <label className="text-xs font-medium text-muted-foreground">Diperbarui pada</label>
+                <p className="text-sm">{formatDate(kantor.updatedAt)}</p>
+              </div>
+            </div>
+          </div>
+        </CardContent>
+      </Card>
+
+      <div className="flex justify-end gap-4">
+        <Button variant="outline" asChild>
+          <Link href={`/dashboard/kantor/${id}/edit`}>
+            <Edit className="h-4 w-4 mr-2" />
+            Edit
+          </Link>
+        </Button>
+        <form action={async () => {
+          'use server';
+          await deleteKantorAction(id);
+          redirect('/dashboard/kantor');
+        }}>
+          <Button type="submit" variant="destructive">
+            <Trash2 className="h-4 w-4 mr-2" />
+            Hapus
+          </Button>
+        </form>
       </div>
-    </div>
+    </>
   );
 }

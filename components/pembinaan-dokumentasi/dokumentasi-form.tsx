@@ -107,15 +107,19 @@ export function DokumentasiForm({ initialData, isEdit = false, dokumentasiId }: 
           </div>
 
           <div className="space-y-2">
-            <Label htmlFor="image">Gambar</Label>
+            <Label htmlFor="image">Gambar *</Label>
             <ImageUpload
               value={imageData}
               onChange={setImageData}
               onRemove={() => setImageData(undefined)}
               disabled={isSubmitting}
-              accept="image/*"
-              maxSize={5}
+              accept="image/jpeg,image/jpg,image/png"
+              maxSize={10}
             />
+            <p className="text-xs text-muted-foreground">Format: JPEG, JPG, PNG. Maksimal: 10MB</p>
+            {form.formState.errors.image && (
+              <p className="text-sm text-destructive">{form.formState.errors.image.message}</p>
+            )}
           </div>
 
           <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
@@ -178,12 +182,13 @@ export function DokumentasiForm({ initialData, isEdit = false, dokumentasiId }: 
           </div>
 
           <div className="space-y-2">
-            <Label htmlFor="uploadGdrive">Upload Google Drive</Label>
+            <Label htmlFor="uploadGdrive">URL Google Drive (Opsional)</Label>
             <Input 
               id="uploadGdrive" 
               {...form.register("uploadGdrive")}
-              placeholder="ID atau link Google Drive"
+              placeholder="https://drive.google.com/..."
             />
+            <p className="text-xs text-muted-foreground">Jika tidak upload foto, wajib isi URL Google Drive</p>
           </div>
         </CardContent>
       </Card>

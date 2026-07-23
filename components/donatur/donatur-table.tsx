@@ -7,9 +7,15 @@ import { Input } from '@/components/ui/input';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { Badge } from '@/components/ui/badge';
 import { Card, CardContent } from '@/components/ui/card';
-import { Eye, Edit, Trash2, Search } from 'lucide-react';
+import { Eye, Edit, Trash2, Search, MoreVertical, Download } from 'lucide-react';
 import { deleteDonaturAction } from '@/app/actions/donatur';
 import { toast } from 'sonner';
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger,
+} from '@/components/ui/dropdown-menu';
 
 interface DonaturTableProps {
   data: any[];
@@ -41,6 +47,35 @@ export function DonaturTable({ data, total, page, pageSize, search }: DonaturTab
     const params = new URLSearchParams(searchParams);
     params.set('page', newPage.toString());
     router.push(`/dashboard/donatur?${params.toString()}`);
+  };
+
+  const handleExport = () => {
+    // Export data to CSV
+    const headers = ['ID', 'Nama Lengkap', 'Nama Publikasi', 'Status Donatur', 'Email', 'Telepon', 'HP', 'Status'];
+    const csvContent = [
+      headers.join(','),
+      ...data.map(donatur => [
+        donatur.id,
+        `"${donatur.namaLengkap || ''}"`,
+        `"${donatur.namaPublikasi || ''}"`,
+        `"${donatur.statusDonatur || ''}"`,
+        `"${donatur.email || ''}"`,
+        `"${donatur.telp || ''}"`,
+        `"${donatur.hp || ''}"`,
+        `"${donatur.aktif === 'y' ? 'Aktif' : 'Nonaktif'}"`,
+      ].join(','))
+    ].join('\n');
+
+    const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
+    const link = document.createElement('a');
+    const url = URL.createObjectURL(blob);
+    link.setAttribute('href', url);
+    link.setAttribute('download', `donatur-export-${new Date().toISOString().split('T')[0]}.csv`);
+    link.style.visibility = 'hidden';
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+    toast.success('Data berhasil diexport');
   };
 
   const handleDelete = async (id: number) => {
@@ -105,6 +140,10 @@ export function DonaturTable({ data, total, page, pageSize, search }: DonaturTab
               className="pl-10"
             />
           </div>
+          <Button variant="outline" size="sm" onClick={handleExport}>
+            <Download className="h-4 w-4 mr-2" />
+            Export
+          </Button>
         </div>
 
         <div className="rounded-md border">
@@ -142,30 +181,27 @@ export function DonaturTable({ data, total, page, pageSize, search }: DonaturTab
                     <TableCell>{donatur.hp || donatur.telp || '-'}</TableCell>
                     <TableCell>{getAktifBadge(donatur.aktif)}</TableCell>
                     <TableCell className="text-right">
-                      <div className="flex justify-end gap-2">
-                        <Button
-                          variant="ghost"
-                          size="sm"
-                          onClick={() => router.push(`/dashboard/donatur/${donatur.id}`)}
-                        >
-                          <Eye className="h-4 w-4" />
-                        </Button>
-                        <Button
-                          variant="ghost"
-                          size="sm"
-                          onClick={() => router.push(`/dashboard/donatur/${donatur.id}/edit`)}
-                        >
-                          <Edit className="h-4 w-4" />
-                        </Button>
-                        <Button
-                          variant="ghost"
-                          size="sm"
-                          onClick={() => handleDelete(donatur.id)}
-                          disabled={isDeleting === donatur.id}
-                        >
-                          <Trash2 className="h-4 w-4" />
-                        </Button>
-                      </div>
+                      <DropdownMenu>
+                        <DropdownMenuTrigger asChild>
+                          <Button variant="ghost" size="sm">
+                            <MoreVertical className="h-4 w-4" />
+                          </Button>
+                        </DropdownMenuTrigger>
+                        <DropdownMenuContent align="end">
+                          <DropdownMenuItem onClick={() => router.push(`/dashboard/donatur/${donatur.id}`)}>
+                            <Eye className="h-4 w-4 mr-2" />
+                            Detail
+                          </DropdownMenuItem>
+                          <DropdownMenuItem onClick={() => router.push(`/dashboard/donatur/${donatur.id}/edit`)}>
+                            <Edit className="h-4 w-4 mr-2" />
+                            Edit
+                          </DropdownMenuItem>
+                          <DropdownMenuItem onClick={() => handleDelete(donatur.id)} disabled={isDeleting === donatur.id}>
+                            <Trash2 className="h-4 w-4 mr-2" />
+                            Hapus
+                          </DropdownMenuItem>
+                        </DropdownMenuContent>
+                      </DropdownMenu>
                     </TableCell>
                   </TableRow>
                 ))

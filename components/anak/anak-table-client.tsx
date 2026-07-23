@@ -5,9 +5,9 @@ import { DataTable, DataColumn } from "@/components/shared/data-table";
 import { DetailDrawer, FieldSpec } from "@/components/shared/detail-drawer";
 import { ImportExcel } from "@/components/shared/import-excel";
 import { AnakActions } from "./anak-actions";
-import { Plus } from "lucide-react";
-import Link from "next/link";
+import { Download } from "lucide-react";
 import { Button } from "@/components/ui/button";
+import { toast } from "sonner";
 
 interface AnakTableClientProps {
   data: any[];
@@ -87,23 +87,49 @@ export function AnakTableClient({ data, userRole, canCreate }: AnakTableClientPr
     alert(`Mensimulasikan import ${rows.length} data anak...`);
   };
 
+  const handleExport = () => {
+    // Export data to CSV
+    const headers = ['ID', 'Kode Anak', 'NIK', 'Nama Lengkap', 'Jenis Kelamin', 'Tanggal Lahir', 'Status'];
+    const csvContent = [
+      headers.join(','),
+      ...data.map(anak => [
+        anak.id,
+        `"${anak.kodeAnak || ''}"`,
+        `"${anak.nik || ''}"`,
+        `"${anak.namaLengkap || ''}"`,
+        `"${anak.jnsKel === 'L' || anak.jnsKel === 'l' ? 'Laki-laki' : 'Perempuan'}"`,
+        `"${anak.tglLahir ? new Date(anak.tglLahir).toLocaleDateString('id-ID') : ''}"`,
+        `"${anak.aktif === 'y' ? 'Aktif' : 'Nonaktif'}"`,
+      ].join(','))
+    ].join('\n');
+
+    const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
+    const link = document.createElement('a');
+    const url = URL.createObjectURL(blob);
+    link.setAttribute('href', url);
+    link.setAttribute('download', `anak-export-${new Date().toISOString().split('T')[0]}.csv`);
+    link.style.visibility = 'hidden';
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+    toast.success('Data berhasil diexport');
+  };
+
   return (
     <div className="space-y-4">
       <div className="flex flex-col sm:flex-row gap-3 items-start sm:items-center justify-between">
-        <ImportExcel
-          slice="Anak"
-          title="Data Anak"
-          fields={detailFields}
-          onImport={handleImport}
-        />
-        {canCreate && (
-          <Link href="/dashboard/anak/new">
-            <Button>
-              <Plus className="mr-2 h-4 w-4" />
-              Tambah Anak
-            </Button>
-          </Link>
-        )}
+        <div className="flex gap-2">
+          <ImportExcel
+            slice="Anak"
+            title="Data Anak"
+            fields={detailFields}
+            onImport={handleImport}
+          />
+          <Button variant="outline" size="sm" onClick={handleExport}>
+            <Download className="h-4 w-4 mr-2" />
+            Export
+          </Button>
+        </div>
       </div>
 
       <DataTable
@@ -111,6 +137,7 @@ export function AnakTableClient({ data, userRole, canCreate }: AnakTableClientPr
         data={data}
         pageSize={10}
         labelSingular="anak"
+        tableId="anak"
         rowActions={(row) => (
           <AnakActions id={Number(row.id)} canEdit={canEdit} canDelete={canDelete} />
         )}

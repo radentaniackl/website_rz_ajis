@@ -1,12 +1,17 @@
 import { getDonaturDetail } from '@/app/actions/donatur';
-import { PageHeader } from '@/components/shared/page-header';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
-import { ArrowLeft, Edit, Trash2 } from 'lucide-react';
+import { ArrowLeft, CheckCircle, XCircle, Edit, Trash2 } from 'lucide-react';
 import Link from 'next/link';
 import { deleteDonaturAction } from '@/app/actions/donatur';
 import { redirect } from 'next/navigation';
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger,
+} from '@/components/ui/dropdown-menu';
 
 interface PageProps {
   params: Promise<{ id: string }>;
@@ -47,36 +52,36 @@ export default async function DonaturDetailPage({ params }: PageProps) {
     return <Badge variant={config.variant}>{config.label}</Badge>;
   };
 
-  const getAktifBadge = (aktif: string) => {
-    if (aktif === 'y') {
-      return <Badge variant="default" className="bg-green-500">Aktif</Badge>;
-    } else if (aktif === 'n') {
-      return <Badge variant="outline">Nonaktif</Badge>;
-    } else {
-      return <Badge variant="secondary">Pending</Badge>;
-    }
-  };
-
   return (
     <div className="space-y-6">
-      <PageHeader
-        title="Detail Donatur"
-        description="Informasi lengkap donatur"
-        action={
-          <Button variant="outline" asChild>
-            <Link href="/dashboard/donatur">
-              <ArrowLeft className="h-4 w-4 mr-2" />
-              Kembali
-            </Link>
-          </Button>
-        }
-      />
+      <div className="flex items-center gap-4">
+        <Button variant="outline" size="sm" asChild>
+          <Link href="/dashboard/donatur">
+            <ArrowLeft className="mr-2 h-4 w-4" />
+            Kembali
+          </Link>
+        </Button>
+        <div>
+          <h1 className="text-2xl font-bold">Detail Donatur</h1>
+          <p className="text-sm text-muted-foreground">Informasi lengkap donatur</p>
+        </div>
+      </div>
 
       <Card>
         <CardHeader>
           <CardTitle className="flex items-center justify-between">
             <span>{donatur.namaLengkap}</span>
-            {getAktifBadge(donatur.aktif)}
+            {donatur.aktif === 'y' ? (
+              <Badge className="bg-green-500">
+                <CheckCircle className="h-3 w-3 mr-1" />
+                Aktif
+              </Badge>
+            ) : (
+              <Badge variant="outline">
+                <XCircle className="h-3 w-3 mr-1" />
+                Nonaktif
+              </Badge>
+            )}
           </CardTitle>
         </CardHeader>
         <CardContent>
@@ -116,10 +121,6 @@ export default async function DonaturDetailPage({ params }: PageProps) {
             <div>
               <h3 className="font-semibold text-sm text-muted-foreground mb-2">Status</h3>
               <div className="space-y-3">
-                <div>
-                  <label className="text-xs font-medium text-muted-foreground">Status Aktif</label>
-                  <p className="text-sm">{getAktifBadge(donatur.aktif)}</p>
-                </div>
                 <div>
                   <label className="text-xs font-medium text-muted-foreground">Kirim SMS</label>
                   <p className="text-sm">{donatur.kirimSms === 'y' ? 'Ya' : 'Tidak'}</p>
@@ -245,8 +246,10 @@ export default async function DonaturDetailPage({ params }: PageProps) {
         </Button>
         <form action={async () => {
           'use server';
-          await deleteDonaturAction(id);
-          redirect('/dashboard/donatur');
+          const res = await deleteDonaturAction(id);
+          if (res.success) {
+            redirect('/dashboard/donatur');
+          }
         }}>
           <Button type="submit" variant="destructive">
             <Trash2 className="h-4 w-4 mr-2" />

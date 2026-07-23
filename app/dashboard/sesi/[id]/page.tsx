@@ -1,21 +1,24 @@
 import { notFound } from 'next/navigation';
 import { getPembinaanById } from '@/app/actions/pembinaan';
-import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
-import { ArrowLeft, Edit, Trash2 } from 'lucide-react';
+import { Button } from '@/components/ui/button';
+import { ArrowLeft, Edit, Trash2, CheckCircle, XCircle } from 'lucide-react';
 import Link from 'next/link';
 import { deletePembinaanAction } from '@/app/actions/pembinaan';
+import { redirect } from 'next/navigation';
 
-export async function generateMetadata({ params }: { params: { id: string } }) {
+export async function generateMetadata({ params }: { params: Promise<{ id: string }> }) {
+  const resolvedParams = await params;
   return {
-    title: `Detail Sesi Pembinaan - AJIS`,
+    title: `Detail Sesi Pembinaan ${resolvedParams.id} - AJIS`,
     description: 'Detail sesi pembinaan anak',
   };
 }
 
-export default async function PembinaanDetailPage({ params }: { params: { id: string } }) {
-  const result = await getPembinaanById(Number(params.id));
+export default async function PembinaanDetailPage({ params }: { params: Promise<{ id: string }> }) {
+  const resolvedParams = await params;
+  const result = await getPembinaanById(Number(resolvedParams.id));
 
   if (!result.success || !result.data) {
     notFound();
@@ -23,184 +26,202 @@ export default async function PembinaanDetailPage({ params }: { params: { id: st
 
   const pembinaan = result.data;
 
+  const formatDate = (date: Date | string | null) => {
+    if (!date) return '-';
+    const d = new Date(date);
+    return d.toLocaleDateString('id-ID', { day: '2-digit', month: 'long', year: 'numeric' });
+  };
+
   return (
-    <div className="container mx-auto py-6">
-      <div className="flex items-center gap-4 mb-6">
-        <Button variant="ghost" size="icon" asChild>
+    <div className="space-y-6">
+      <div className="flex items-center gap-4">
+        <Button variant="outline" size="sm" asChild>
           <Link href="/dashboard/sesi">
-            <ArrowLeft className="h-4 w-4" />
+            <ArrowLeft className="mr-2 h-4 w-4" />
+            Kembali
           </Link>
         </Button>
         <div>
-          <h1 className="text-3xl font-bold">Detail Sesi Pembinaan</h1>
-          <p className="text-muted-foreground">Informasi lengkap sesi pembinaan</p>
+          <h1 className="text-2xl font-bold">Detail Sesi Pembinaan</h1>
+          <p className="text-sm text-muted-foreground">Informasi lengkap sesi pembinaan</p>
         </div>
       </div>
 
       <Card>
         <CardHeader>
-          <div className="flex justify-between items-start">
-            <CardTitle>Informasi Sesi Pembinaan</CardTitle>
-            <div className="flex gap-2">
-              <Button variant="outline" size="sm" asChild>
-                <Link href={`/dashboard/sesi/${pembinaan.id}/edit`}>
-                  <Edit className="mr-2 h-4 w-4" />
-                  Edit
-                </Link>
-              </Button>
-              <Button variant="destructive" size="sm" asChild>
-                <Link href={`/dashboard/sesi/${pembinaan.id}/delete`}>
-                  <Trash2 className="mr-2 h-4 w-4" />
-                  Hapus
-                </Link>
-              </Button>
-            </div>
-          </div>
+          <CardTitle className="flex items-center justify-between">
+            <span>Sesi #{pembinaan.id}</span>
+            {pembinaan.tampil === 'y' ? (
+              <Badge className="bg-green-500">
+                <CheckCircle className="h-3 w-3 mr-1" />
+                Aktif
+              </Badge>
+            ) : (
+              <Badge variant="outline">
+                <XCircle className="h-3 w-3 mr-1" />
+                Nonaktif
+              </Badge>
+            )}
+          </CardTitle>
         </CardHeader>
-        <CardContent className="space-y-6">
+        <CardContent>
           <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
             <div>
-              <h3 className="font-semibold text-sm text-muted-foreground mb-2">ID Sesi</h3>
-              <p className="text-lg">{pembinaan.id}</p>
+              <h3 className="font-semibold text-sm text-muted-foreground mb-2">Informasi Umum</h3>
+              <div className="space-y-3">
+                <div>
+                  <label className="text-xs font-medium text-muted-foreground">Tanggal Pembinaan</label>
+                  <p className="text-sm">{formatDate(pembinaan.tglPembinaan)}</p>
+                </div>
+                <div>
+                  <label className="text-xs font-medium text-muted-foreground">Anak Binaan</label>
+                  <p className="text-sm font-medium">{pembinaan.anakNama ? `${pembinaan.anakNama} (${pembinaan.anakKode || pembinaan.anakId})` : pembinaan.anakId || '-'}</p>
+                </div>
+                <div>
+                  <label className="text-xs font-medium text-muted-foreground">Semester</label>
+                  <p className="text-sm">{pembinaan.semesterNama || (pembinaan.semesterId ? `Semester ID: ${pembinaan.semesterId}` : '-')}</p>
+                </div>
+                <div>
+                  <label className="text-xs font-medium text-muted-foreground">Bulan</label>
+                  <p className="text-sm">{pembinaan.bulan || '-'}</p>
+                </div>
+                <div>
+                  <label className="text-xs font-medium text-muted-foreground">Tahun</label>
+                  <p className="text-sm">{pembinaan.tahun || '-'}</p>
+                </div>
+              </div>
             </div>
-            <div>
-              <h3 className="font-semibold text-sm text-muted-foreground mb-2">Tanggal Pembinaan</h3>
-              <p className="text-lg">{pembinaan.tglPembinaan}</p>
-            </div>
-            <div>
-              <h3 className="font-semibold text-sm text-muted-foreground mb-2">Anak ID</h3>
-              <p className="text-lg">{pembinaan.anakId}</p>
-            </div>
-            <div>
-              <h3 className="font-semibold text-sm text-muted-foreground mb-2">Semester ID</h3>
-              <p className="text-lg">{pembinaan.semesterId || '-'}</p>
-            </div>
-            <div>
-              <h3 className="font-semibold text-sm text-muted-foreground mb-2">Bulan</h3>
-              <p className="text-lg">{pembinaan.bulan || '-'}</p>
-            </div>
-            <div>
-              <h3 className="font-semibold text-sm text-muted-foreground mb-2">Tahun</h3>
-              <p className="text-lg">{pembinaan.tahun || '-'}</p>
-            </div>
-          </div>
 
-          <div className="border-t pt-6">
-            <h3 className="font-semibold mb-4">Informasi Pembinaan</h3>
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-              <div>
-                <h3 className="font-semibold text-sm text-muted-foreground mb-2">Jenis Pembinaan</h3>
-                <p className="text-lg">{pembinaan.jenisPembinaan || '-'}</p>
+            <div>
+              <h3 className="font-semibold text-sm text-muted-foreground mb-2">Informasi Pembinaan</h3>
+              <div className="space-y-3">
+                <div>
+                  <label className="text-xs font-medium text-muted-foreground">Jenis Pembinaan</label>
+                  <p className="text-sm">{pembinaan.jenisPembinaan || '-'}</p>
+                </div>
+                <div>
+                  <label className="text-xs font-medium text-muted-foreground">Judul Materi</label>
+                  <p className="text-sm">{pembinaan.judulMateri || '-'}</p>
+                </div>
+                <div>
+                  <label className="text-xs font-medium text-muted-foreground">Kehadiran</label>
+                  <p className="text-sm">{pembinaan.kehadiran || '-'}</p>
+                </div>
+                <div>
+                  <label className="text-xs font-medium text-muted-foreground">Keterangan</label>
+                  <p className="text-sm">{pembinaan.keterangan || '-'}</p>
+                </div>
               </div>
-              <div>
-                <h3 className="font-semibold text-sm text-muted-foreground mb-2">Judul Materi</h3>
-                <p className="text-lg">{pembinaan.judulMateri || '-'}</p>
+            </div>
+
+            <div>
+              <h3 className="font-semibold text-sm text-muted-foreground mb-2">Informasi Pemateri</h3>
+              <div className="space-y-3">
+                <div>
+                  <label className="text-xs font-medium text-muted-foreground">Pemateri</label>
+                  <p className="text-sm">{pembinaan.pemateri || '-'}</p>
+                </div>
+                <div>
+                  <label className="text-xs font-medium text-muted-foreground">Pemateri Personal</label>
+                  <p className="text-sm">{pembinaan.pemateriPersonal || '-'}</p>
+                </div>
+                <div>
+                  <label className="text-xs font-medium text-muted-foreground">Orang Tua Hadir</label>
+                  <p className="text-sm">{pembinaan.ortuHadir || '-'}</p>
+                </div>
               </div>
-              <div>
-                <h3 className="font-semibold text-sm text-muted-foreground mb-2">Kehadiran</h3>
-                <p className="text-lg">{pembinaan.kehadiran || '-'}</p>
+            </div>
+
+            <div>
+              <h3 className="font-semibold text-sm text-muted-foreground mb-2">Capaian</h3>
+              <div className="space-y-3">
+                <div>
+                  <label className="text-xs font-medium text-muted-foreground">Capaian Tilawah</label>
+                  <p className="text-sm">{pembinaan.capaianTilawah || '-'}</p>
+                </div>
+                <div>
+                  <label className="text-xs font-medium text-muted-foreground">Capaian Tahfidz</label>
+                  <p className="text-sm">{pembinaan.capaianTahfidz || '-'}</p>
+                </div>
+                <div>
+                  <label className="text-xs font-medium text-muted-foreground">Capaian Tahfidz Halaman</label>
+                  <p className="text-sm">{pembinaan.capaianTahfidzHalaman || '-'}</p>
+                </div>
               </div>
-              <div>
-                <h3 className="font-semibold text-sm text-muted-foreground mb-2">Keterangan</h3>
-                <p className="text-lg">{pembinaan.keterangan || '-'}</p>
+            </div>
+
+            <div>
+              <h3 className="font-semibold text-sm text-muted-foreground mb-2">Pembiasaan (Skala 1-5)</h3>
+              <div className="space-y-3">
+                <div>
+                  <label className="text-xs font-medium text-muted-foreground">Pembiasaan Shalat Wajib</label>
+                  <p className="text-sm">{pembinaan.pembiasaanShalatWajib || '-'}</p>
+                </div>
+                <div>
+                  <label className="text-xs font-medium text-muted-foreground">Pembiasaan Tilawah</label>
+                  <p className="text-sm">{pembinaan.pembiasaanTilawah || '-'}</p>
+                </div>
+                <div>
+                  <label className="text-xs font-medium text-muted-foreground">Pembiasaan Sedekah</label>
+                  <p className="text-sm">{pembinaan.pembiasaanSedekah || '-'}</p>
+                </div>
+                <div>
+                  <label className="text-xs font-medium text-muted-foreground">Membantu Orang Tua</label>
+                  <p className="text-sm">{pembinaan.membantuOrtu || '-'}</p>
+                </div>
               </div>
-              <div>
-                <h3 className="font-semibold text-sm text-muted-foreground mb-2">Tampil</h3>
-                <Badge variant={pembinaan.tampil === 'y' ? 'default' : 'secondary'}>
-                  {pembinaan.tampil === 'y' ? 'Ya' : 'Tidak'}
-                </Badge>
+            </div>
+
+            <div>
+              <h3 className="font-semibold text-sm text-muted-foreground mb-2">Audit</h3>
+              <div className="space-y-3">
+                <div>
+                  <label className="text-xs font-medium text-muted-foreground">User Insert</label>
+                  <p className="text-sm">{pembinaan.userInsert || '-'}</p>
+                </div>
+                <div>
+                  <label className="text-xs font-medium text-muted-foreground">Date Insert</label>
+                  <p className="text-sm">{formatDate(pembinaan.dateInsert)}</p>
+                </div>
+                <div>
+                  <label className="text-xs font-medium text-muted-foreground">User Update</label>
+                  <p className="text-sm">{pembinaan.userUpdate || '-'}</p>
+                </div>
+                <div>
+                  <label className="text-xs font-medium text-muted-foreground">Date Update</label>
+                  <p className="text-sm">{formatDate(pembinaan.dateUpdate)}</p>
+                </div>
               </div>
             </div>
           </div>
 
           {pembinaan.p3a && (
-            <div className="border-t pt-6">
-              <h3 className="font-semibold mb-2">P3A</h3>
-              <p className="text-muted-foreground">{pembinaan.p3a}</p>
+            <div className="border-t pt-6 mt-6">
+              <h3 className="font-semibold text-sm text-muted-foreground mb-2">P3A</h3>
+              <p className="text-sm">{pembinaan.p3a}</p>
             </div>
           )}
-
-          <div className="border-t pt-6">
-            <h3 className="font-semibold mb-4">Informasi Pemateri</h3>
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-              <div>
-                <h3 className="font-semibold text-sm text-muted-foreground mb-2">Pemateri</h3>
-                <p className="text-lg">{pembinaan.pemateri || '-'}</p>
-              </div>
-              <div>
-                <h3 className="font-semibold text-sm text-muted-foreground mb-2">Pemateri Personal</h3>
-                <p className="text-lg">{pembinaan.pemateriPersonal || '-'}</p>
-              </div>
-              <div>
-                <h3 className="font-semibold text-sm text-muted-foreground mb-2">Orang Tua Hadir</h3>
-                <p className="text-lg">{pembinaan.ortuHadir || '-'}</p>
-              </div>
-            </div>
-          </div>
-
-          <div className="border-t pt-6">
-            <h3 className="font-semibold mb-4">Capaian</h3>
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-              <div>
-                <h3 className="font-semibold text-sm text-muted-foreground mb-2">Capaian Tilawah</h3>
-                <p className="text-lg">{pembinaan.capaianTilawah || '-'}</p>
-              </div>
-              <div>
-                <h3 className="font-semibold text-sm text-muted-foreground mb-2">Capaian Tahfidz</h3>
-                <p className="text-lg">{pembinaan.capaianTahfidz || '-'}</p>
-              </div>
-              <div>
-                <h3 className="font-semibold text-sm text-muted-foreground mb-2">Capaian Tahfidz Halaman</h3>
-                <p className="text-lg">{pembinaan.capaianTahfidzHalaman || '-'}</p>
-              </div>
-            </div>
-          </div>
-
-          <div className="border-t pt-6">
-            <h3 className="font-semibold mb-4">Pembiasaan (Skala 1-5)</h3>
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-              <div>
-                <h3 className="font-semibold text-sm text-muted-foreground mb-2">Pembiasaan Shalat Wajib</h3>
-                <p className="text-lg">{pembinaan.pembiasaanShalatWajib || '-'}</p>
-              </div>
-              <div>
-                <h3 className="font-semibold text-sm text-muted-foreground mb-2">Pembiasaan Tilawah</h3>
-                <p className="text-lg">{pembinaan.pembiasaanTilawah || '-'}</p>
-              </div>
-              <div>
-                <h3 className="font-semibold text-sm text-muted-foreground mb-2">Pembiasaan Sedekah</h3>
-                <p className="text-lg">{pembinaan.pembiasaanSedekah || '-'}</p>
-              </div>
-              <div>
-                <h3 className="font-semibold text-sm text-muted-foreground mb-2">Membantu Orang Tua</h3>
-                <p className="text-lg">{pembinaan.membantuOrtu || '-'}</p>
-              </div>
-            </div>
-          </div>
-
-          <div className="border-t pt-6">
-            <h3 className="font-semibold mb-4">Informasi Sistem</h3>
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-              <div>
-                <h3 className="font-semibold text-sm text-muted-foreground mb-2">User Insert</h3>
-                <p className="text-lg">{pembinaan.userInsert || '-'}</p>
-              </div>
-              <div>
-                <h3 className="font-semibold text-sm text-muted-foreground mb-2">Date Insert</h3>
-                <p className="text-lg">{pembinaan.dateInsert || '-'}</p>
-              </div>
-              <div>
-                <h3 className="font-semibold text-sm text-muted-foreground mb-2">User Update</h3>
-                <p className="text-lg">{pembinaan.userUpdate || '-'}</p>
-              </div>
-              <div>
-                <h3 className="font-semibold text-sm text-muted-foreground mb-2">Date Update</h3>
-                <p className="text-lg">{pembinaan.dateUpdate || '-'}</p>
-              </div>
-            </div>
-          </div>
         </CardContent>
       </Card>
+
+      <div className="flex justify-end gap-4">
+        <Button variant="outline" asChild>
+          <Link href={`/dashboard/sesi/${pembinaan.id}/edit`}>
+            <Edit className="h-4 w-4 mr-2" />
+            Edit
+          </Link>
+        </Button>
+        <form action={async () => {
+          'use server';
+          await deletePembinaanAction(pembinaan.id);
+          redirect('/dashboard/sesi');
+        }}>
+          <Button type="submit" variant="destructive">
+            <Trash2 className="h-4 w-4 mr-2" />
+            Hapus
+          </Button>
+        </form>
+      </div>
     </div>
   );
 }

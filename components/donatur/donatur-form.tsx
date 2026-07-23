@@ -77,12 +77,14 @@ export function DonaturForm({ initialData, isEdit = false, donaturId }: DonaturF
   return (
     <form onSubmit={form.handleSubmit(handleSubmit)}>
       <Tabs defaultValue="identitas" className="w-full">
-        <TabsList className="grid w-full grid-cols-4">
-          <TabsTrigger value="identitas">Identitas</TabsTrigger>
-          <TabsTrigger value="kontak">Kontak</TabsTrigger>
-          <TabsTrigger value="rekening">Rekening</TabsTrigger>
-          <TabsTrigger value="lainnya">Lainnya</TabsTrigger>
-        </TabsList>
+        <div className="w-full overflow-x-auto pb-2">
+          <TabsList className="inline-flex h-10 items-center justify-start rounded-md bg-muted p-1 text-muted-foreground min-w-full w-max space-x-1">
+            <TabsTrigger value="identitas">Identitas</TabsTrigger>
+            <TabsTrigger value="kontak">Kontak</TabsTrigger>
+            <TabsTrigger value="rekening">Rekening</TabsTrigger>
+            <TabsTrigger value="lainnya">Lainnya</TabsTrigger>
+          </TabsList>
+        </div>
 
         <TabsContent value="identitas">
           <Card>

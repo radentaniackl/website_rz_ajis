@@ -37,6 +37,7 @@ export type ListAnakOptions = {
   pageSize?: number;
   search?: string;
   aktif?: 'y' | 'n';
+  wilayahPembinaanId?: number;
 };
 
 /**
@@ -49,7 +50,7 @@ export async function listAnakByUser(
   user: UserSession,
   options: ListAnakOptions = {}
 ) {
-  const { page = 1, pageSize = 20, search, aktif = 'y' } = options;
+  const { page = 1, pageSize = 20, search, aktif = 'y', wilayahPembinaanId } = options;
 
   const rbacFilter = buildRbacFilter(user, ajisAnak);
 
@@ -59,6 +60,7 @@ export async function listAnakByUser(
     search,
     aktif,
     rbacFilter,
+    wilayahPembinaanId,
   });
 }
 

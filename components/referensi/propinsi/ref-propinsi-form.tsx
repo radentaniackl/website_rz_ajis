@@ -33,8 +33,6 @@ export function RefPropinsiForm({ mode, initialData }: RefPropinsiFormProps) {
   const router = useRouter();
   const [isSubmitting, setIsSubmitting] = useState(false);
 
-  console.log('RefPropinsiForm rendered with mode:', mode, 'initialData:', initialData);
-
   const {
     register,
     handleSubmit,
@@ -57,8 +55,6 @@ export function RefPropinsiForm({ mode, initialData }: RefPropinsiFormProps) {
         },
   });
 
-  console.log('Form initialized');
-
   const onSubmit = async (data: RefPropinsiInput) => {
     setIsSubmitting(true);
     try {
@@ -69,8 +65,6 @@ export function RefPropinsiForm({ mode, initialData }: RefPropinsiFormProps) {
         result = await updateRefPropinsi(initialData!.id, data as RefPropinsiUpdateInput);
       }
 
-      console.log('Form submission result:', result);
-
       if (result.success) {
         toast.success(
           mode === 'create' ? 'Propinsi berhasil ditambahkan' : 'Propinsi berhasil diubah'
@@ -78,22 +72,18 @@ export function RefPropinsiForm({ mode, initialData }: RefPropinsiFormProps) {
         router.push('/dashboard/referensi/propinsi');
         router.refresh();
       } else {
-        console.error('Form submission error:', result.error);
         toast.error(result.error || 'Gagal menyimpan data propinsi');
       }
     } catch (error) {
-      console.error('Form submission exception:', error);
+      console.error('Form submission error:', error);
       toast.error('Terjadi kesalahan saat menyimpan data');
     } finally {
       setIsSubmitting(false);
     }
   };
 
-  console.log('About to return form JSX');
-
   return (
-    <div className="border border-green-200 bg-green-50 p-4 rounded-lg">
-      <p className="text-green-600">Debug: Form JSX rendering!</p>
+    <div className="rounded-lg border bg-card p-6">
       <form onSubmit={handleSubmit(onSubmit)} className="space-y-6 max-w-2xl">
         <div className="grid gap-4">
           <div className="space-y-2">
@@ -141,19 +131,19 @@ export function RefPropinsiForm({ mode, initialData }: RefPropinsiFormProps) {
 
           <div className="space-y-2">
             <Label htmlFor="aktif">Status</Label>
-              <Select
-                defaultValue={initialData?.aktif === 'y' ? 'aktif' : 'nonaktif'}
-                onValueChange={(value: string) => setValue('aktif', value === 'aktif' ? 'y' : 'n')}
-                disabled={isSubmitting}
-              >
-                <SelectTrigger id="aktif">
-                  <SelectValue placeholder="Pilih status" />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="aktif">Aktif</SelectItem>
-                  <SelectItem value="nonaktif">Nonaktif</SelectItem>
-                </SelectContent>
-              </Select>
+            <Select
+              defaultValue={initialData?.aktif === 'y' ? 'aktif' : 'nonaktif'}
+              onValueChange={(value: string) => setValue('aktif', value === 'aktif' ? 'y' : 'n')}
+              disabled={isSubmitting}
+            >
+              <SelectTrigger id="aktif">
+                <SelectValue placeholder="Pilih status" />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="aktif">Aktif</SelectItem>
+                <SelectItem value="nonaktif">Nonaktif</SelectItem>
+              </SelectContent>
+            </Select>
             {errors.aktif && (
               <p className="text-sm text-destructive">{errors.aktif.message}</p>
             )}

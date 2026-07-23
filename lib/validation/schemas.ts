@@ -517,6 +517,7 @@ const pembinaanObjectSchema = z.object({
   tampil: z.enum(['y', 'n']).default('y'),
   viaInput: z.string().max(50, 'Via input maksimal 50 karakter').optional(),
   image: z.string().max(500, 'URL gambar maksimal 500 karakter').optional(),
+  uploadGdrive: z.string().max(500, 'URL Google Drive maksimal 500 karakter').optional(),
   capaianTilawah: z.string().max(50, 'Capaian tilawah maksimal 50 karakter').optional(),
   capaianTahfidz: z.string().max(50, 'Capaian tahfidz maksimal 50 karakter').optional(),
   capaianTahfidzHalaman: z.string().max(50, 'Capaian tahfidz halaman maksimal 50 karakter').optional(),
@@ -526,8 +527,32 @@ const pembinaanObjectSchema = z.object({
   membantuOrtu: z.number().int().min(1).max(5).optional(),
 });
 
-export const pembinaanSchema = z.preprocess(cleanAnakFormValues, pembinaanObjectSchema);
-export const pembinaanUpdateSchema = z.preprocess(cleanAnakFormValues, pembinaanObjectSchema.partial());
+export const pembinaanSchema = pembinaanObjectSchema;
+// For update schema, allow null for optional fields and convert to undefined
+export const pembinaanUpdateSchema = pembinaanObjectSchema
+  .partial()
+  .transform((data: any) => {
+    // Transform null values to undefined for optional fields
+    const transformed: any = {};
+    Object.keys(data).forEach((key: string) => {
+      transformed[key] = data[key] === null ? undefined : data[key];
+    });
+    return transformed;
+  });
+
+// Base schema without anakId for form (both create and edit)
+export const pembinaanFormSchema = pembinaanObjectSchema.omit({ anakId: true });
+export const pembinaanFormUpdateSchema = pembinaanObjectSchema
+  .omit({ anakId: true })
+  .partial()
+  .transform((data: any) => {
+    // Transform null values to undefined for optional fields
+    const transformed: any = {};
+    Object.keys(data).forEach((key: string) => {
+      transformed[key] = data[key] === null ? undefined : data[key];
+    });
+    return transformed;
+  });
 
 export type PembinaanInput = z.infer<typeof pembinaanSchema>;
 export type PembinaanUpdateInput = z.infer<typeof pembinaanUpdateSchema>;
@@ -795,11 +820,24 @@ const pembinaanDokumentasiObjectSchema = z.object({
   wilayahPembinaanId: z.number().int().positive('Wilayah pembinaan ID harus positif').optional(),
   image: z.string().max(500, 'URL gambar maksimal 500 karakter').optional(),
   nama: z.string().min(1, 'Nama dokumentasi wajib diisi').max(100, 'Nama dokumentasi maksimal 100 karakter'),
-  uploadGdrive: z.string().max(50, 'Upload Google Drive maksimal 50 karakter').optional(),
+  uploadGdrive: z.string().max(500, 'URL Google Drive maksimal 500 karakter').optional(),
 });
 
-export const pembinaanDokumentasiSchema = z.preprocess(cleanAnakFormValues, pembinaanDokumentasiObjectSchema);
-export const pembinaanDokumentasiUpdateSchema = z.preprocess(cleanAnakFormValues, pembinaanDokumentasiObjectSchema.partial());
+export const pembinaanDokumentasiSchema = pembinaanDokumentasiObjectSchema.refine(
+  (data) => data.image || data.uploadGdrive,
+  {
+    message: 'Dokumentasi wajib memiliki foto atau URL Google Drive',
+    path: ['image'],
+  }
+);
+
+export const pembinaanDokumentasiUpdateSchema = pembinaanDokumentasiObjectSchema.partial().refine(
+  (data) => !data.image && !data.uploadGdrive || data.image || data.uploadGdrive,
+  {
+    message: 'Dokumentasi wajib memiliki foto atau URL Google Drive',
+    path: ['image'],
+  }
+);
 
 export type PembinaanDokumentasiInput = z.infer<typeof pembinaanDokumentasiSchema>;
 export type PembinaanDokumentasiUpdateInput = z.infer<typeof pembinaanDokumentasiUpdateSchema>;

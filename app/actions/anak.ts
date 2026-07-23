@@ -10,7 +10,7 @@ import { ZodError } from 'zod';
 import { redirect } from 'next/navigation';
 import { revalidatePath } from 'next/cache';
 
-export async function getAnakList(params: { page?: number; pageSize?: number; search?: string }) {
+export async function getAnakList(params: { page?: number; pageSize?: number; search?: string; wilayahPembinaanId?: number }) {
   try {
     const session = await auth();
     if (!session?.user) {

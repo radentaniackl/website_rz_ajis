@@ -15,7 +15,7 @@ import {
   DialogHeader,
   DialogTitle,
 } from '@/components/ui/dialog';
-import { MoreHorizontal, Pencil, Trash2, Eye } from 'lucide-react';
+import { MoreVertical, Pencil, Trash2, Eye } from 'lucide-react';
 import Link from 'next/link';
 import { useState } from 'react';
 import { forceDeleteAnakAction } from '@/app/actions/anak';
@@ -65,7 +65,7 @@ export function AnakActions({ id, canEdit = true, canDelete = true }: AnakAction
       <DropdownMenu>
         <DropdownMenuTrigger asChild>
           <Button variant="ghost" size="sm">
-            <MoreHorizontal className="h-4 w-4" />
+            <MoreVertical className="h-4 w-4" />
           </Button>
         </DropdownMenuTrigger>
         <DropdownMenuContent align="end">

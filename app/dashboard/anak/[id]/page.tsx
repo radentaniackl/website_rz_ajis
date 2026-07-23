@@ -1,4 +1,3 @@
-import { PageHeader } from "@/components/shared/page-header";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { ArrowLeft, Edit, User } from "lucide-react";
@@ -74,14 +73,6 @@ async function AnakDetail({ id, userRole }: { id: string; userRole: number }) {
           </div>
         </div>
         <div className="flex gap-2">
-          {canEdit && (
-            <Link href={`/dashboard/anak/${id}/edit`}>
-              <Button variant="outline">
-                <Edit className="h-4 w-4 mr-2" />
-                Edit
-              </Button>
-            </Link>
-          )}
           <AnakActions id={Number(anak.id)} canEdit={canEdit} canDelete={canDelete} />
         </div>
       </div>
@@ -543,26 +534,23 @@ export default async function AnakDetailPage({
   const { id } = await params;
   const session = await auth();
   const userRole = session?.user?.id_group_user || 1;
-  
+
   return (
     <div className="space-y-6">
       <div className="flex items-center gap-4">
-        <Link href="/dashboard/anak">
-          <Button variant="ghost" size="icon">
-            <ArrowLeft className="h-4 w-4" />
-          </Button>
-        </Link>
-        <PageHeader 
-          title="Detail Anak" 
-          description="Lihat informasi lengkap anak"
-        />
+        <Button variant="outline" size="sm" asChild>
+          <Link href="/dashboard/anak">
+            <ArrowLeft className="mr-2 h-4 w-4" />
+            Kembali
+          </Link>
+        </Button>
+        <div>
+          <h1 className="text-2xl font-bold">Detail Anak</h1>
+          <p className="text-sm text-muted-foreground">Lihat informasi lengkap anak</p>
+        </div>
       </div>
 
-      <Card>
-        <CardContent className="pt-6">
-          <AnakDetail id={id} userRole={userRole} />
-        </CardContent>
-      </Card>
+      <AnakDetail id={id} userRole={userRole} />
     </div>
   );
 }

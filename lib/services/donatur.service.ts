@@ -3,7 +3,7 @@ import { donatur } from '@/lib/db/schema';
 import { db } from '@/lib/repositories/base.repository';
 import { count, sql, and, eq } from 'drizzle-orm';
 import {
-  pemasukan,
+  pemasangan,
   donasiTransaksi,
   penyaluran,
   pembinaan,
@@ -79,33 +79,37 @@ export async function getDonaturById(id: number) {
  * Memastikan tidak ada data yang bergantung pada donatur ini.
  */
 export async function checkDonaturDependencies(id: number) {
-  const checks = {
-    pemasangan: db
-      .select({ total: count() })
-      .from(pemasangan)
-      .where(sql`${pemasangan.donaturId} = ${BigInt(id)}`),
-    donasiTransaksi: db
-      .select({ total: count() })
-      .from(donasiTransaksi)
-      .where(sql`${donasiTransaksi.donaturId} = ${BigInt(id)}`),
-    penyaluran: db
-      .select({ total: count() })
-      .from(penyaluran)
-      .where(sql`${penyaluran.donaturId} = ${BigInt(id)}`),
-    pembinaan: db
-      .select({ total: count() })
-      .from(pembinaan)
-      .where(sql`${pembinaan.donaturId} = ${BigInt(id)}`),
-  } as const;
+  try {
+    const checks = {
+      pemasangan: db
+        .select({ total: count() })
+        .from(pemasangan)
+        .where(sql`${pemasangan.donaturId} = ${BigInt(id)}`),
+      donasiTransaksi: db
+        .select({ total: count() })
+        .from(donasiTransaksi)
+        .where(sql`${donasiTransaksi.donaturId} = ${BigInt(id)}`),
+      penyaluran: db
+        .select({ total: count() })
+        .from(penyaluran)
+        .where(sql`${penyaluran.donaturId} = ${BigInt(id)}`),
+      pembinaan: db
+        .select({ total: count() })
+        .from(pembinaan)
+        .where(sql`${pembinaan.donaturId} = ${BigInt(id)}`),
+    } as const;
 
-  const keys = Object.keys(checks) as (keyof typeof checks)[];
-  const results = await Promise.all(keys.map((k) => checks[k]));
+    const keys = Object.keys(checks) as (keyof typeof checks)[];
+    const results = await Promise.all(keys.map((k) => checks[k].catch(() => [{ total: 0 }])));
 
-  const summary: Record<string, number> = {};
-  keys.forEach((k, i) => {
-    summary[k] = Number(results[i]?.[0]?.total ?? 0);
-  });
-  return summary;
+    const summary: Record<string, number> = {};
+    keys.forEach((k, i) => {
+      summary[k] = Number(results[i]?.[0]?.total ?? 0);
+    });
+    return summary;
+  } catch (error) {
+    return {};
+  }
 }
 
 /**
@@ -117,15 +121,19 @@ export async function deleteDonaturForUser(
   options?: { force?: boolean }
 ) {
   const existing = await donaturRepo.findDonaturById(id);
-  if (!existing) return { success: false, error: 'Donatur not found' };
+  if (!existing) return { success: false, error: 'Donatur tidak ditemukan' };
 
   const deps = await checkDonaturDependencies(id);
   const hasDeps = Object.values(deps).some((v) => v > 0);
   if (hasDeps && !options?.force) {
-    return { success: false, error: 'Has dependents', dependents: deps };
+    return {
+      success: false,
+      error: 'Tidak dapat menghapus donatur karena masih memiliki data terkait (transaksi/pembinaan/penyaluran).',
+      dependents: deps,
+    };
   }
 
   const deleted = await donaturRepo.deleteDonatur(id);
-  if (!deleted) return { success: false, error: 'Failed to delete donatur' };
+  if (!deleted) return { success: false, error: 'Gagal menghapus donatur' };
   return { success: true, data: deleted };
 }

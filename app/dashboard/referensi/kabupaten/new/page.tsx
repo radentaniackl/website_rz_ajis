@@ -43,9 +43,7 @@ export default async function NewRefKabupatenPage() {
         </div>
       </div>
 
-      <div className="border border-blue-200 bg-blue-50 p-4 rounded-lg">
-        <p className="text-blue-600">Debug: About to render form with {propinsiOptions.length} propinsi options</p>
-      </div>
+
 
       <RefKabupatenForm mode="create" propinsiOptions={propinsiOptions} />
     </div>

@@ -13,11 +13,16 @@ import { Textarea } from '@/components/ui/textarea';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Checkbox } from '@/components/ui/checkbox';
-import { pembinaanSchema, type PembinaanInput } from '@/lib/validation/schemas';
+import { pembinaanSchema, pembinaanUpdateSchema, pembinaanFormSchema, pembinaanFormUpdateSchema, type PembinaanInput, type PembinaanUpdateInput } from '@/lib/validation/schemas';
 import { createPembinaanAction, updatePembinaanAction } from '@/app/actions/pembinaan';
 import { getAnakList } from '@/app/actions/anak';
-import { getSemesterOptions } from '@/app/actions/dropdown-data';
-import { ImageUpload } from '@/components/shared/image-upload';
+import { 
+  getSemesterOptions, 
+  getKantorOptions, 
+  getWilayahOptions, 
+  getSdmWilayahOptions 
+} from '@/app/actions/dropdown-data';
+
 
 interface PembinaanFormProps {
   initialData?: Partial<PembinaanInput>;
@@ -38,6 +43,7 @@ interface AttendanceRecord {
   pembiasaanTilawah?: number;
   pembiasaanSedekah?: number;
   membantuOrtu?: number;
+  pembinaanId?: number; // Track existing pembinaan ID for edit mode
 }
 
 export function PembinaanForm({ initialData, isEdit = false, pembinaanId }: PembinaanFormProps) {
@@ -51,13 +57,87 @@ export function PembinaanForm({ initialData, isEdit = false, pembinaanId }: Pemb
   const [mentorOptions, setMentorOptions] = useState<{ value: number; label: string }[]>([]);
   const [selectedMentor, setSelectedMentor] = useState<string>('');
   const [imageData, setImageData] = useState<string | undefined>(initialData?.image);
+  const [anakSearch, setAnakSearch] = useState<string>('');
+  
+  const [kantorOptions, setKantorOptions] = useState<{ value: number; label: string }[]>([]);
+  const [wilayahOptions, setWilayahOptions] = useState<{ value: number; label: string }[]>([]);
+  const [sdmOptions, setSdmOptions] = useState<{ value: number; label: string }[]>([]);
+
+  // Use different schema based on edit/create mode
+  const formSchema = isEdit 
+    ? pembinaanFormUpdateSchema
+    : pembinaanFormSchema;
+  
+  // Custom resolver that converts null to undefined before validation
+  const customResolver = zodResolver(formSchema);
+  
+  // Clean null values from initialData for form default values
+  const cleanInitialData = initialData ? Object.fromEntries(
+    Object.entries(initialData).map(([key, value]) => [key, value === null ? undefined : value])
+  ) : {};
+  
+  const defaultValues = (cleanInitialData as z.infer<typeof formSchema>) || {
+    tglPembinaan: new Date().toISOString().split('T')[0],
+    bulan: new Date().getMonth() + 1,
+    tahun: new Date().getFullYear(),
+    tampil: 'y',
+  };
+  
+  const form = useForm<z.infer<typeof formSchema>>({
+    resolver: async (data, context, options) => {
+      // Convert null to undefined before validation
+      const cleanedData = Object.fromEntries(
+        Object.entries(data).map(([key, value]) => [key, value === null ? undefined : value])
+      );
+      return customResolver(cleanedData, context, options);
+    },
+    defaultValues,
+  });
+
+  const watchKantorId = form.watch("kantorId");
+  const watchWilayahId = form.watch("wilayahPembinaanId");
 
   useEffect(() => {
-    async function fetchDropdownData() {
-      const [anak, semester] = await Promise.all([
-        getAnakList({ page: 1, pageSize: 1000 }),
+    async function fetchInitialDropdowns() {
+      const [semester, kantor] = await Promise.all([
         getSemesterOptions(),
+        getKantorOptions(),
       ]);
+      if (semester.success) setSemesterOptions(semester.data);
+      if (kantor.success) setKantorOptions(kantor.data);
+    }
+    fetchInitialDropdowns();
+  }, []);
+
+  useEffect(() => {
+    async function fetchWilayah() {
+      if (watchKantorId) {
+        const wilayah = await getWilayahOptions(watchKantorId);
+        if (wilayah.success) setWilayahOptions(wilayah.data);
+      } else {
+        setWilayahOptions([]);
+      }
+    }
+    fetchWilayah();
+  }, [watchKantorId]);
+
+  useEffect(() => {
+    async function fetchSdm() {
+      const sdm = await getSdmWilayahOptions(watchKantorId, watchWilayahId);
+      if (sdm.success) setSdmOptions(sdm.data);
+    }
+    fetchSdm();
+  }, [watchKantorId, watchWilayahId]);
+
+  useEffect(() => {
+    async function fetchAnakData() {
+      // Only fetch if wilayahPembinaanId is selected (for correlation) or if we want to show all by default
+      const params: any = { page: 1, pageSize: 1000, search: anakSearch };
+      if (watchWilayahId) {
+        params.wilayahPembinaanId = watchWilayahId;
+      }
+      
+      const anak = await getAnakList(params);
       if (anak.success) {
         setAnakOptions(anak.data.data.map((a: any) => ({ 
           value: a.id, 
@@ -65,22 +145,82 @@ export function PembinaanForm({ initialData, isEdit = false, pembinaanId }: Pemb
           data: a
         })));
       }
-      if (semester.success) {
-        setSemesterOptions(semester.data);
+    }
+    fetchAnakData();
+  }, [anakSearch, watchWilayahId]);
+
+  // Load existing pembinaan records in edit mode
+  useEffect(() => {
+    async function loadExistingRecords() {
+      if (isEdit && initialData && watchWilayahId) {
+        const params: any = { page: 1, pageSize: 1000 };
+        if (watchWilayahId) {
+          params.wilayahPembinaanId = watchWilayahId;
+        }
+        
+        const anak = await getAnakList(params);
+        
+        if (anak.success && anak.data?.data) {
+          // Fetch existing pembinaan records for this session
+          // Filter by multiple fields to get the correct session records
+          const { getPembinaanList } = await import('@/app/actions/pembinaan');
+          const pembinaanResult = await getPembinaanList({
+            page: 1,
+            pageSize: 1000,
+            semesterId: initialData.semesterId,
+          });
+
+          // Check if data is directly in data or in data.data
+          const allRecords = Array.isArray(pembinaanResult?.data) 
+            ? pembinaanResult.data 
+            : Array.isArray(pembinaanResult?.data?.data) 
+              ? pembinaanResult.data.data 
+              : [];
+          
+          // Filter records that match the current session (same date, wilayah, kantor, etc.)
+          const existingRecords = allRecords.filter((r: any) => {
+            return r.tglPembinaan === initialData.tglPembinaan &&
+                   r.wilayahPembinaanId === initialData.wilayahPembinaanId &&
+                   r.kantorId === initialData.kantorId &&
+                   (initialData.jenisPembinaan ? r.jenisPembinaan === initialData.jenisPembinaan : true);
+          });
+
+          const records = anak.data.data.map((a: any) => {
+            const label = `${a.namaLengkap} (${a.kodeAnak})`;
+            const namaLengkap = a.namaLengkap;
+            const kodeAnak = a.kodeAnak;
+            const nik = a.nik || '';
+            const pendidikanTerakhir = a.pendidikanTerakhir || '';
+            const initials = namaLengkap.split(' ').map((n: string) => n[0]).join('').toUpperCase();
+            
+            // Find existing pembinaan record for this anak
+            const existing = existingRecords?.find((r: any) => Number(r.anakId) === Number(a.id));
+            
+            return {
+              anakId: a.id,
+              namaLengkap,
+              kodeAnak,
+              nik,
+              pendidikanTerakhir,
+              initials,
+              kehadiran: existing?.kehadiran || '',
+              keterangan: existing?.keterangan || '',
+              pembiasaanShalatWajib: existing?.pembiasaanShalatWajib,
+              pembiasaanTilawah: existing?.pembiasaanTilawah,
+              pembiasaanSedekah: existing?.pembiasaanSedekah,
+              membantuOrtu: existing?.membantuOrtu,
+              pembinaanId: existing?.id,
+            };
+          });
+
+          setAttendanceRecords(records);
+          setShowAttendanceTable(true);
+        }
       }
     }
-    fetchDropdownData();
-  }, []);
+    loadExistingRecords();
+  }, [isEdit, initialData, watchWilayahId]);
 
-  const form = useForm<z.infer<typeof pembinaanSchema>>({
-    resolver: zodResolver(pembinaanSchema),
-    defaultValues: initialData as z.infer<typeof pembinaanSchema> || {
-      tglPembinaan: new Date().toISOString().split('T')[0],
-      bulan: new Date().getMonth() + 1,
-      tahun: new Date().getFullYear(),
-      tampil: 'y',
-    },
-  });
 
   const handleShowAttendance = () => {
     const records = anakOptions.map((anak) => {
@@ -119,22 +259,53 @@ export function PembinaanForm({ initialData, isEdit = false, pembinaanId }: Pemb
     );
   };
 
-  const handleSubmit = async (data: z.infer<typeof pembinaanSchema>) => {
+  const handleSubmit = async (data: z.infer<typeof formSchema>) => {
     setIsSubmitting(true);
     try {
-      // Create pembinaan records for each attended child
-      const attendedRecords = attendanceRecords.filter((r) => r.kehadiran);
+      // Include image data in the submission
+      const submitData = {
+        ...data,
+        image: imageData,
+      };
+
+      // Process all attendance records
+      const recordsToProcess = attendanceRecords.filter((r) => r.kehadiran);
       
-      if (attendedRecords.length === 0) {
+      if (recordsToProcess.length === 0 && !isEdit) {
         toast.error("Pilih minimal satu anak yang hadir");
         setIsSubmitting(false);
         return;
       }
 
-      for (const record of attendedRecords) {
-        const pembinaanData = {
-          ...data,
-          anakId: record.anakId,
+      for (const record of attendanceRecords) {
+        // Session-level data (applies to all children)
+        const sessionData = {
+          tglPembinaan: submitData.tglPembinaan,
+          semesterId: submitData.semesterId,
+          bulan: submitData.bulan,
+          tahun: submitData.tahun,
+          jenisPembinaan: submitData.jenisPembinaan,
+          p3a: submitData.p3a,
+          judulMateri: submitData.judulMateri,
+          wilayahPembinaanId: submitData.wilayahPembinaanId,
+          kantorId: submitData.kantorId,
+          pemateri: submitData.pemateri,
+          pemateriPersonal: submitData.pemateriPersonal,
+          ortuHadir: submitData.ortuHadir,
+          donaturId: submitData.donaturId,
+          programDonasi: submitData.programDonasi,
+          tampil: submitData.tampil,
+          viaInput: submitData.viaInput,
+          image: submitData.image,
+          uploadGdrive: submitData.uploadGdrive,
+          capaianTilawah: submitData.capaianTilawah,
+          capaianTahfidz: submitData.capaianTahfidz,
+          capaianTahfidzHalaman: submitData.capaianTahfidzHalaman,
+        };
+
+        // Child-level data (per child)
+        const childData = {
+          anakId: Number(record.anakId),
           kehadiran: record.kehadiran,
           keterangan: record.keterangan,
           pembiasaanShalatWajib: record.pembiasaanShalatWajib,
@@ -143,11 +314,21 @@ export function PembinaanForm({ initialData, isEdit = false, pembinaanId }: Pemb
           membantuOrtu: record.membantuOrtu,
         };
 
+        const pembinaanData = {
+          ...sessionData,
+          ...childData,
+        };
+
         let result;
-        if (isEdit && pembinaanId) {
-          result = await updatePembinaanAction(pembinaanId, pembinaanData);
-        } else {
+        if (record.pembinaanId) {
+          // Update existing record
+          result = await updatePembinaanAction(record.pembinaanId, pembinaanData);
+        } else if (record.kehadiran) {
+          // Create new record only if child has attendance
           result = await createPembinaanAction(pembinaanData);
+        } else {
+          // Skip: no attendance and no existing record
+          continue;
         }
 
         if (!result.success) {
@@ -232,9 +413,71 @@ export function PembinaanForm({ initialData, isEdit = false, pembinaanId }: Pemb
             </div>
           )}
 
-          <div className="space-y-2">
-            <Label htmlFor="pemateri">Pemateri</Label>
-            <Input id="pemateri" {...form.register("pemateri")} placeholder="Ketik nama pemateri..." />
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+            <div className="space-y-2">
+              <Label htmlFor="kantorId">Kantor Asal</Label>
+              <Select 
+                onValueChange={(value) => form.setValue("kantorId", Number(value))} 
+                value={form.watch("kantorId")?.toString() || ""}
+              >
+                <SelectTrigger id="kantorId">
+                  <SelectValue placeholder="Pilih kantor asal" />
+                </SelectTrigger>
+                <SelectContent>
+                  {kantorOptions.map((option) => (
+                    <SelectItem key={option.value} value={option.value.toString()}>
+                      {option.label}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </div>
+            
+            <div className="space-y-2">
+              <Label htmlFor="wilayahPembinaanId">Wilayah Pembinaan</Label>
+              <Select 
+                onValueChange={(value) => form.setValue("wilayahPembinaanId", Number(value))} 
+                value={form.watch("wilayahPembinaanId")?.toString() || ""}
+                disabled={!watchKantorId}
+              >
+                <SelectTrigger id="wilayahPembinaanId">
+                  <SelectValue placeholder="Pilih wilayah pembinaan" />
+                </SelectTrigger>
+                <SelectContent>
+                  {wilayahOptions.map((option) => (
+                    <SelectItem key={option.value} value={option.value.toString()}>
+                      {option.label}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </div>
+          </div>
+
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+            <div className="space-y-2">
+              <Label htmlFor="pemateri">Pemateri (SDM/Fasilitator)</Label>
+              <Select 
+                onValueChange={(value) => form.setValue("pemateri", value)} 
+                value={form.watch("pemateri") || ""}
+              >
+                <SelectTrigger id="pemateri">
+                  <SelectValue placeholder="Pilih pemateri" />
+                </SelectTrigger>
+                <SelectContent>
+                  {sdmOptions.map((option) => (
+                    <SelectItem key={option.value} value={option.label}>
+                      {option.label}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </div>
+            
+            <div className="space-y-2">
+              <Label htmlFor="pemateriPersonal">Pemateri Tambahan (Opsional)</Label>
+              <Input id="pemateriPersonal" {...form.register("pemateriPersonal")} placeholder="Ketik nama pemateri lain..." />
+            </div>
           </div>
 
           <div className="space-y-2">
@@ -242,17 +485,7 @@ export function PembinaanForm({ initialData, isEdit = false, pembinaanId }: Pemb
             <Textarea id="judulMateri" {...form.register("judulMateri")} rows={2} placeholder="Masukkan materi/pembahasan utama..." />
           </div>
 
-          <div className="space-y-2">
-            <Label htmlFor="image">Dokumentasi (Foto)</Label>
-            <ImageUpload
-              value={imageData}
-              onChange={setImageData}
-              onRemove={() => setImageData(undefined)}
-              disabled={isSubmitting}
-              accept="image/*"
-              maxSize={5}
-            />
-          </div>
+
 
           <div className="border-t pt-6">
             <h3 className="text-lg font-semibold mb-4">Daftar Kehadiran Anak Juara</h3>
@@ -262,9 +495,19 @@ export function PembinaanForm({ initialData, isEdit = false, pembinaanId }: Pemb
                 <span className="font-medium">Data Anak (ajis_anak)</span>
               </div>
               
-              <Button type="button" onClick={handleShowAttendance} variant="outline">
-                Tampilkan Data Anak
-              </Button>
+              {!isEdit && (
+                <div className="flex gap-2">
+                  <Input
+                    placeholder="Cari anak..."
+                    value={anakSearch}
+                    onChange={(e) => setAnakSearch(e.target.value)}
+                    className="max-w-xs"
+                  />
+                  <Button type="button" onClick={handleShowAttendance} variant="outline">
+                    Tampilkan Data Anak
+                  </Button>
+                </div>
+              )}
 
               {showAttendanceTable && attendanceRecords.length > 0 && (
                 <div className="rounded-md border overflow-x-auto">
@@ -415,6 +658,70 @@ export function PembinaanForm({ initialData, isEdit = false, pembinaanId }: Pemb
               </SelectContent>
             </Select>
           </div>
+
+          <div className="border-t pt-6">
+            <h3 className="text-lg font-semibold mb-4">Dokumentasi (Opsional)</h3>
+            <div className="space-y-4">
+              <div className="space-y-2">
+                <Label htmlFor="image">Upload Foto Dokumentasi</Label>
+                <Input 
+                  id="image" 
+                  type="file" 
+                  accept="image/jpeg,image/jpg,image/png"
+                  onChange={(e) => {
+                    const file = e.target.files?.[0];
+                    if (file) {
+                      if (file.size > 10 * 1024 * 1024) {
+                        toast.error("Ukuran file maksimal 10MB");
+                        return;
+                      }
+                      if (!['image/jpeg', 'image/jpg', 'image/png'].includes(file.type)) {
+                        toast.error("Format file harus JPEG, JPG, atau PNG");
+                        return;
+                      }
+                      const reader = new FileReader();
+                      reader.onloadend = () => {
+                        setImageData(reader.result as string);
+                      };
+                      reader.readAsDataURL(file);
+                    }
+                  }}
+                />
+                <p className="text-xs text-muted-foreground">Format: JPEG, JPG, PNG. Maksimal: 10MB</p>
+              </div>
+              
+              <div className="space-y-2">
+                <Label htmlFor="uploadGdrive">URL Google Drive (Opsional)</Label>
+                <Input 
+                  id="uploadGdrive" 
+                  type="url" 
+                  placeholder="https://drive.google.com/..."
+                  {...form.register("uploadGdrive")}
+                />
+                <p className="text-xs text-muted-foreground">Link Google Drive untuk dokumentasi tambahan</p>
+              </div>
+
+              {imageData && (
+                <div className="mt-4">
+                  <p className="text-sm font-medium mb-2">Preview Foto:</p>
+                  <img
+                    src={imageData}
+                    alt="Preview dokumentasi"
+                    className="w-full max-w-md rounded-lg border"
+                  />
+                  <Button
+                    type="button"
+                    variant="ghost"
+                    size="sm"
+                    onClick={() => setImageData(undefined)}
+                    className="mt-2"
+                  >
+                    Hapus Foto
+                  </Button>
+                </div>
+              )}
+            </div>
+          </div>
         </CardContent>
       </Card>
 
@@ -422,7 +729,10 @@ export function PembinaanForm({ initialData, isEdit = false, pembinaanId }: Pemb
         <Button type="button" variant="outline" onClick={() => window.history.back()}>
           Batal
         </Button>
-        <Button type="submit" disabled={isSubmitting}>
+        <Button 
+          type="submit" 
+          disabled={isSubmitting}
+        >
           {isSubmitting ? "Menyimpan..." : "Simpan Pembinaan"}
         </Button>
       </div>

@@ -15,7 +15,7 @@ import {
   DialogHeader,
   DialogTitle,
 } from '@/components/ui/dialog';
-import { MoreHorizontal, Pencil, Trash2 } from 'lucide-react';
+import { MoreVertical, Eye, Pencil, Trash2 } from 'lucide-react';
 import Link from 'next/link';
 import { useState } from 'react';
 import { deleteSdmAction } from '@/app/actions/sdm';
@@ -53,10 +53,16 @@ export function SdmActions({ id, canEdit = true, canDelete = true }: SdmActionsP
       <DropdownMenu>
         <DropdownMenuTrigger asChild>
           <Button variant="ghost" size="sm">
-            <MoreHorizontal className="h-4 w-4" />
+            <MoreVertical className="h-4 w-4" />
           </Button>
         </DropdownMenuTrigger>
         <DropdownMenuContent align="end">
+          <DropdownMenuItem>
+            <Link href={`/dashboard/sdm/${id}`} className="flex items-center w-full">
+              <Eye className="mr-2 h-4 w-4" />
+              Detail
+            </Link>
+          </DropdownMenuItem>
           {canEdit && (
             <DropdownMenuItem>
               <Link href={`/dashboard/sdm/${id}/edit`} className="flex items-center w-full">

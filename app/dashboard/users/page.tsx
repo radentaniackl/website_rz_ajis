@@ -1,6 +1,7 @@
 import { Suspense } from 'react';
 import { getUserList } from '@/app/actions/user';
 import { UserTable } from '@/components/user/user-table';
+import { PageHeader } from '@/components/shared/page-header';
 import { Button } from '@/components/ui/button';
 import { Plus } from 'lucide-react';
 import Link from 'next/link';
@@ -25,14 +26,10 @@ export default async function UsersPage(props: PageProps) {
   if (userRole === 9) {
     return (
       <div className="space-y-6">
-        <div className="flex justify-between items-center">
-          <div>
-            <h1 className="text-2xl font-bold">Users</h1>
-            <p className="text-sm text-muted-foreground">
-              Kelola data pengguna sistem
-            </p>
-          </div>
-        </div>
+        <PageHeader
+          title="Users"
+          description="Kelola data pengguna sistem"
+        />
         <div className="p-4 border border-red-200 bg-red-50 rounded-lg">
           <p className="text-red-600">Akses ditolak - Hanya Super Admin dan Branch Admin yang dapat mengakses modul ini</p>
         </div>
@@ -42,20 +39,18 @@ export default async function UsersPage(props: PageProps) {
 
   return (
     <div className="space-y-6">
-      <div className="flex justify-between items-center">
-        <div>
-          <h1 className="text-2xl font-bold">Users</h1>
-          <p className="text-sm text-muted-foreground">
-            Kelola data pengguna sistem
-          </p>
-        </div>
-        <Button asChild>
-          <Link href="/dashboard/users/new">
-            <Plus className="mr-2 h-4 w-4" />
-            Tambah User
-          </Link>
-        </Button>
-      </div>
+      <PageHeader
+        title="Users"
+        description="Kelola data pengguna sistem"
+        action={
+          <Button asChild>
+            <Link href="/dashboard/users/new">
+              <Plus className="mr-2 h-4 w-4" />
+              Tambah User
+            </Link>
+          </Button>
+        }
+      />
 
       <Suspense fallback={<div className="p-4">Memuat data...</div>}>
         <UserList
@@ -66,6 +61,7 @@ export default async function UsersPage(props: PageProps) {
     </div>
   );
 }
+
 
 async function UserList({
   page,

@@ -23,17 +23,22 @@ export async function getDesaOptions() {
   }
 }
 
-export async function getWilayahOptions() {
+export async function getWilayahOptions(kantorId?: number) {
   try {
-    const wilayah = await db
+    let query = db
       .select({
         id: ajisWilayahPembinaan.id,
         nama: ajisWilayahPembinaan.namaWilayah,
         kodeLama: ajisWilayahPembinaan.kodeLama,
       })
       .from(ajisWilayahPembinaan)
-      .where(eq(ajisWilayahPembinaan.aktif, 'y'))
-      .orderBy(ajisWilayahPembinaan.namaWilayah);
+      .where(eq(ajisWilayahPembinaan.aktif, 'y'));
+
+    if (kantorId) {
+      query = query.where(eq(ajisWilayahPembinaan.kantorId, kantorId)) as any;
+    }
+
+    const wilayah = await query.orderBy(ajisWilayahPembinaan.namaWilayah);
     
     return { success: true, data: wilayah.map(w => ({ value: Number(w.id), label: `${w.kodeLama} - ${w.nama}` })) };
   } catch (error) {
@@ -61,19 +66,29 @@ export async function getKantorOptions() {
   }
 }
 
-export async function getSdmWilayahOptions() {
+export async function getSdmWilayahOptions(kantorId?: number, wilayahId?: number) {
   try {
-    const sdm = await db
+    let query = db
       .select({
         id: ajisSdmWilayah.id,
         nama: ajisSdmWilayah.namaLengkap,
         kodeLama: ajisSdmWilayah.kodeLama,
       })
       .from(ajisSdmWilayah)
-      .where(eq(ajisSdmWilayah.aktif, 'y'))
-      .orderBy(ajisSdmWilayah.namaLengkap);
+      .where(eq(ajisSdmWilayah.aktif, 'y'));
+
+    if (kantorId) {
+      // @ts-ignore
+      query = query.where(eq(ajisSdmWilayah.penugasanKantorId, kantorId));
+    }
+    if (wilayahId) {
+      // @ts-ignore
+      query = query.where(eq(ajisSdmWilayah.penugasanWilayahId, wilayahId));
+    }
+
+    const sdm = await query.orderBy(ajisSdmWilayah.namaLengkap);
     
-    return { success: true, data: sdm.map(s => ({ value: Number(s.id), label: `${s.kodeLama} - ${s.nama}` })) };
+    return { success: true, data: sdm.map(s => ({ value: Number(s.id), label: `${s.kodeLama ? s.kodeLama + ' - ' : ''}${s.nama}` })) };
   } catch (error) {
     console.error('Error fetching sdm wilayah options:', error);
     return { success: false, error: 'Failed to fetch sdm wilayah options' };

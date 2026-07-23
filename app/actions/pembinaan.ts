@@ -52,6 +52,10 @@ export async function getPembinaanList(params: {
 
 export async function getPembinaanById(id: number) {
   try {
+    if (isNaN(id)) {
+      return { success: false, error: 'Invalid ID' };
+    }
+
     const session = await auth();
     if (!session?.user) {
       return { success: false, error: 'Unauthorized' };
@@ -60,6 +64,7 @@ export async function getPembinaanById(id: number) {
     const pembinaan = await pembinaanRepo.findPembinaanById(id);
     
     if (!pembinaan) {
+      console.log(`[DEBUG] getPembinaanById: Record with ID ${id} not found in DB`);
       return { success: false, error: 'Pembinaan not found' };
     }
 
@@ -82,10 +87,13 @@ export async function getPembinaanById(id: number) {
       if (rbacFilter) {
         const match = await db.select().from(pembinaanTable).where(and(rbacFilter, eq(pembinaanTable.id, BigInt(id)))).limit(1);
         if (!match.length) {
+          console.log(`[DEBUG] getPembinaanById: RBAC blocked access for user ${user.id} to record ${id}`);
           return { success: false, error: 'Forbidden - You do not have access to this pembinaan' };
         }
       }
     }
+
+    console.log(`[DEBUG] getPembinaanById: Success for ID ${id}`);
 
     return { success: true, data: pembinaan };
   } catch (error) {

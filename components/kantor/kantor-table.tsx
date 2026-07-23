@@ -11,8 +11,9 @@ import {
   TableRow,
 } from '@/components/ui/table';
 import { KantorActions } from './kantor-actions';
-import { ChevronLeft, ChevronRight } from 'lucide-react';
+import { ChevronLeft, ChevronRight, Download } from 'lucide-react';
 import Link from 'next/link';
+import { toast } from 'sonner';
 
 interface KantorTableProps {
   data: Array<{
@@ -44,8 +45,43 @@ export function KantorTable({
   const startRow = (currentPage - 1) * pageSize + 1;
   const endRow = Math.min(currentPage * pageSize, total);
 
+  const handleExport = () => {
+    // Export data to CSV
+    const headers = ['ID', 'Kode', 'Nama Kantor', 'Alamat', 'No Telepon', 'Kode Program RZ', 'Jenis', 'Status'];
+    const csvContent = [
+      headers.join(','),
+      ...data.map(item => [
+        item.id,
+        `"${item.kode || ''}"`,
+        `"${item.nama || ''}"`,
+        `"${item.alamat || ''}"`,
+        `"${item.noTelp || ''}"`,
+        `"${item.kodeProgramRz || ''}"`,
+        `"${item.jenis || ''}"`,
+        `"${item.aktif === 'y' ? 'Aktif' : 'Nonaktif'}"`,
+      ].join(','))
+    ].join('\n');
+
+    const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
+    const link = document.createElement('a');
+    const url = URL.createObjectURL(blob);
+    link.setAttribute('href', url);
+    link.setAttribute('download', `kantor-export-${new Date().toISOString().split('T')[0]}.csv`);
+    link.style.visibility = 'hidden';
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+    toast.success('Data berhasil diexport');
+  };
+
   return (
     <div className="space-y-4">
+      <div className="flex justify-end">
+        <Button variant="outline" size="sm" onClick={handleExport}>
+          <Download className="h-4 w-4 mr-2" />
+          Export
+        </Button>
+      </div>
       <div className="border rounded-lg overflow-hidden">
         <Table>
           <TableHeader>

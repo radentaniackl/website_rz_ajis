@@ -4,7 +4,6 @@ import { ArrowLeft } from 'lucide-react';
 import Link from 'next/link';
 
 export default function NewRefPropinsiPage() {
-  console.log('NewRefPropinsiPage rendered');
 
   return (
     <div className="space-y-6">
@@ -23,9 +22,7 @@ export default function NewRefPropinsiPage() {
         </div>
       </div>
 
-      <div className="border border-blue-200 bg-blue-50 p-4 rounded-lg">
-        <p className="text-blue-600">Debug: About to render form...</p>
-      </div>
+
 
       <RefPropinsiForm mode="create" />
     </div>

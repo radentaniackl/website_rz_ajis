@@ -1,11 +1,20 @@
 import { Suspense } from 'react';
 import { getWilayahDetail } from '@/app/actions/wilayah';
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
-import { ArrowLeft, Pencil } from 'lucide-react';
+import { ArrowLeft, CheckCircle, XCircle, Edit, Trash2 } from 'lucide-react';
 import Link from 'next/link';
 import { notFound } from 'next/navigation';
 import { auth } from '@/auth';
-import { Badge } from '@/components/ui/badge';
+import { deleteWilayahAction } from '@/app/actions/wilayah';
+import { redirect } from 'next/navigation';
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger,
+} from '@/components/ui/dropdown-menu';
 
 interface PageProps {
   params: Promise<{ id: string }>;
@@ -45,24 +54,17 @@ export default async function WilayahDetailPage(props: PageProps) {
 
   return (
     <div className="space-y-6">
-      <div className="flex items-center justify-between">
-        <div className="flex items-center gap-4">
-          <Button variant="outline" size="sm" asChild>
-            <Link href="/dashboard/wilayah">
-              <ArrowLeft className="mr-2 h-4 w-4" />
-              Kembali
-            </Link>
-          </Button>
-          <div>
-            <h1 className="text-2xl font-bold">Detail Wilayah</h1>
-          </div>
-        </div>
-        <Button asChild>
-          <Link href={`/dashboard/wilayah/${id}/edit`}>
-            <Pencil className="mr-2 h-4 w-4" />
-            Edit
+      <div className="flex items-center gap-4">
+        <Button variant="outline" size="sm" asChild>
+          <Link href="/dashboard/wilayah">
+            <ArrowLeft className="mr-2 h-4 w-4" />
+            Kembali
           </Link>
         </Button>
+        <div>
+          <h1 className="text-2xl font-bold">Detail Wilayah</h1>
+          <p className="text-sm text-muted-foreground">Informasi lengkap wilayah pembinaan</p>
+        </div>
       </div>
 
       <Suspense fallback={<div className="p-4">Loading...</div>}>
@@ -81,56 +83,108 @@ async function WilayahDetail({ id }: { id: number }) {
 
   const wilayah = result.data;
 
+  const formatDate = (date: Date | string | null) => {
+    if (!date) return '-';
+    const d = new Date(date);
+    return d.toLocaleDateString('id-ID', { day: '2-digit', month: 'long', year: 'numeric' });
+  };
+
   return (
-    <div className="grid gap-6 md:grid-cols-2">
-      <div className="space-y-4">
-        <div>
-          <h3 className="text-sm font-medium text-muted-foreground">Kode Lama</h3>
-          <p className="text-lg font-semibold">{wilayah.kodeLama ? String(wilayah.kodeLama) : '-'}</p>
-        </div>
-        <div>
-          <h3 className="text-sm font-medium text-muted-foreground">Nama Wilayah</h3>
-          <p className="text-lg font-semibold">{wilayah.namaWilayah}</p>
-        </div>
-        <div>
-          <h3 className="text-sm font-medium text-muted-foreground">Alamat Wilayah</h3>
-          <p className="text-lg">{wilayah.alamatWilayah || '-'}</p>
-        </div>
-      </div>
+    <>
+      <Card>
+        <CardHeader>
+          <CardTitle className="flex items-center justify-between">
+            <span>{wilayah.namaWilayah}</span>
+            {wilayah.aktif === 'y' ? (
+              <Badge className="bg-green-500">
+                <CheckCircle className="h-3 w-3 mr-1" />
+                Aktif
+              </Badge>
+            ) : (
+              <Badge variant="outline">
+                <XCircle className="h-3 w-3 mr-1" />
+                Nonaktif
+              </Badge>
+            )}
+          </CardTitle>
+        </CardHeader>
+        <CardContent>
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+            <div>
+              <h3 className="font-semibold text-sm text-muted-foreground mb-2">Informasi Umum</h3>
+              <div className="space-y-3">
+                <div>
+                  <label className="text-xs font-medium text-muted-foreground">Kode Lama</label>
+                  <p className="text-sm">{wilayah.kodeLama ? String(wilayah.kodeLama) : '-'}</p>
+                </div>
+                <div>
+                  <label className="text-xs font-medium text-muted-foreground">Nama Wilayah</label>
+                  <p className="text-sm">{wilayah.namaWilayah || '-'}</p>
+                </div>
+                <div>
+                  <label className="text-xs font-medium text-muted-foreground">Alamat Wilayah</label>
+                  <p className="text-sm">{wilayah.alamatWilayah || '-'}</p>
+                </div>
+                <div>
+                  <label className="text-xs font-medium text-muted-foreground">Status Approve</label>
+                  <p className="text-sm">
+                    <Badge variant={wilayah.statusApprove === 'y' || wilayah.statusApprove === 't' ? 'default' : 'secondary'}>
+                      {wilayah.statusApprove === 'y' || wilayah.statusApprove === 't' ? 'Approved' : 'Pending'}
+                    </Badge>
+                  </p>
+                </div>
+              </div>
+            </div>
 
-      <div className="space-y-4">
-        <div>
-          <h3 className="text-sm font-medium text-muted-foreground">Kantor ID</h3>
-          <p className="text-lg">{wilayah.kantorId ? String(wilayah.kantorId) : '-'}</p>
-        </div>
-        <div>
-          <h3 className="text-sm font-medium text-muted-foreground">Desa ID</h3>
-          <p className="text-lg">{wilayah.desaId ? String(wilayah.desaId) : '-'}</p>
-        </div>
-        <div>
-          <h3 className="text-sm font-medium text-muted-foreground">Status Approve</h3>
-          <Badge variant={wilayah.statusApprove === 'y' || wilayah.statusApprove === 't' ? 'default' : 'secondary'}>
-            {wilayah.statusApprove === 'y' || wilayah.statusApprove === 't' ? 'Approved' : 'Pending'}
-          </Badge>
-        </div>
-        <div>
-          <h3 className="text-sm font-medium text-muted-foreground">Status</h3>
-          <Badge variant={wilayah.aktif === 'y' ? 'default' : 'secondary'}>
-            {wilayah.aktif === 'y' ? 'Aktif' : 'Nonaktif'}
-          </Badge>
-        </div>
-      </div>
+            <div>
+              <h3 className="font-semibold text-sm text-muted-foreground mb-2">Relasi</h3>
+              <div className="space-y-3">
+                <div>
+                  <label className="text-xs font-medium text-muted-foreground">Kantor ID</label>
+                  <p className="text-sm">{wilayah.kantorId ? String(wilayah.kantorId) : '-'}</p>
+                </div>
+                <div>
+                  <label className="text-xs font-medium text-muted-foreground">Desa ID</label>
+                  <p className="text-sm">{wilayah.desaId ? String(wilayah.desaId) : '-'}</p>
+                </div>
+              </div>
+            </div>
+          </div>
 
-      <div className="md:col-span-2 space-y-4 border-t pt-4">
-        <div>
-          <h3 className="text-sm font-medium text-muted-foreground">User Insert</h3>
-          <p className="text-lg">{wilayah.userInsert || '-'}</p>
-        </div>
-        <div>
-          <h3 className="text-sm font-medium text-muted-foreground">Date Insert</h3>
-          <p className="text-lg">{wilayah.dateInsert ? new Date(wilayah.dateInsert).toLocaleDateString('id-ID') : '-'}</p>
-        </div>
+          <div className="border-t pt-6 mt-6">
+            <h3 className="font-semibold text-sm text-muted-foreground mb-2">Audit</h3>
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+              <div>
+                <label className="text-xs font-medium text-muted-foreground">User Insert</label>
+                <p className="text-sm">{wilayah.userInsert || '-'}</p>
+              </div>
+              <div>
+                <label className="text-xs font-medium text-muted-foreground">Date Insert</label>
+                <p className="text-sm">{formatDate(wilayah.dateInsert)}</p>
+              </div>
+            </div>
+          </div>
+        </CardContent>
+      </Card>
+
+      <div className="flex justify-end gap-4">
+        <Button variant="outline" asChild>
+          <Link href={`/dashboard/wilayah/${id}/edit`}>
+            <Edit className="h-4 w-4 mr-2" />
+            Edit
+          </Link>
+        </Button>
+        <form action={async () => {
+          'use server';
+          await deleteWilayahAction(id);
+          redirect('/dashboard/wilayah');
+        }}>
+          <Button type="submit" variant="destructive">
+            <Trash2 className="h-4 w-4 mr-2" />
+            Hapus
+          </Button>
+        </form>
       </div>
-    </div>
+    </>
   );
 }

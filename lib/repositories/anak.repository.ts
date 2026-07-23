@@ -19,6 +19,7 @@ export type ListAnakParams = ListParams & {
   aktif?: 'y' | 'n';
   field?: string;
   direction?: 'asc' | 'desc';
+  wilayahPembinaanId?: number;
 };
 
 // ─── READ ────────────────────────────────────────────────────────────────────
@@ -46,12 +47,13 @@ export async function findAnakByKode(kodeAnak: string): Promise<AnakRow | null> 
 }
 
 export async function listAnak(params: ListAnakParams) {
-  const { page, pageSize, search, rbacFilter, aktif = 'y', field, direction = 'desc' } = params;
+  const { page, pageSize, search, rbacFilter, aktif = 'y', field, direction = 'desc', wilayahPembinaanId } = params;
 
   return safeQuery(`listAnak(page=${page}, search=${search ?? '-'})`, async () => {
     const conditions: SQL[] = [];
 
     if (aktif) conditions.push(eq(ajisAnak.aktif, aktif));
+    if (wilayahPembinaanId) conditions.push(eq(ajisAnak.wilayahPembinaanId, BigInt(wilayahPembinaanId)));
 
     if (rbacFilter) conditions.push(rbacFilter);
     if (search) {

@@ -1,5 +1,6 @@
 import * as userRepo from '@/lib/repositories/user.repository';
 import { buildRbacFilter } from '@/lib/rbac/filters';
+import { ajisUser } from '@/lib/db/schema';
 
 /**
  * User Service
@@ -52,7 +53,7 @@ export async function listUsersByUser(
     id_group_user: user.id_group_user,
     kantor_id: user.kantor_id,
     id_wilayah_pembinaan: user.id_wilayah_pembinaan,
-  }, 'ajis_user');
+  }, ajisUser);
 
   return userRepo.listUsers({
     page,

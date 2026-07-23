@@ -5,15 +5,17 @@ import { ArrowLeft } from 'lucide-react';
 import Link from 'next/link';
 import { Button } from '@/components/ui/button';
 
-export async function generateMetadata({ params }: { params: { id: string } }) {
+export async function generateMetadata({ params }: { params: Promise<{ id: string }> }) {
+  const resolvedParams = await params;
   return {
-    title: `Edit Sesi - AJIS`,
+    title: `Edit Sesi ${resolvedParams.id} - AJIS`,
     description: 'Edit sesi pembinaan anak',
   };
 }
 
-export default async function EditPembinaanPage({ params }: { params: { id: string } }) {
-  const result = await getPembinaanById(Number(params.id));
+export default async function EditPembinaanPage({ params }: { params: Promise<{ id: string }> }) {
+  const resolvedParams = await params;
+  const result = await getPembinaanById(Number(resolvedParams.id));
 
   if (!result.success || !result.data) {
     notFound();

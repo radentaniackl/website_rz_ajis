@@ -32,7 +32,7 @@ export function DashboardLayoutWrapper({
         <AppSidebar session={session} isCollapsed={isSidebarCollapsed} />
       </div>
       
-      <div className="flex flex-1 flex-col">
+      <div className="flex min-w-0 flex-1 flex-col">
         <AppHeader session={session} onSidebarToggle={toggleSidebar} />
         
         <TabsBar />

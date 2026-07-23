@@ -1,5 +1,5 @@
 import { eq, ilike, and, count, desc, asc, sql, type SQL } from 'drizzle-orm';
-import { pembinaan, pembinaanDokumentasi } from '@/lib/db/schema';
+import { pembinaan, pembinaanDokumentasi, ajisAnak, ajisSemester } from '@/lib/db/schema';
 import { db, getOffset, safeQuery, type ListParams } from './base.repository';
 
 /**
@@ -24,11 +24,42 @@ export type ListPembinaanParams = ListParams & {
 
 // ─── READ ────────────────────────────────────────────────────────────────────
 
-export async function findPembinaanById(id: number): Promise<PembinaanRow | null> {
+export async function findPembinaanById(id: number) {
   return safeQuery(`findPembinaanById(${id})`, async () => {
     const result = await db
-      .select()
+      .select({
+        id: pembinaan.id,
+        idRowLama: pembinaan.idRowLama,
+        kodePembinaan: pembinaan.kodePembinaan,
+        tglPembinaan: pembinaan.tglPembinaan,
+        semesterId: pembinaan.semesterId,
+        semesterNama: ajisSemester.nama,
+        bulan: pembinaan.bulan,
+        tahun: pembinaan.tahun,
+        jenisPembinaan: pembinaan.jenisPembinaan,
+        p3a: pembinaan.p3a,
+        judulMateri: pembinaan.judulMateri,
+        anakId: pembinaan.anakId,
+        anakNama: ajisAnak.namaLengkap,
+        anakKode: ajisAnak.kodeAnak,
+        kehadiran: pembinaan.kehadiran,
+        keterangan: pembinaan.keterangan,
+        wilayahPembinaanId: pembinaan.wilayahPembinaanId,
+        kantorId: pembinaan.kantorId,
+        pemateri: pembinaan.pemateri,
+        pemateriPersonal: pembinaan.pemateriPersonal,
+        ortuHadir: pembinaan.ortuHadir,
+        donaturId: pembinaan.donaturId,
+        programDonasi: pembinaan.programDonasi,
+        tampil: pembinaan.tampil,
+        userInsert: pembinaan.userInsert,
+        dateInsert: pembinaan.dateInsert,
+        userUpdate: pembinaan.userUpdate,
+        dateUpdate: pembinaan.dateUpdate,
+      })
       .from(pembinaan)
+      .leftJoin(ajisAnak, eq(pembinaan.anakId, ajisAnak.id))
+      .leftJoin(ajisSemester, eq(pembinaan.semesterId, ajisSemester.id))
       .where(eq(pembinaan.id, BigInt(id)))
       .limit(1);
     return result[0] ?? null;
@@ -46,7 +77,7 @@ export async function listPembinaan(params: ListPembinaanParams) {
     if (semesterId) conditions.push(eq(pembinaan.semesterId, BigInt(semesterId)));
     if (search) {
       conditions.push(
-        sql`(${pembinaan.kodePembinaan} ILIKE ${'%' + search + '%'} OR ${pembinaan.judulMateri} ILIKE ${'%' + search + '%'})`
+        sql`(${pembinaan.kodePembinaan} ILIKE ${'%' + search + '%'} OR ${pembinaan.judulMateri} ILIKE ${'%' + search + '%'} OR ${ajisAnak.namaLengkap} ILIKE ${'%' + search + '%'} OR ${ajisAnak.kodeAnak} ILIKE ${'%' + search + '%'} OR ${pembinaan.pemateri} ILIKE ${'%' + search + '%'})`
       );
     }
 
@@ -59,13 +90,42 @@ export async function listPembinaan(params: ListPembinaanParams) {
     } else if (field === 'kodePembinaan') {
       orderBy = direction === 'asc' ? asc(pembinaan.kodePembinaan) : desc(pembinaan.kodePembinaan);
     } else {
-      orderBy = direction === 'asc' ? asc(pembinaan.dateInsert) : desc(pembinaan.dateInsert);
+      orderBy = direction === 'asc' ? asc(pembinaan.id) : desc(pembinaan.id);
     }
 
     const [rows, totalResult] = await Promise.all([
       db
-        .select()
+        .select({
+          id: pembinaan.id,
+          idRowLama: pembinaan.idRowLama,
+          kodePembinaan: pembinaan.kodePembinaan,
+          tglPembinaan: pembinaan.tglPembinaan,
+          semesterId: pembinaan.semesterId,
+          semesterNama: ajisSemester.nama,
+          bulan: pembinaan.bulan,
+          tahun: pembinaan.tahun,
+          jenisPembinaan: pembinaan.jenisPembinaan,
+          p3a: pembinaan.p3a,
+          judulMateri: pembinaan.judulMateri,
+          anakId: pembinaan.anakId,
+          anakNama: ajisAnak.namaLengkap,
+          anakKode: ajisAnak.kodeAnak,
+          kehadiran: pembinaan.kehadiran,
+          keterangan: pembinaan.keterangan,
+          wilayahPembinaanId: pembinaan.wilayahPembinaanId,
+          kantorId: pembinaan.kantorId,
+          pemateri: pembinaan.pemateri,
+          pemateriPersonal: pembinaan.pemateriPersonal,
+          ortuHadir: pembinaan.ortuHadir,
+          donaturId: pembinaan.donaturId,
+          programDonasi: pembinaan.programDonasi,
+          tampil: pembinaan.tampil,
+          userInsert: pembinaan.userInsert,
+          dateInsert: pembinaan.dateInsert,
+        })
         .from(pembinaan)
+        .leftJoin(ajisAnak, eq(pembinaan.anakId, ajisAnak.id))
+        .leftJoin(ajisSemester, eq(pembinaan.semesterId, ajisSemester.id))
         .where(where)
         .orderBy(orderBy)
         .limit(pageSize)
@@ -73,6 +133,8 @@ export async function listPembinaan(params: ListPembinaanParams) {
       db
         .select({ total: count() })
         .from(pembinaan)
+        .leftJoin(ajisAnak, eq(pembinaan.anakId, ajisAnak.id))
+        .leftJoin(ajisSemester, eq(pembinaan.semesterId, ajisSemester.id))
         .where(where),
     ]);
 
@@ -93,8 +155,8 @@ export async function listPembinaanByAnak(anakId: number, params: Omit<ListPembi
 
 export async function createPembinaan(data: NewPembinaan): Promise<PembinaanRow> {
   return safeQuery('createPembinaan', async () => {
-    const [pembinaan] = await db.insert(pembinaan).values(data).returning();
-    return pembinaan;
+    const [inserted] = await db.insert(pembinaan).values(data).returning();
+    return inserted;
   });
 }
 
@@ -103,12 +165,12 @@ export async function updatePembinaan(
   data: Partial<NewPembinaan>
 ): Promise<PembinaanRow | null> {
   return safeQuery(`updatePembinaan(${id})`, async () => {
-    const [pembinaan] = await db
+    const [updated] = await db
       .update(pembinaan)
       .set(data)
       .where(eq(pembinaan.id, BigInt(id)))
       .returning();
-    return pembinaan ?? null;
+    return updated ?? null;
   });
 }
 

@@ -1,6 +1,6 @@
 import { db } from '@/lib/db';
 import { ajisSdmWilayah } from '@/lib/db/schema';
-import { eq, or, and, ilike, desc } from 'drizzle-orm';
+import { eq, or, and, ilike, desc, count } from 'drizzle-orm';
 import { SdmWilayahInput, SdmWilayahUpdateInput } from '../validation/schemas';
 
 export async function findAll(params: {
@@ -14,7 +14,7 @@ export async function findAll(params: {
   const offset = (page - 1) * pageSize;
 
   let query = db.select().from(ajisSdmWilayah);
-  let countQuery = db.select({ count: ajisSdmWilayah.id }).from(ajisSdmWilayah);
+  let countQuery = db.select({ total: count() }).from(ajisSdmWilayah);
 
   const conditions = [];
 
@@ -50,7 +50,7 @@ export async function findAll(params: {
 
   return {
     data,
-    total: totalResult.length > 0 ? Number(totalResult[0].count) : 0,
+    total: Number(totalResult[0]?.total ?? 0),
     page,
     pageSize,
   };

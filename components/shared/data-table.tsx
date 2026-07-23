@@ -1,6 +1,6 @@
 "use client";
 
-import { useMemo, useState, ReactNode } from "react";
+import { useMemo, useState, useEffect, ReactNode } from "react";
 import {
   Search,
   MoreHorizontal,
@@ -62,6 +62,8 @@ export interface DataTableProps<T> {
   onDelete?: (row: T) => void;
   onView?: (row: T) => void;
   extraRowActions?: (row: T) => ReactNode;
+  /** Optional identifier for persisting column visibility state */
+  tableId?: string;
 }
 
 export function DataTable<T extends { id: number | string }>({
@@ -77,11 +79,28 @@ export function DataTable<T extends { id: number | string }>({
   onDelete,
   onView,
   extraRowActions,
+  tableId,
 }: DataTableProps<T>) {
   const [query, setQuery] = useState("");
   const [page, setPage] = useState(1);
   const [size, setSize] = useState<number>(pageSize);
+  // hidden column keys set, optionally persisted via tableId
   const [hidden, setHidden] = useState<Set<string>>(new Set());
+
+  // Load persisted hidden columns on mount if tableId provided
+  useEffect(() => {
+    if (tableId) {
+      try {
+        const stored = localStorage.getItem(`dt_hidden_${tableId}`);
+        if (stored) {
+          const parsed: string[] = JSON.parse(stored);
+          setHidden(new Set(parsed));
+        }
+      } catch (e) {
+        console.warn('Failed to load persisted column visibility', e);
+      }
+    }
+  }, [tableId]);
 
   const visibleColumns = useMemo(() => columns.filter((c) => !hidden.has(c.key)), [columns, hidden]);
   const toggleCol = (key: string) =>
@@ -89,6 +108,14 @@ export function DataTable<T extends { id: number | string }>({
       const n = new Set(s);
       if (n.has(key)) n.delete(key);
       else n.add(key);
+      // Persist if tableId is set
+      if (tableId) {
+        try {
+          localStorage.setItem(`dt_hidden_${tableId}`, JSON.stringify(Array.from(n)));
+        } catch (e) {
+          console.warn('Failed to persist column visibility', e);
+        }
+      }
       return n;
     });
 

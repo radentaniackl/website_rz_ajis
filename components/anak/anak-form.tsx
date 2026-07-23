@@ -215,21 +215,23 @@ export function AnakForm({ initialData, isEdit = false, anakId }: AnakFormProps)
 
   return (
     <form onSubmit={form.handleSubmit(handleSubmit)}>
-      <Tabs defaultValue="identitas" className="w-full">
-        <TabsList className="grid w-full grid-cols-6 lg:grid-cols-12">
-          <TabsTrigger value="identitas">Identitas</TabsTrigger>
-          <TabsTrigger value="pendidikan">Pendidikan</TabsTrigger>
-          <TabsTrigger value="keluarga">Keluarga</TabsTrigger>
-          <TabsTrigger value="ayah">Ayah</TabsTrigger>
-          <TabsTrigger value="ibu">Ibu</TabsTrigger>
-          <TabsTrigger value="wali">Wali</TabsTrigger>
-          <TabsTrigger value="kontak">Kontak</TabsTrigger>
-          <TabsTrigger value="karakter">Karakter</TabsTrigger>
-          <TabsTrigger value="status">Status</TabsTrigger>
-          <TabsTrigger value="organisasi">Organisasi</TabsTrigger>
-          <TabsTrigger value="peminjaman">Peminjaman</TabsTrigger>
-          <TabsTrigger value="tinggal">Tinggal</TabsTrigger>
-        </TabsList>
+      <Tabs defaultValue="identitas" className="w-full max-w-full">
+        <div className="w-full max-w-full overflow-x-auto pb-2 scrollbar-thin">
+          <TabsList className="inline-flex h-10 items-center justify-start rounded-md bg-muted p-1 text-muted-foreground w-max space-x-1">
+            <TabsTrigger value="identitas">Identitas</TabsTrigger>
+            <TabsTrigger value="pendidikan">Pendidikan</TabsTrigger>
+            <TabsTrigger value="keluarga">Keluarga</TabsTrigger>
+            <TabsTrigger value="ayah">Ayah</TabsTrigger>
+            <TabsTrigger value="ibu">Ibu</TabsTrigger>
+            <TabsTrigger value="wali">Wali</TabsTrigger>
+            <TabsTrigger value="kontak">Kontak</TabsTrigger>
+            <TabsTrigger value="karakter">Karakter</TabsTrigger>
+            <TabsTrigger value="status">Status</TabsTrigger>
+            <TabsTrigger value="organisasi">Organisasi</TabsTrigger>
+            <TabsTrigger value="peminjaman">Peminjaman</TabsTrigger>
+            <TabsTrigger value="tinggal">Tinggal</TabsTrigger>
+          </TabsList>
+        </div>
 
         {/* Tab 1: Identitas Dasar */}
         <TabsContent value="identitas">

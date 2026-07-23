@@ -7,9 +7,15 @@ import { Input } from '@/components/ui/input';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { Badge } from '@/components/ui/badge';
 import { Card, CardContent } from '@/components/ui/card';
-import { Eye, Edit, Trash2, Search, CheckCircle, XCircle } from 'lucide-react';
+import { Eye, Edit, Trash2, Search, CheckCircle, XCircle, MoreVertical, Download } from 'lucide-react';
 import { deleteSemesterAction, setActiveSemesterAction } from '@/app/actions/semester';
 import { toast } from 'sonner';
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger,
+} from '@/components/ui/dropdown-menu';
 
 interface SemesterTableProps {
   data: any[];
@@ -88,19 +94,51 @@ export function SemesterTable({ data, total, page, pageSize, search }: SemesterT
     return d.toLocaleDateString('id-ID', { day: '2-digit', month: 'short', year: 'numeric' });
   };
 
+  const handleExport = () => {
+    const headers = ['ID', 'Nama Semester', 'Jenis', 'Tahun', 'Tanggal Awal', 'Tanggal Akhir', 'Status', 'Laporan'];
+    const csvContent = [
+      headers.join(','),
+      ...data.map(item => [
+        item.id,
+        `"${item.nama || ''}"`,
+        `"${item.jenis === 'ganjil' ? 'Ganjil' : 'Genap'}"`,
+        `"${item.tahun || ''}"`,
+        `"${formatDate(item.tglAwal)}"`,
+        `"${formatDate(item.tglAkhir)}"`,
+        `"${item.onprogress === 'y' ? 'Aktif' : 'Tidak Aktif'}"`,
+        `"${item.lapsem === 'y' ? 'Ya' : 'Tidak'}"`,
+      ].join(','))
+    ].join('\n');
+
+    const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
+    const link = document.createElement('a');
+    const url = URL.createObjectURL(blob);
+    link.setAttribute('href', url);
+    link.setAttribute('download', `semester-export-${new Date().toISOString().split('T')[0]}.csv`);
+    link.style.visibility = 'hidden';
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+    toast.success('Data semester berhasil diexport');
+  };
+
   return (
     <Card>
       <CardContent className="p-6">
-        <div className="flex items-center gap-4 mb-4">
+        <div className="flex items-center justify-between gap-4 mb-4">
           <div className="relative flex-1">
             <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-muted-foreground" />
             <Input
               placeholder="Cari semester..."
-              value={search}
+              defaultValue={search}
               onChange={(e) => handleSearch(e.target.value)}
               className="pl-10"
             />
           </div>
+          <Button variant="outline" size="sm" onClick={handleExport}>
+            <Download className="h-4 w-4 mr-2" />
+            Export
+          </Button>
         </div>
 
         <div className="rounded-md border">
@@ -157,40 +195,33 @@ export function SemesterTable({ data, total, page, pageSize, search }: SemesterT
                       )}
                     </TableCell>
                     <TableCell className="text-right">
-                      <div className="flex justify-end gap-2">
-                        {semester.onprogress !== 'y' && (
-                          <Button
-                            variant="ghost"
-                            size="sm"
-                            onClick={() => handleSetActive(semester.id)}
-                            disabled={isSettingActive === semester.id}
-                          >
-                            <CheckCircle className="h-4 w-4" />
+                      <DropdownMenu>
+                        <DropdownMenuTrigger asChild>
+                          <Button variant="ghost" size="sm">
+                            <MoreVertical className="h-4 w-4" />
                           </Button>
-                        )}
-                        <Button
-                          variant="ghost"
-                          size="sm"
-                          onClick={() => router.push(`/dashboard/semester/${semester.id}`)}
-                        >
-                          <Eye className="h-4 w-4" />
-                        </Button>
-                        <Button
-                          variant="ghost"
-                          size="sm"
-                          onClick={() => router.push(`/dashboard/semester/${semester.id}/edit`)}
-                        >
-                          <Edit className="h-4 w-4" />
-                        </Button>
-                        <Button
-                          variant="ghost"
-                          size="sm"
-                          onClick={() => handleDelete(semester.id)}
-                          disabled={isDeleting === semester.id}
-                        >
-                          <Trash2 className="h-4 w-4" />
-                        </Button>
-                      </div>
+                        </DropdownMenuTrigger>
+                        <DropdownMenuContent align="end">
+                          <DropdownMenuItem onClick={() => router.push(`/dashboard/semester/${semester.id}`)}>
+                            <Eye className="h-4 w-4 mr-2" />
+                            Detail
+                          </DropdownMenuItem>
+                          {semester.onprogress !== 'y' && (
+                            <DropdownMenuItem onClick={() => handleSetActive(semester.id)} disabled={isSettingActive === semester.id}>
+                              <CheckCircle className="h-4 w-4 mr-2" />
+                              Set Aktif
+                            </DropdownMenuItem>
+                          )}
+                          <DropdownMenuItem onClick={() => router.push(`/dashboard/semester/${semester.id}/edit`)}>
+                            <Edit className="h-4 w-4 mr-2" />
+                            Edit
+                          </DropdownMenuItem>
+                          <DropdownMenuItem onClick={() => handleDelete(semester.id)} disabled={isDeleting === semester.id} className="text-destructive">
+                            <Trash2 className="h-4 w-4 mr-2" />
+                            Hapus
+                          </DropdownMenuItem>
+                        </DropdownMenuContent>
+                      </DropdownMenu>
                     </TableCell>
                   </TableRow>
                 ))

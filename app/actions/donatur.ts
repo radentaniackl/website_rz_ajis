@@ -127,7 +127,7 @@ export async function updateDonaturAction(id: number, data: DonaturUpdateInput) 
   }
 }
 
-export async function deleteDonaturAction(id: number) {
+export async function deleteDonaturAction(id: number, options?: { force?: boolean }) {
   try {
     const session = await auth();
     if (!session?.user) {
@@ -146,7 +146,7 @@ export async function deleteDonaturAction(id: number) {
       id_wilayah_pembinaan: session.user.id_wilayah_pembinaan,
     };
 
-    const result = await donaturService.deleteDonaturForUser(userSession, id);
+    const result = await donaturService.deleteDonaturForUser(userSession, id, options);
 
     if (!result.success) {
       return result; // Propagate error (e.g. Has dependents)
@@ -156,8 +156,8 @@ export async function deleteDonaturAction(id: number) {
     revalidatePath('/dashboard/sesi');
 
     return { success: true, data: result.data };
-  } catch (error) {
+  } catch (error: any) {
     console.error('Error deleting donatur:', error);
-    return { success: false, error: 'Failed to delete donatur' };
+    return { success: false, error: error?.message || 'Gagal menghapus donatur' };
   }
 }

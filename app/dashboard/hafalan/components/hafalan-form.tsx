@@ -9,6 +9,7 @@ import { Form, FormField, FormItem, FormLabel, FormControl, FormMessage } from '
 import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
+import { SearchableSelect } from '@/components/ui/searchable-select';
 import { Calendar } from '@/components/ui/calendar';
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
 import { CalendarIcon } from 'lucide-react';
@@ -91,20 +92,15 @@ export function HafalanForm({
             render={({ field }) => (
               <FormItem>
                 <FormLabel>Anak *</FormLabel>
-                <Select onValueChange={(value) => field.onChange(Number(value))} value={field.value?.toString()}>
-                  <FormControl>
-                    <SelectTrigger>
-                      <SelectValue placeholder="Pilih anak" />
-                    </SelectTrigger>
-                  </FormControl>
-                  <SelectContent>
-                    {anakList.map((anak) => (
-                      <SelectItem key={anak.id} value={anak.id.toString()}>
-                        {anak.namaLengkap} ({anak.kodeAnak})
-                      </SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
+                <FormControl>
+                  <SearchableSelect
+                    id="anakId"
+                    options={anakList.map(a => ({ value: String(a.id), label: `${a.namaLengkap} (${a.kodeAnak})` }))}
+                    value={field.value?.toString()}
+                    onValueChange={(v) => field.onChange(v ? Number(v) : undefined)}
+                    placeholder="Ketik nama atau kode anak..."
+                  />
+                </FormControl>
                 <FormMessage />
               </FormItem>
             )}
@@ -116,20 +112,15 @@ export function HafalanForm({
             render={({ field }) => (
               <FormItem>
                 <FormLabel>Item Hafalan</FormLabel>
-                <Select onValueChange={(value) => field.onChange(Number(value))} value={field.value?.toString()}>
-                  <FormControl>
-                    <SelectTrigger>
-                      <SelectValue placeholder="Pilih item hafalan (opsional)" />
-                    </SelectTrigger>
-                  </FormControl>
-                  <SelectContent>
-                    {itemHafalanList.map((item) => (
-                      <SelectItem key={item.id} value={item.id.toString()}>
-                        {item.konten}
-                      </SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
+                <FormControl>
+                  <SearchableSelect
+                    id="itemHafalanId"
+                    options={itemHafalanList.map(i => ({ value: String(i.id), label: i.konten }))}
+                    value={field.value?.toString()}
+                    onValueChange={(v) => field.onChange(v ? Number(v) : undefined)}
+                    placeholder="Ketik untuk cari item hafalan..."
+                  />
+                </FormControl>
                 <FormMessage />
               </FormItem>
             )}
@@ -205,20 +196,15 @@ export function HafalanForm({
             render={({ field }) => (
               <FormItem>
                 <FormLabel>Semester</FormLabel>
-                <Select onValueChange={(value) => field.onChange(Number(value))} value={field.value?.toString()}>
-                  <FormControl>
-                    <SelectTrigger>
-                      <SelectValue placeholder="Pilih semester" />
-                    </SelectTrigger>
-                  </FormControl>
-                  <SelectContent>
-                    {semesterList.map((semester) => (
-                      <SelectItem key={semester.id} value={semester.id.toString()}>
-                        {semester.nama}
-                      </SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
+                <FormControl>
+                  <SearchableSelect
+                    id="semesterId"
+                    options={semesterList.map(s => ({ value: String(s.id), label: s.nama }))}
+                    value={field.value?.toString()}
+                    onValueChange={(v) => field.onChange(v ? Number(v) : undefined)}
+                    placeholder="Ketik untuk cari semester..."
+                  />
+                </FormControl>
                 <FormMessage />
               </FormItem>
             )}

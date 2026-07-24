@@ -11,6 +11,7 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
 import { SearchableSelect, type SearchableSelectOption } from '@/components/ui/searchable-select';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Checkbox } from '@/components/ui/checkbox';
 import { pembinaanSchema, pembinaanUpdateSchema, pembinaanFormSchema, pembinaanFormUpdateSchema, type PembinaanInput, type PembinaanUpdateInput } from '@/lib/validation/schemas';
@@ -72,7 +73,7 @@ export function PembinaanForm({ initialData, isEdit = false, pembinaanId }: Pemb
   const customResolver = zodResolver(formSchema);
   
   // Clean null values from initialData for form default values
-  const cleanInitialData = initialData ? Object.fromEntries(
+  const cleanInitialData = initialData && typeof initialData === 'object' ? Object.fromEntries(
     Object.entries(initialData).map(([key, value]) => [key, value === null ? undefined : value])
   ) : {};
   
@@ -86,9 +87,9 @@ export function PembinaanForm({ initialData, isEdit = false, pembinaanId }: Pemb
   const form = useForm<z.infer<typeof formSchema>>({
     resolver: async (data, context, options) => {
       // Convert null to undefined before validation
-      const cleanedData = Object.fromEntries(
+      const cleanedData = (data && typeof data === 'object') ? Object.fromEntries(
         Object.entries(data).map(([key, value]) => [key, value === null ? undefined : value])
-      );
+      ) : {};
       return customResolver(cleanedData, context, options);
     },
     defaultValues,
@@ -195,6 +196,7 @@ export function PembinaanForm({ initialData, isEdit = false, pembinaanId }: Pemb
             
             // Find existing pembinaan record for this anak
             const existing = existingRecords?.find((r: any) => Number(r.anakId) === Number(a.id));
+            const isInitialChild = initialData?.anakId && Number(initialData.anakId) === Number(a.id);
             
             return {
               anakId: a.id,
@@ -203,13 +205,13 @@ export function PembinaanForm({ initialData, isEdit = false, pembinaanId }: Pemb
               nik,
               pendidikanTerakhir,
               initials,
-              kehadiran: existing?.kehadiran || '',
-              keterangan: existing?.keterangan || '',
-              pembiasaanShalatWajib: existing?.pembiasaanShalatWajib,
-              pembiasaanTilawah: existing?.pembiasaanTilawah,
-              pembiasaanSedekah: existing?.pembiasaanSedekah,
-              membantuOrtu: existing?.membantuOrtu,
-              pembinaanId: existing?.id,
+              kehadiran: existing?.kehadiran || (isInitialChild ? (initialData as any)?.kehadiran : '') || '',
+              keterangan: existing?.keterangan || (isInitialChild ? (initialData as any)?.keterangan : '') || '',
+              pembiasaanShalatWajib: existing?.pembiasaanShalatWajib ?? (isInitialChild ? initialData?.pembiasaanShalatWajib : undefined) ?? undefined,
+              pembiasaanTilawah: existing?.pembiasaanTilawah ?? (isInitialChild ? initialData?.pembiasaanTilawah : undefined) ?? undefined,
+              pembiasaanSedekah: existing?.pembiasaanSedekah ?? (isInitialChild ? initialData?.pembiasaanSedekah : undefined) ?? undefined,
+              membantuOrtu: existing?.membantuOrtu ?? (isInitialChild ? initialData?.membantuOrtu : undefined) ?? undefined,
+              pembinaanId: existing?.id ?? (isInitialChild && pembinaanId ? pembinaanId : undefined),
             };
           });
 
@@ -219,8 +221,7 @@ export function PembinaanForm({ initialData, isEdit = false, pembinaanId }: Pemb
       }
     }
     loadExistingRecords();
-  }, [isEdit, initialData, watchWilayahId]);
-
+  }, [isEdit, initialData, watchWilayahId, pembinaanId]);
 
   const handleShowAttendance = () => {
     const records = anakOptions.map((anak) => {
@@ -308,10 +309,10 @@ export function PembinaanForm({ initialData, isEdit = false, pembinaanId }: Pemb
           anakId: Number(record.anakId),
           kehadiran: record.kehadiran,
           keterangan: record.keterangan,
-          pembiasaanShalatWajib: record.pembiasaanShalatWajib,
-          pembiasaanTilawah: record.pembiasaanTilawah,
-          pembiasaanSedekah: record.pembiasaanSedekah,
-          membantuOrtu: record.membantuOrtu,
+          pembiasaanShalatWajib: record.pembiasaanShalatWajib ? Number(record.pembiasaanShalatWajib) : undefined,
+          pembiasaanTilawah: record.pembiasaanTilawah ? Number(record.pembiasaanTilawah) : undefined,
+          pembiasaanSedekah: record.pembiasaanSedekah ? Number(record.pembiasaanSedekah) : undefined,
+          membantuOrtu: record.membantuOrtu ? Number(record.membantuOrtu) : undefined,
         };
 
         const pembinaanData = {
@@ -476,7 +477,7 @@ export function PembinaanForm({ initialData, isEdit = false, pembinaanId }: Pemb
               )}
 
               {showAttendanceTable && attendanceRecords.length > 0 && (
-                <div className="rounded-md border overflow-x-auto">
+                <div className="rounded-md border overflow-x-auto min-h-[250px] pb-6">
                   <table className="w-full">
                     <thead>
                       <tr className="border-b bg-muted/50">
@@ -517,34 +518,36 @@ export function PembinaanForm({ initialData, isEdit = false, pembinaanId }: Pemb
                               </div>
                             </td>
                             <td className="p-3">
-                              <SearchableSelect
-                                id={`kehadiran-${record.anakId}`}
-                                label=""
-                                options={[
-                                  { value: 'hadir', label: 'Hadir' },
-                                  { value: 'izin', label: 'Izin' },
-                                  { value: 'sakit', label: 'Sakit' },
-                                  { value: 'alpha', label: 'Alpha' },
-                                ]}
-                                value={record.kehadiran || undefined}
+                              <Select
+                                value={record.kehadiran || ""}
                                 onValueChange={(value) => handleAttendanceChange(record.anakId, 'kehadiran', value)}
-                                placeholder="Pilih"
-                              />
+                              >
+                                <SelectTrigger className="w-[110px] h-9">
+                                  <SelectValue placeholder="Pilih" />
+                                </SelectTrigger>
+                                <SelectContent>
+                                  <SelectItem value="hadir">Hadir</SelectItem>
+                                  <SelectItem value="izin">Izin</SelectItem>
+                                  <SelectItem value="sakit">Sakit</SelectItem>
+                                  <SelectItem value="alpha">Alpha</SelectItem>
+                                </SelectContent>
+                              </Select>
                             </td>
                             <td className="p-3">
                               {record.kehadiran !== 'hadir' ? (
-                                <SearchableSelect
-                                  id={`keterangan-${record.anakId}`}
-                                  label=""
-                                  options={[
-                                    { value: 'alpa', label: 'Alpa' },
-                                    { value: 'izin', label: 'Izin' },
-                                    { value: 'sakit', label: 'Sakit' },
-                                  ]}
-                                  value={record.keterangan || undefined}
+                                <Select
+                                  value={record.keterangan || ""}
                                   onValueChange={(value) => handleAttendanceChange(record.anakId, 'keterangan', value)}
-                                  placeholder="—"
-                                />
+                                >
+                                  <SelectTrigger className="w-[110px] h-9">
+                                    <SelectValue placeholder="—" />
+                                  </SelectTrigger>
+                                  <SelectContent>
+                                    <SelectItem value="alpa">Alpa</SelectItem>
+                                    <SelectItem value="izin">Izin</SelectItem>
+                                    <SelectItem value="sakit">Sakit</SelectItem>
+                                  </SelectContent>
+                                </Select>
                               ) : (
                                 <span className="text-muted-foreground">—</span>
                               )}

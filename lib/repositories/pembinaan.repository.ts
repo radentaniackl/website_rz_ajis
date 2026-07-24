@@ -3,6 +3,20 @@ import { pembinaan, pembinaanDokumentasi, ajisAnak, ajisSemester } from '@/lib/d
 import { db, getOffset, safeQuery, type ListParams } from './base.repository';
 
 /**
+ * Converts BigInt values to Numbers in a row object.
+ * Needed because the pembinaan table uses bigserial({ mode: 'bigint' }) for its id,
+ * and BigInt values cannot be serialized by Next.js RSC protocol.
+ */
+function serializeRow<T>(row: T): T {
+  if (!row || typeof row !== 'object') return row;
+  const serialized: Record<string, unknown> = {};
+  for (const [key, value] of Object.entries(row as Record<string, unknown>)) {
+    serialized[key] = typeof value === 'bigint' ? Number(value) : value;
+  }
+  return serialized as T;
+}
+
+/**
  * Pembinaan Repository
  * Tanggung jawab:
  *   - Query data pembinaan dengan RBAC scope (kantor_id / wilayah_pembinaan_id)
@@ -52,6 +66,14 @@ export async function findPembinaanById(id: number) {
         donaturId: pembinaan.donaturId,
         programDonasi: pembinaan.programDonasi,
         tampil: pembinaan.tampil,
+        viaInput: pembinaan.viaInput,
+        capaianTilawah: pembinaan.capaianTilawah,
+        capaianTahfidz: pembinaan.capaianTahfidz,
+        capaianTahfidzHalaman: pembinaan.capaianTahfidzHalaman,
+        pembiasaanShalatWajib: pembinaan.pembiasaanShalatWajib,
+        pembiasaanTilawah: pembinaan.pembiasaanTilawah,
+        pembiasaanSedekah: pembinaan.pembiasaanSedekah,
+        membantuOrtu: pembinaan.membantuOrtu,
         userInsert: pembinaan.userInsert,
         dateInsert: pembinaan.dateInsert,
         userUpdate: pembinaan.userUpdate,
@@ -62,7 +84,8 @@ export async function findPembinaanById(id: number) {
       .leftJoin(ajisSemester, eq(pembinaan.semesterId, ajisSemester.id))
       .where(eq(pembinaan.id, BigInt(id)))
       .limit(1);
-    return result[0] ?? null;
+    const row = result[0] ?? null;
+    return row ? serializeRow(row) : null;
   });
 }
 
@@ -120,6 +143,10 @@ export async function listPembinaan(params: ListPembinaanParams) {
           donaturId: pembinaan.donaturId,
           programDonasi: pembinaan.programDonasi,
           tampil: pembinaan.tampil,
+          pembiasaanShalatWajib: pembinaan.pembiasaanShalatWajib,
+          pembiasaanTilawah: pembinaan.pembiasaanTilawah,
+          pembiasaanSedekah: pembinaan.pembiasaanSedekah,
+          membantuOrtu: pembinaan.membantuOrtu,
           userInsert: pembinaan.userInsert,
           dateInsert: pembinaan.dateInsert,
         })
@@ -139,7 +166,7 @@ export async function listPembinaan(params: ListPembinaanParams) {
     ]);
 
     return {
-      data: rows,
+      data: rows.map(serializeRow),
       total: Number(totalResult[0]?.total ?? 0),
       page,
       pageSize,

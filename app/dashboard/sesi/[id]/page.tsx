@@ -26,6 +26,11 @@ export default async function PembinaanDetailPage({ params }: { params: Promise<
 
   const pembinaan = result.data;
 
+  // Ensure pembinaan is a valid object
+  if (!pembinaan || typeof pembinaan !== 'object') {
+    notFound();
+  }
+
   const formatDate = (date: Date | string | null) => {
     if (!date) return '-';
     const d = new Date(date);
@@ -50,7 +55,7 @@ export default async function PembinaanDetailPage({ params }: { params: Promise<
       <Card>
         <CardHeader>
           <CardTitle className="flex items-center justify-between">
-            <span>Sesi #{pembinaan.id}</span>
+            <span>Sesi #{Number(pembinaan.id)}</span>
             {pembinaan.tampil === 'y' ? (
               <Badge className="bg-green-500">
                 <CheckCircle className="h-3 w-3 mr-1" />
@@ -151,23 +156,74 @@ export default async function PembinaanDetailPage({ params }: { params: Promise<
             </div>
 
             <div>
+              <h3 className="font-semibold text-sm text-muted-foreground mb-2">Dokumentasi</h3>
+              <div className="space-y-3">
+                <div>
+                  <label className="text-xs font-medium text-muted-foreground">Via Input</label>
+                  <p className="text-sm">{pembinaan.viaInput || '-'}</p>
+                </div>
+                <div>
+                  <label className="text-xs font-medium text-muted-foreground">Upload Google Drive</label>
+                  {pembinaan.uploadGdrive ? (
+                    <a 
+                      href={pembinaan.uploadGdrive} 
+                      target="_blank" 
+                      rel="noopener noreferrer"
+                      className="text-sm text-blue-600 hover:underline"
+                    >
+                      Buka Link
+                    </a>
+                  ) : (
+                    <p className="text-sm">-</p>
+                  )}
+                </div>
+                {pembinaan.image && (
+                  <div>
+                    <label className="text-xs font-medium text-muted-foreground">Foto Dokumentasi</label>
+                    <div className="mt-2">
+                      <img
+                        src={pembinaan.image}
+                        alt="Dokumentasi pembinaan"
+                        className="w-full max-w-md rounded-lg border"
+                      />
+                    </div>
+                  </div>
+                )}
+              </div>
+            </div>
+
+            <div>
+              <h3 className="font-semibold text-sm text-muted-foreground mb-2">Donasi</h3>
+              <div className="space-y-3">
+                <div>
+                  <label className="text-xs font-medium text-muted-foreground">ID Donatur</label>
+                  <p className="text-sm">{pembinaan.donaturId || '-'}</p>
+                </div>
+                <div>
+                  <label className="text-xs font-medium text-muted-foreground">Program Donasi</label>
+                  <p className="text-sm">{pembinaan.programDonasi || '-'}</p>
+                </div>
+              </div>
+            </div>
+
+            <div>
               <h3 className="font-semibold text-sm text-muted-foreground mb-2">Pembiasaan (Skala 1-5)</h3>
               <div className="space-y-3">
                 <div>
                   <label className="text-xs font-medium text-muted-foreground">Pembiasaan Shalat Wajib</label>
-                  <p className="text-sm">{pembinaan.pembiasaanShalatWajib || '-'}</p>
+                  <p className="text-sm">{pembinaan.pembiasaanShalatWajib ?? '-'}</p>
                 </div>
                 <div>
                   <label className="text-xs font-medium text-muted-foreground">Pembiasaan Tilawah</label>
-                  <p className="text-sm">{pembinaan.pembiasaanTilawah || '-'}</p>
+                  <p className="text-sm">{pembinaan.pembiasaanTilawah ?? '-'}</p>
                 </div>
                 <div>
                   <label className="text-xs font-medium text-muted-foreground">Pembiasaan Sedekah</label>
-                  <p className="text-sm">{pembinaan.pembiasaanSedekah || '-'}</p>
+                  <p className="text-sm">{pembinaan.pembiasaanSedekah ?? '-'}</p>
                 </div>
                 <div>
                   <label className="text-xs font-medium text-muted-foreground">Membantu Orang Tua</label>
-                  <p className="text-sm">{pembinaan.membantuOrtu || '-'}</p>
+                  <p className="text-sm">{pembinaan.membantuOrtu ?? '-'}</p>
                 </div>
               </div>
             </div>
@@ -206,14 +262,14 @@ export default async function PembinaanDetailPage({ params }: { params: Promise<
 
       <div className="flex justify-end gap-4">
         <Button variant="outline" asChild>
-          <Link href={`/dashboard/sesi/${pembinaan.id}/edit`}>
+          <Link href={`/dashboard/sesi/${Number(pembinaan.id)}/edit`}>
             <Edit className="h-4 w-4 mr-2" />
             Edit
           </Link>
         </Button>
         <form action={async () => {
           'use server';
-          await deletePembinaanAction(pembinaan.id);
+          await deletePembinaanAction(Number(pembinaan.id));
           redirect('/dashboard/sesi');
         }}>
           <Button type="submit" variant="destructive">

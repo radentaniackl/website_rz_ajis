@@ -521,10 +521,10 @@ const pembinaanObjectSchema = z.object({
   capaianTilawah: z.string().max(50, 'Capaian tilawah maksimal 50 karakter').optional(),
   capaianTahfidz: z.string().max(50, 'Capaian tahfidz maksimal 50 karakter').optional(),
   capaianTahfidzHalaman: z.string().max(50, 'Capaian tahfidz halaman maksimal 50 karakter').optional(),
-  pembiasaanShalatWajib: z.number().int().min(1).max(5).optional(),
-  pembiasaanTilawah: z.number().int().min(1).max(5).optional(),
-  pembiasaanSedekah: z.number().int().min(1).max(5).optional(),
-  membantuOrtu: z.number().int().min(1).max(5).optional(),
+  pembiasaanShalatWajib: z.number().int().min(1).max(5).optional().nullable(),
+  pembiasaanTilawah: z.number().int().min(1).max(5).optional().nullable(),
+  pembiasaanSedekah: z.number().int().min(1).max(5).optional().nullable(),
+  membantuOrtu: z.number().int().min(1).max(5).optional().nullable(),
 });
 
 export const pembinaanSchema = pembinaanObjectSchema;
@@ -532,6 +532,7 @@ export const pembinaanSchema = pembinaanObjectSchema;
 export const pembinaanUpdateSchema = pembinaanObjectSchema
   .partial()
   .transform((data: any) => {
+    if (!data || typeof data !== 'object') return {};
     // Transform null values to undefined for optional fields
     const transformed: any = {};
     Object.keys(data).forEach((key: string) => {
@@ -546,6 +547,7 @@ export const pembinaanFormUpdateSchema = pembinaanObjectSchema
   .omit({ anakId: true })
   .partial()
   .transform((data: any) => {
+    if (!data || typeof data !== 'object') return {};
     // Transform null values to undefined for optional fields
     const transformed: any = {};
     Object.keys(data).forEach((key: string) => {

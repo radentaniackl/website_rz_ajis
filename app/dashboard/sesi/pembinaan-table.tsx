@@ -1,6 +1,6 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { useRouter, useSearchParams } from 'next/navigation';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -29,6 +29,12 @@ export function PembinaanTable({ data, total, page, pageSize, search }: Pembinaa
   const router = useRouter();
   const searchParams = useSearchParams();
   const [isDeleting, setIsDeleting] = useState<number | null>(null);
+  const [searchValue, setSearchValue] = useState(search);
+
+  // Sync state with search prop when URL searchParam changes
+  useEffect(() => {
+    setSearchValue(search);
+  }, [search]);
 
   const totalPages = Math.ceil(total / pageSize);
 
@@ -108,8 +114,11 @@ export function PembinaanTable({ data, total, page, pageSize, search }: Pembinaa
             <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-muted-foreground" />
             <Input
               placeholder="Cari berdasarkan nama anak, kode anak, materi, atau kode sesi..."
-              defaultValue={search}
-              onChange={(e) => handleSearch(e.target.value)}
+              value={searchValue}
+              onChange={(e) => {
+                setSearchValue(e.target.value);
+                handleSearch(e.target.value);
+              }}
               className="pl-10"
             />
           </div>

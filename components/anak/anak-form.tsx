@@ -10,6 +10,7 @@ import { Label } from "@/components/ui/label";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { SearchableSelect } from "@/components/ui/searchable-select";
 import { Textarea } from "@/components/ui/textarea";
 import { Checkbox } from "@/components/ui/checkbox";
 import { anakSchema, type AnakInput, type AnakUpdateInput } from "@/lib/validation/schemas";
@@ -369,18 +370,13 @@ export function AnakForm({ initialData, isEdit = false, anakId }: AnakFormProps)
                 </div>
                 <div className="space-y-2">
                   <Label htmlFor="desaId">Desa</Label>
-                  <Select onValueChange={(value) => form.setValue("desaId", Number(value))} value={form.watch("desaId")?.toString() || ""}>
-                    <SelectTrigger id="desaId">
-                      <SelectValue placeholder="Pilih desa" />
-                    </SelectTrigger>
-                    <SelectContent>
-                      {desaOptions.map((option) => (
-                        <SelectItem key={option.value} value={option.value.toString()}>
-                          {option.label}
-                        </SelectItem>
-                      ))}
-                    </SelectContent>
-                  </Select>
+                  <SearchableSelect
+                    id="desaId"
+                    options={desaOptions.map(o => ({ value: String(o.value), label: o.label }))}
+                    value={form.watch("desaId")?.toString()}
+                    onValueChange={(v) => form.setValue("desaId", v ? Number(v) : undefined)}
+                    placeholder="Ketik untuk cari desa..."
+                  />
                 </div>
               </div>
 
@@ -569,18 +565,13 @@ export function AnakForm({ initialData, isEdit = false, anakId }: AnakFormProps)
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                 <div className="space-y-2">
                   <Label htmlFor="desaAyahId">Desa Ayah</Label>
-                  <Select onValueChange={(value) => form.setValue("desaAyahId", Number(value))} value={form.watch("desaAyahId")?.toString() || ""}>
-                    <SelectTrigger id="desaAyahId">
-                      <SelectValue placeholder="Pilih desa ayah" />
-                    </SelectTrigger>
-                    <SelectContent>
-                      {desaOptions.map((option) => (
-                        <SelectItem key={option.value} value={option.value.toString()}>
-                          {option.label}
-                        </SelectItem>
-                      ))}
-                    </SelectContent>
-                  </Select>
+                  <SearchableSelect
+                    id="desaAyahId"
+                    options={desaOptions.map(o => ({ value: String(o.value), label: o.label }))}
+                    value={form.watch("desaAyahId")?.toString()}
+                    onValueChange={(v) => form.setValue("desaAyahId", v ? Number(v) : undefined)}
+                    placeholder="Ketik untuk cari desa ayah..."
+                  />
                 </div>
                 <div className="space-y-2">
                   <Label htmlFor="pekerjaanAyah">Pekerjaan Ayah</Label>
@@ -634,18 +625,13 @@ export function AnakForm({ initialData, isEdit = false, anakId }: AnakFormProps)
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                 <div className="space-y-2">
                   <Label htmlFor="desaIbuId">Desa Ibu</Label>
-                  <Select onValueChange={(value) => form.setValue("desaIbuId", Number(value))} value={form.watch("desaIbuId")?.toString() || ""}>
-                    <SelectTrigger id="desaIbuId">
-                      <SelectValue placeholder="Pilih desa ibu" />
-                    </SelectTrigger>
-                    <SelectContent>
-                      {desaOptions.map((option) => (
-                        <SelectItem key={option.value} value={option.value.toString()}>
-                          {option.label}
-                        </SelectItem>
-                      ))}
-                    </SelectContent>
-                  </Select>
+                  <SearchableSelect
+                    id="desaIbuId"
+                    options={desaOptions.map(o => ({ value: String(o.value), label: o.label }))}
+                    value={form.watch("desaIbuId")?.toString()}
+                    onValueChange={(v) => form.setValue("desaIbuId", v ? Number(v) : undefined)}
+                    placeholder="Ketik untuk cari desa ibu..."
+                  />
                 </div>
                 <div className="space-y-2">
                   <Label htmlFor="pekerjaanIbu">Pekerjaan Ibu</Label>
@@ -699,18 +685,13 @@ export function AnakForm({ initialData, isEdit = false, anakId }: AnakFormProps)
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                 <div className="space-y-2">
                   <Label htmlFor="desaWaliId">Desa Wali</Label>
-                  <Select onValueChange={(value) => form.setValue("desaWaliId", Number(value))} value={form.watch("desaWaliId")?.toString() || ""}>
-                    <SelectTrigger id="desaWaliId">
-                      <SelectValue placeholder="Pilih desa wali" />
-                    </SelectTrigger>
-                    <SelectContent>
-                      {desaOptions.map((option) => (
-                        <SelectItem key={option.value} value={option.value.toString()}>
-                          {option.label}
-                        </SelectItem>
-                      ))}
-                    </SelectContent>
-                  </Select>
+                  <SearchableSelect
+                    id="desaWaliId"
+                    options={desaOptions.map(o => ({ value: String(o.value), label: o.label }))}
+                    value={form.watch("desaWaliId")?.toString()}
+                    onValueChange={(v) => form.setValue("desaWaliId", v ? Number(v) : undefined)}
+                    placeholder="Ketik untuk cari desa wali..."
+                  />
                 </div>
                 <div className="space-y-2">
                   <Label htmlFor="pekerjaanWali">Pekerjaan Wali</Label>
@@ -974,51 +955,36 @@ export function AnakForm({ initialData, isEdit = false, anakId }: AnakFormProps)
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                 <div className="space-y-2">
                   <Label htmlFor="wilayahPembinaanId">Wilayah Pembinaan</Label>
-                  <Select onValueChange={(value) => form.setValue("wilayahPembinaanId", Number(value))} value={form.watch("wilayahPembinaanId")?.toString() || ""}>
-                    <SelectTrigger id="wilayahPembinaanId">
-                      <SelectValue placeholder="Pilih wilayah pembinaan" />
-                    </SelectTrigger>
-                    <SelectContent>
-                      {wilayahOptions.map((option) => (
-                        <SelectItem key={option.value} value={option.value.toString()}>
-                          {option.label}
-                        </SelectItem>
-                      ))}
-                    </SelectContent>
-                  </Select>
+                  <SearchableSelect
+                    id="wilayahPembinaanId"
+                    options={wilayahOptions.map(o => ({ value: String(o.value), label: o.label }))}
+                    value={form.watch("wilayahPembinaanId")?.toString()}
+                    onValueChange={(v) => form.setValue("wilayahPembinaanId", v ? Number(v) : undefined)}
+                    placeholder="Ketik untuk cari wilayah..."
+                  />
                 </div>
                 <div className="space-y-2">
                   <Label htmlFor="kantorId">Kantor</Label>
-                  <Select onValueChange={(value) => form.setValue("kantorId", Number(value))} value={form.watch("kantorId")?.toString() || ""}>
-                    <SelectTrigger id="kantorId">
-                      <SelectValue placeholder="Pilih kantor" />
-                    </SelectTrigger>
-                    <SelectContent>
-                      {kantorOptions.map((option) => (
-                        <SelectItem key={option.value} value={option.value.toString()}>
-                          {option.label}
-                        </SelectItem>
-                      ))}
-                    </SelectContent>
-                  </Select>
+                  <SearchableSelect
+                    id="kantorId"
+                    options={kantorOptions.map(o => ({ value: String(o.value), label: o.label }))}
+                    value={form.watch("kantorId")?.toString()}
+                    onValueChange={(v) => form.setValue("kantorId", v ? Number(v) : undefined)}
+                    placeholder="Ketik untuk cari kantor..."
+                  />
                 </div>
               </div>
 
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                 <div className="space-y-2">
                   <Label htmlFor="sdmWilayahId">SDM Wilayah (Mentor)</Label>
-                  <Select onValueChange={(value) => form.setValue("sdmWilayahId", Number(value))} value={form.watch("sdmWilayahId")?.toString() || ""}>
-                    <SelectTrigger id="sdmWilayahId">
-                      <SelectValue placeholder="Pilih SDM wilayah" />
-                    </SelectTrigger>
-                    <SelectContent>
-                      {sdmOptions.map((option) => (
-                        <SelectItem key={option.value} value={option.value.toString()}>
-                          {option.label}
-                        </SelectItem>
-                      ))}
-                    </SelectContent>
-                  </Select>
+                  <SearchableSelect
+                    id="sdmWilayahId"
+                    options={sdmOptions.map(o => ({ value: String(o.value), label: o.label }))}
+                    value={form.watch("sdmWilayahId")?.toString()}
+                    onValueChange={(v) => form.setValue("sdmWilayahId", v ? Number(v) : undefined)}
+                    placeholder="Ketik untuk cari SDM / mentor..."
+                  />
                 </div>
                 <div className="space-y-2">
                   <Label htmlFor="namaMentorManual">Nama Mentor Manual</Label>

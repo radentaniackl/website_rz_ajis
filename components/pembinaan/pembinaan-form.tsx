@@ -10,7 +10,7 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
+import { SearchableSelect, type SearchableSelectOption } from '@/components/ui/searchable-select';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Checkbox } from '@/components/ui/checkbox';
 import { pembinaanSchema, pembinaanUpdateSchema, pembinaanFormSchema, pembinaanFormUpdateSchema, type PembinaanInput, type PembinaanUpdateInput } from '@/lib/validation/schemas';
@@ -370,40 +370,30 @@ export function PembinaanForm({ initialData, isEdit = false, pembinaanId }: Pemb
               )}
             </div>
             <div className="space-y-2">
-              <Label htmlFor="semesterId">Semester</Label>
-              <Select 
-                onValueChange={(value) => form.setValue("semesterId", Number(value))} 
-                value={form.watch("semesterId")?.toString() || ""}
-              >
-                <SelectTrigger id="semesterId">
-                  <SelectValue placeholder="Pilih semester" />
-                </SelectTrigger>
-                <SelectContent>
-                  {semesterOptions.map((option) => (
-                    <SelectItem key={option.value} value={option.value.toString()}>
-                      {option.label}
-                    </SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
+              <SearchableSelect
+                id="semesterId"
+                label="Semester"
+                options={semesterOptions.map(o => ({ value: String(o.value), label: o.label }))}
+                value={form.watch("semesterId")?.toString() || undefined}
+                onValueChange={(value) => form.setValue("semesterId", Number(value))}
+                placeholder="Pilih semester"
+              />
             </div>
           </div>
 
           <div className="space-y-2">
-            <Label htmlFor="jenisPembinaan">Jenis Pembinaan</Label>
-            <Select 
-              onValueChange={(value) => form.setValue("jenisPembinaan", value)} 
-              value={form.watch("jenisPembinaan") || ""}
-            >
-              <SelectTrigger id="jenisPembinaan">
-                <SelectValue placeholder="Pilih jenis pembinaan" />
-              </SelectTrigger>
-              <SelectContent>
-                <SelectItem value="Pembinaan Reguler">Pembinaan Reguler</SelectItem>
-                <SelectItem value="P3A">P3A</SelectItem>
-                <SelectItem value="Pembinaan Khusus">Pembinaan Khusus</SelectItem>
-              </SelectContent>
-            </Select>
+            <SearchableSelect
+              id="jenisPembinaan"
+              label="Jenis Pembinaan"
+              options={[
+                { value: 'Pembinaan Reguler', label: 'Pembinaan Reguler' },
+                { value: 'P3A', label: 'P3A' },
+                { value: 'Pembinaan Khusus', label: 'Pembinaan Khusus' },
+              ]}
+              value={form.watch("jenisPembinaan") || undefined}
+              onValueChange={(value) => form.setValue("jenisPembinaan", value)}
+              placeholder="Pilih jenis pembinaan"
+            />
           </div>
 
           {form.watch("jenisPembinaan") === "P3A" && (
@@ -415,63 +405,39 @@ export function PembinaanForm({ initialData, isEdit = false, pembinaanId }: Pemb
 
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
             <div className="space-y-2">
-              <Label htmlFor="kantorId">Kantor Asal</Label>
-              <Select 
-                onValueChange={(value) => form.setValue("kantorId", Number(value))} 
-                value={form.watch("kantorId")?.toString() || ""}
-              >
-                <SelectTrigger id="kantorId">
-                  <SelectValue placeholder="Pilih kantor asal" />
-                </SelectTrigger>
-                <SelectContent>
-                  {kantorOptions.map((option) => (
-                    <SelectItem key={option.value} value={option.value.toString()}>
-                      {option.label}
-                    </SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
+              <SearchableSelect
+                id="kantorId"
+                label="Kantor Asal"
+                options={kantorOptions.map(o => ({ value: String(o.value), label: o.label }))}
+                value={form.watch("kantorId")?.toString() || undefined}
+                onValueChange={(value) => form.setValue("kantorId", Number(value))}
+                placeholder="Pilih kantor asal"
+              />
             </div>
             
             <div className="space-y-2">
-              <Label htmlFor="wilayahPembinaanId">Wilayah Pembinaan</Label>
-              <Select 
-                onValueChange={(value) => form.setValue("wilayahPembinaanId", Number(value))} 
-                value={form.watch("wilayahPembinaanId")?.toString() || ""}
+              <SearchableSelect
+                id="wilayahPembinaanId"
+                label="Wilayah Pembinaan"
+                options={wilayahOptions.map(o => ({ value: String(o.value), label: o.label }))}
+                value={form.watch("wilayahPembinaanId")?.toString() || undefined}
+                onValueChange={(value) => form.setValue("wilayahPembinaanId", Number(value))}
+                placeholder="Pilih wilayah pembinaan"
                 disabled={!watchKantorId}
-              >
-                <SelectTrigger id="wilayahPembinaanId">
-                  <SelectValue placeholder="Pilih wilayah pembinaan" />
-                </SelectTrigger>
-                <SelectContent>
-                  {wilayahOptions.map((option) => (
-                    <SelectItem key={option.value} value={option.value.toString()}>
-                      {option.label}
-                    </SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
+              />
             </div>
           </div>
 
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
             <div className="space-y-2">
-              <Label htmlFor="pemateri">Pemateri (SDM/Fasilitator)</Label>
-              <Select 
-                onValueChange={(value) => form.setValue("pemateri", value)} 
-                value={form.watch("pemateri") || ""}
-              >
-                <SelectTrigger id="pemateri">
-                  <SelectValue placeholder="Pilih pemateri" />
-                </SelectTrigger>
-                <SelectContent>
-                  {sdmOptions.map((option) => (
-                    <SelectItem key={option.value} value={option.label}>
-                      {option.label}
-                    </SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
+              <SearchableSelect
+                id="pemateri"
+                label="Pemateri (SDM/Fasilitator)"
+                options={sdmOptions.map(o => ({ value: String(o.value), label: o.label }))}
+                value={form.watch("pemateri") || undefined}
+                onValueChange={(value) => form.setValue("pemateri", value)}
+                placeholder="Pilih pemateri"
+              />
             </div>
             
             <div className="space-y-2">
@@ -551,36 +517,34 @@ export function PembinaanForm({ initialData, isEdit = false, pembinaanId }: Pemb
                               </div>
                             </td>
                             <td className="p-3">
-                              <Select
-                                value={record.kehadiran}
+                              <SearchableSelect
+                                id={`kehadiran-${record.anakId}`}
+                                label=""
+                                options={[
+                                  { value: 'hadir', label: 'Hadir' },
+                                  { value: 'izin', label: 'Izin' },
+                                  { value: 'sakit', label: 'Sakit' },
+                                  { value: 'alpha', label: 'Alpha' },
+                                ]}
+                                value={record.kehadiran || undefined}
                                 onValueChange={(value) => handleAttendanceChange(record.anakId, 'kehadiran', value)}
-                              >
-                                <SelectTrigger className="w-32">
-                                  <SelectValue placeholder="Pilih" />
-                                </SelectTrigger>
-                                <SelectContent>
-                                  <SelectItem value="hadir">Hadir</SelectItem>
-                                  <SelectItem value="izin">Izin</SelectItem>
-                                  <SelectItem value="sakit">Sakit</SelectItem>
-                                  <SelectItem value="alpha">Alpha</SelectItem>
-                                </SelectContent>
-                              </Select>
+                                placeholder="Pilih"
+                              />
                             </td>
                             <td className="p-3">
                               {record.kehadiran !== 'hadir' ? (
-                                <Select
-                                  value={record.keterangan}
+                                <SearchableSelect
+                                  id={`keterangan-${record.anakId}`}
+                                  label=""
+                                  options={[
+                                    { value: 'alpa', label: 'Alpa' },
+                                    { value: 'izin', label: 'Izin' },
+                                    { value: 'sakit', label: 'Sakit' },
+                                  ]}
+                                  value={record.keterangan || undefined}
                                   onValueChange={(value) => handleAttendanceChange(record.anakId, 'keterangan', value)}
-                                >
-                                  <SelectTrigger className="w-32">
-                                    <SelectValue placeholder="—" />
-                                  </SelectTrigger>
-                                  <SelectContent>
-                                    <SelectItem value="alpa">Alpa</SelectItem>
-                                    <SelectItem value="izin">Izin</SelectItem>
-                                    <SelectItem value="sakit">Sakit</SelectItem>
-                                  </SelectContent>
-                                </Select>
+                                  placeholder="—"
+                                />
                               ) : (
                                 <span className="text-muted-foreground">—</span>
                               )}
@@ -644,19 +608,17 @@ export function PembinaanForm({ initialData, isEdit = false, pembinaanId }: Pemb
           </div>
 
           <div className="space-y-2">
-            <Label htmlFor="tampil">Tampil</Label>
-            <Select 
-              onValueChange={(value) => form.setValue("tampil", value as 'y' | 'n')} 
+            <SearchableSelect
+              id="tampil"
+              label="Tampil"
+              options={[
+                { value: 'y', label: 'Ya' },
+                { value: 'n', label: 'Tidak' },
+              ]}
               value={form.watch("tampil") || "y"}
-            >
-              <SelectTrigger id="tampil">
-                <SelectValue placeholder="Pilih tampil" />
-              </SelectTrigger>
-              <SelectContent>
-                <SelectItem value="y">Ya</SelectItem>
-                <SelectItem value="n">Tidak</SelectItem>
-              </SelectContent>
-            </Select>
+              onValueChange={(value) => form.setValue("tampil", value as 'y' | 'n')}
+              placeholder="Pilih tampil"
+            />
           </div>
 
           <div className="border-t pt-6">

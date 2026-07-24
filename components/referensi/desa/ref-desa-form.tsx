@@ -7,7 +7,7 @@ import { RefDesaInput, RefDesaUpdateInput, refDesaSchema } from '@/lib/validatio
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
+import { SearchableSelect, type SearchableSelectOption } from '@/components/ui/searchable-select';
 import { createRefDesa, updateRefDesa } from '@/app/actions/ref-desa';
 import { toast } from 'sonner';
 import { useRouter } from 'next/navigation';
@@ -29,6 +29,12 @@ interface RefDesaFormProps {
 export function RefDesaForm({ mode, initialData, kecamatanOptions }: RefDesaFormProps) {
   const router = useRouter();
   const [isSubmitting, setIsSubmitting] = useState(false);
+
+  // Convert kecamatanOptions to SearchableSelectOption format
+  const kecamatanSelectOptions: SearchableSelectOption[] = kecamatanOptions.map(k => ({
+    value: String(k.id),
+    label: k.nama,
+  }));
 
   const {
     register,
@@ -56,11 +62,6 @@ export function RefDesaForm({ mode, initialData, kecamatanOptions }: RefDesaForm
         },
   });
 
-  useEffect(() => {
-    if (initialData) {
-      setValue('kecamatanId', initialData.kecamatanId);
-    }
-  }, [initialData, setValue]);
 
   const onSubmit = async (data: RefDesaInput) => {
     setIsSubmitting(true);
@@ -95,23 +96,15 @@ export function RefDesaForm({ mode, initialData, kecamatanOptions }: RefDesaForm
         </div>
 
         <div className="space-y-2">
-          <Label htmlFor="kecamatanId">Kecamatan <span className="text-destructive">*</span></Label>
-          <Select
-            defaultValue={initialData?.kecamatanId.toString() || ''}
-            onValueChange={(value: string) => setValue('kecamatanId', Number(value))}
+          <SearchableSelect
+            id="kecamatanId"
+            label="Kecamatan"
+            options={kecamatanSelectOptions}
+            value={initialData?.kecamatanId.toString() || undefined}
+            onValueChange={(value) => setValue('kecamatanId', Number(value))}
+            placeholder="Pilih kecamatan"
             disabled={isSubmitting}
-          >
-            <SelectTrigger id="kecamatanId">
-              <SelectValue placeholder="Pilih kecamatan" />
-            </SelectTrigger>
-            <SelectContent>
-              {kecamatanOptions.map((kecamatan) => (
-                <SelectItem key={kecamatan.id} value={kecamatan.id.toString()}>
-                  {kecamatan.nama}
-                </SelectItem>
-              ))}
-            </SelectContent>
-          </Select>
+          />
           {errors.kecamatanId && <p className="text-sm text-destructive">{errors.kecamatanId.message}</p>}
         </div>
 
@@ -123,37 +116,33 @@ export function RefDesaForm({ mode, initialData, kecamatanOptions }: RefDesaForm
 
         <div className="grid grid-cols-2 gap-4">
           <div className="space-y-2">
-            <Label htmlFor="isKelurahan">Tipe</Label>
-            <Select
-              defaultValue={initialData?.isKelurahan ? 'kelurahan' : 'desa'}
-              onValueChange={(value: string) => setValue('isKelurahan', value === 'kelurahan')}
+            <SearchableSelect
+              id="isKelurahan"
+              label="Tipe"
+              options={[
+                { value: 'desa', label: 'Desa' },
+                { value: 'kelurahan', label: 'Kelurahan' },
+              ]}
+              value={initialData?.isKelurahan ? 'kelurahan' : 'desa'}
+              onValueChange={(value) => setValue('isKelurahan', value === 'kelurahan')}
+              placeholder="Pilih tipe"
               disabled={isSubmitting}
-            >
-              <SelectTrigger id="isKelurahan">
-                <SelectValue placeholder="Pilih tipe" />
-              </SelectTrigger>
-              <SelectContent>
-                <SelectItem value="desa">Desa</SelectItem>
-                <SelectItem value="kelurahan">Kelurahan</SelectItem>
-              </SelectContent>
-            </Select>
+            />
           </div>
 
           <div className="space-y-2">
-            <Label htmlFor="aktif">Status</Label>
-            <Select
-              defaultValue={initialData?.aktif === 'y' ? 'aktif' : 'nonaktif'}
-              onValueChange={(value: string) => setValue('aktif', value === 'aktif' ? 'y' : 'n')}
+            <SearchableSelect
+              id="aktif"
+              label="Status"
+              options={[
+                { value: 'y', label: 'Aktif' },
+                { value: 'n', label: 'Nonaktif' },
+              ]}
+              value={initialData?.aktif === 'y' ? 'y' : 'n'}
+              onValueChange={(value) => setValue('aktif', value)}
+              placeholder="Pilih status"
               disabled={isSubmitting}
-            >
-              <SelectTrigger id="aktif">
-                <SelectValue placeholder="Pilih status" />
-              </SelectTrigger>
-              <SelectContent>
-                <SelectItem value="aktif">Aktif</SelectItem>
-                <SelectItem value="nonaktif">Nonaktif</SelectItem>
-              </SelectContent>
-            </Select>
+            />
             {errors.aktif && <p className="text-sm text-destructive">{errors.aktif.message}</p>}
           </div>
         </div>

@@ -7,7 +7,7 @@ import { RefKabupatenInput, RefKabupatenUpdateInput, refKabupatenSchema } from '
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
+import { SearchableSelect, type SearchableSelectOption } from '@/components/ui/searchable-select';
 import { createRefKabupaten, updateRefKabupaten } from '@/app/actions/ref-kabupaten';
 import { toast } from 'sonner';
 import { useRouter } from 'next/navigation';
@@ -29,9 +29,12 @@ interface RefKabupatenFormProps {
 export function RefKabupatenForm({ mode, initialData, propinsiOptions }: RefKabupatenFormProps) {
   const router = useRouter();
   const [isSubmitting, setIsSubmitting] = useState(false);
-  const [selectedPropinsi, setSelectedPropinsi] = useState<string>(
-    initialData?.propinsiId.toString() ?? ''
-  );
+
+  // Convert propinsiOptions to SearchableSelectOption format
+  const propinsiSelectOptions: SearchableSelectOption[] = propinsiOptions.map(p => ({
+    value: String(p.id),
+    label: p.nama,
+  }));
 
   console.log('RefKabupatenForm rendered with:', { mode, initialData, propinsiOptions });
 
@@ -62,12 +65,6 @@ export function RefKabupatenForm({ mode, initialData, propinsiOptions }: RefKabu
   });
 
   console.log('RefKabupatenForm form initialized');
-
-  useEffect(() => {
-    if (initialData) {
-      setSelectedPropinsi(initialData.propinsiId.toString());
-    }
-  }, [initialData]);
 
   const onSubmit = async (data: RefKabupatenInput) => {
     setIsSubmitting(true);
@@ -102,26 +99,15 @@ export function RefKabupatenForm({ mode, initialData, propinsiOptions }: RefKabu
         </div>
 
         <div className="space-y-2">
-          <Label htmlFor="propinsiId">Propinsi <span className="text-destructive">*</span></Label>
-          <Select
-            defaultValue={initialData?.propinsiId.toString() || ''}
-            onValueChange={(value: string) => {
-              setSelectedPropinsi(value);
-              setValue('propinsiId', Number(value));
-            }}
+          <SearchableSelect
+            id="propinsiId"
+            label="Propinsi"
+            options={propinsiSelectOptions}
+            value={initialData?.propinsiId.toString() || undefined}
+            onValueChange={(value) => setValue('propinsiId', Number(value))}
+            placeholder="Pilih propinsi"
             disabled={isSubmitting}
-          >
-            <SelectTrigger id="propinsiId">
-              <SelectValue placeholder="Pilih propinsi" />
-            </SelectTrigger>
-            <SelectContent>
-              {propinsiOptions.map((propinsi) => (
-                <SelectItem key={propinsi.id} value={propinsi.id.toString()}>
-                  {propinsi.nama}
-                </SelectItem>
-              ))}
-            </SelectContent>
-          </Select>
+          />
           {errors.propinsiId && <p className="text-sm text-destructive">{errors.propinsiId.message}</p>}
         </div>
 
@@ -133,37 +119,33 @@ export function RefKabupatenForm({ mode, initialData, propinsiOptions }: RefKabu
 
         <div className="grid grid-cols-2 gap-4">
           <div className="space-y-2">
-            <Label htmlFor="isKota">Jenis</Label>
-              <Select
-                defaultValue={initialData?.isKota ? 'kota' : 'kabupaten'}
-                onValueChange={(value: string) => setValue('isKota', value === 'kota')}
-                disabled={isSubmitting}
-              >
-                <SelectTrigger id="isKota">
-                  <SelectValue placeholder="Pilih jenis" />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="kabupaten">Kabupaten</SelectItem>
-                  <SelectItem value="kota">Kota</SelectItem>
-                </SelectContent>
-              </Select>
+            <SearchableSelect
+              id="isKota"
+              label="Jenis"
+              options={[
+                { value: 'kabupaten', label: 'Kabupaten' },
+                { value: 'kota', label: 'Kota' },
+              ]}
+              value={initialData?.isKota ? 'kota' : 'kabupaten'}
+              onValueChange={(value) => setValue('isKota', value === 'kota')}
+              placeholder="Pilih jenis"
+              disabled={isSubmitting}
+            />
           </div>
 
           <div className="space-y-2">
-            <Label htmlFor="aktif">Status</Label>
-            <Select
-              defaultValue={initialData?.aktif === 'y' ? 'aktif' : 'nonaktif'}
-              onValueChange={(value: string) => setValue('aktif', value === 'aktif' ? 'y' : 'n')}
+            <SearchableSelect
+              id="aktif"
+              label="Status"
+              options={[
+                { value: 'y', label: 'Aktif' },
+                { value: 'n', label: 'Nonaktif' },
+              ]}
+              value={initialData?.aktif === 'y' ? 'y' : 'n'}
+              onValueChange={(value) => setValue('aktif', value as 'y' | 'n')}
+              placeholder="Pilih status"
               disabled={isSubmitting}
-            >
-              <SelectTrigger id="aktif">
-                <SelectValue placeholder="Pilih status" />
-              </SelectTrigger>
-              <SelectContent>
-                <SelectItem value="aktif">Aktif</SelectItem>
-                <SelectItem value="nonaktif">Nonaktif</SelectItem>
-              </SelectContent>
-            </Select>
+            />
             {errors.aktif && <p className="text-sm text-destructive">{errors.aktif.message}</p>}
           </div>
         </div>

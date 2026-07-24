@@ -1,19 +1,13 @@
 "use client";
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { wilayahSchema, type WilayahInput, type WilayahUpdateInput } from '@/lib/validation/schemas';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from '@/components/ui/select';
+import { SearchableSelect, type SearchableSelectOption } from '@/components/ui/searchable-select';
 import { createWilayahAction, updateWilayahAction } from '@/app/actions/wilayah';
 import { toast } from 'sonner';
 import { useRouter } from 'next/navigation';
@@ -35,6 +29,49 @@ interface WilayahFormProps {
 export function WilayahForm({ mode, initialData }: WilayahFormProps) {
   const router = useRouter();
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [kantorOptions, setKantorOptions] = useState<SearchableSelectOption[]>([]);
+  const [desaOptions, setDesaOptions] = useState<SearchableSelectOption[]>([]);
+  const [loadingDropdowns, setLoadingDropdowns] = useState(true);
+
+  useEffect(() => {
+    fetchDropdownData();
+  }, []);
+
+  const fetchDropdownData = async () => {
+    try {
+      setLoadingDropdowns(true);
+      // Fetch kantor list
+      const kantorRes = await fetch('/api/kantor/list');
+      if (kantorRes.ok) {
+        const kantorData = await kantorRes.json();
+        setKantorOptions(
+          (kantorData.data || []).map((k: { id: number; nama: string; kode: string }) => ({
+            value: String(k.id),
+            label: k.nama,
+            subtitle: k.kode,
+          }))
+        );
+      }
+
+      // Fetch desa list
+      const desaRes = await fetch('/api/referensi/desa/list');
+      if (desaRes.ok) {
+        const desaData = await desaRes.json();
+        setDesaOptions(
+          (desaData.data || []).map((d: { id: number; nama: string; kecamatanNama?: string; kabupatenNama?: string }) => ({
+            value: String(d.id),
+            label: d.nama,
+            subtitle: d.kecamatanNama ? `${d.kecamatanNama}, ${d.kabupatenNama}` : undefined,
+          }))
+        );
+      }
+    } catch (error) {
+      console.error('Error fetching dropdown data:', error);
+      toast.error('Gagal memuat data referensi');
+    } finally {
+      setLoadingDropdowns(false);
+    }
+  };
 
   const {
     register,
@@ -135,13 +172,14 @@ export function WilayahForm({ mode, initialData }: WilayahFormProps) {
         </div>
 
         <div className="space-y-2">
-          <Label htmlFor="kantorId">Kantor ID</Label>
-          <Input
+          <SearchableSelect
             id="kantorId"
-            type="number"
-            placeholder="Kantor ID"
-            {...register('kantorId', { valueAsNumber: true })}
-            disabled={isSubmitting}
+            label="Kantor"
+            options={kantorOptions}
+            value={initialData?.kantorId ? String(initialData.kantorId) : undefined}
+            onValueChange={(value) => setValue('kantorId', value ? Number(value) : undefined)}
+            placeholder={loadingDropdowns ? 'Memuat...' : 'Pilih kantor'}
+            disabled={isSubmitting || loadingDropdowns}
           />
           {errors.kantorId && (
             <p className="text-sm text-destructive">{errors.kantorId.message}</p>
@@ -149,13 +187,14 @@ export function WilayahForm({ mode, initialData }: WilayahFormProps) {
         </div>
 
         <div className="space-y-2">
-          <Label htmlFor="desaId">Desa ID</Label>
-          <Input
+          <SearchableSelect
             id="desaId"
-            type="number"
-            placeholder="Desa ID"
-            {...register('desaId', { valueAsNumber: true })}
-            disabled={isSubmitting}
+            label="Lokasi (Desa)"
+            options={desaOptions}
+            value={initialData?.desaId ? String(initialData.desaId) : undefined}
+            onValueChange={(value) => setValue('desaId', value ? Number(value) : undefined)}
+            placeholder={loadingDropdowns ? 'Memuat...' : 'Pilih desa'}
+            disabled={isSubmitting || loadingDropdowns}
           />
           {errors.desaId && (
             <p className="text-sm text-destructive">{errors.desaId.message}</p>
@@ -163,40 +202,36 @@ export function WilayahForm({ mode, initialData }: WilayahFormProps) {
         </div>
 
         <div className="space-y-2">
-          <Label htmlFor="statusApprove">Status Approve</Label>
-            <Select
-              defaultValue={initialData?.statusApprove || undefined}
-              onValueChange={(value: string) => setValue('statusApprove', value)}
-              disabled={isSubmitting}
-            >
-              <SelectTrigger id="statusApprove">
-                <SelectValue placeholder="Pilih status approve" />
-              </SelectTrigger>
-              <SelectContent>
-                <SelectItem value="y">Approved (y)</SelectItem>
-                <SelectItem value="t">Approved (t)</SelectItem>
-              </SelectContent>
-            </Select>
+          <SearchableSelect
+            id="statusApprove"
+            label="Status Approve"
+            options={[
+              { value: 'y', label: 'Approved (y)' },
+              { value: 't', label: 'Approved (t)' },
+            ]}
+            value={initialData?.statusApprove || undefined}
+            onValueChange={(value) => setValue('statusApprove', value)}
+            placeholder="Pilih status approve"
+            disabled={isSubmitting}
+          />
           {errors.statusApprove && (
             <p className="text-sm text-destructive">{errors.statusApprove.message}</p>
           )}
         </div>
 
         <div className="space-y-2">
-          <Label htmlFor="aktif">Status</Label>
-            <Select
-              defaultValue={initialData?.aktif === 'y' ? 'aktif' : 'nonaktif'}
-              onValueChange={(value: string) => setValue('aktif', value === 'aktif' ? 'y' : 'n')}
-              disabled={isSubmitting}
-            >
-              <SelectTrigger id="aktif">
-                <SelectValue placeholder="Pilih status" />
-              </SelectTrigger>
-              <SelectContent>
-                <SelectItem value="aktif">Aktif</SelectItem>
-                <SelectItem value="nonaktif">Nonaktif</SelectItem>
-              </SelectContent>
-            </Select>
+          <SearchableSelect
+            id="aktif"
+            label="Status"
+            options={[
+              { value: 'y', label: 'Aktif' },
+              { value: 'n', label: 'Nonaktif' },
+            ]}
+            value={initialData?.aktif === 'y' ? 'y' : 'n'}
+            onValueChange={(value) => setValue('aktif', value)}
+            placeholder="Pilih status"
+            disabled={isSubmitting}
+          />
           {errors.aktif && (
             <p className="text-sm text-destructive">{errors.aktif.message}</p>
           )}

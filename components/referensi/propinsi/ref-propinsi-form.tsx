@@ -7,13 +7,7 @@ import { refPropinsiSchema, type RefPropinsiInput, type RefPropinsiUpdateInput }
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from '@/components/ui/select';
+import { SearchableSelect } from '@/components/ui/searchable-select';
 import { createRefPropinsi, updateRefPropinsi } from '@/app/actions/ref-propinsi';
 import { toast } from 'sonner';
 import { useRouter } from 'next/navigation';
@@ -130,20 +124,18 @@ export function RefPropinsiForm({ mode, initialData }: RefPropinsiFormProps) {
           </div>
 
           <div className="space-y-2">
-            <Label htmlFor="aktif">Status</Label>
-            <Select
-              defaultValue={initialData?.aktif === 'y' ? 'aktif' : 'nonaktif'}
-              onValueChange={(value: string) => setValue('aktif', value === 'aktif' ? 'y' : 'n')}
+            <SearchableSelect
+              id="aktif"
+              label="Status"
+              options={[
+                { value: 'y', label: 'Aktif' },
+                { value: 'n', label: 'Nonaktif' },
+              ]}
+              value={initialData?.aktif === 'y' ? 'y' : 'n'}
+              onValueChange={(value) => setValue('aktif', value)}
+              placeholder="Pilih status"
               disabled={isSubmitting}
-            >
-              <SelectTrigger id="aktif">
-                <SelectValue placeholder="Pilih status" />
-              </SelectTrigger>
-              <SelectContent>
-                <SelectItem value="aktif">Aktif</SelectItem>
-                <SelectItem value="nonaktif">Nonaktif</SelectItem>
-              </SelectContent>
-            </Select>
+            />
             {errors.aktif && (
               <p className="text-sm text-destructive">{errors.aktif.message}</p>
             )}

@@ -9,7 +9,7 @@ import { toast } from 'sonner';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
+import { SearchableSelect } from '@/components/ui/searchable-select';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { pembinaanDokumentasiSchema, pembinaanDokumentasiUpdateSchema, type PembinaanDokumentasiInput, type PembinaanDokumentasiUpdateInput } from '@/lib/validation/schemas';
 import { createPembinaanDokumentasiAction, updatePembinaanDokumentasiAction } from '@/app/actions/pembinaan-dokumentasi';
@@ -124,60 +124,36 @@ export function DokumentasiForm({ initialData, isEdit = false, dokumentasiId }: 
 
           <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
             <div className="space-y-2">
-              <Label htmlFor="semesterId">Semester</Label>
-              <Select 
-                onValueChange={(value) => form.setValue("semesterId", Number(value))} 
-                value={form.watch("semesterId")?.toString() || ""}
-              >
-                <SelectTrigger id="semesterId">
-                  <SelectValue placeholder="Pilih semester" />
-                </SelectTrigger>
-                <SelectContent>
-                  {semesterOptions.map((option) => (
-                    <SelectItem key={option.value} value={option.value.toString()}>
-                      {option.label}
-                    </SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
+              <SearchableSelect
+                id="semesterId"
+                label="Semester"
+                options={semesterOptions.map(o => ({ value: String(o.value), label: o.label }))}
+                value={form.watch("semesterId")?.toString() || undefined}
+                onValueChange={(value) => form.setValue("semesterId", Number(value))}
+                placeholder="Pilih semester"
+              />
             </div>
 
             <div className="space-y-2">
-              <Label htmlFor="kantorId">Kantor</Label>
-              <Select 
-                onValueChange={(value) => form.setValue("kantorId", Number(value))} 
-                value={form.watch("kantorId")?.toString() || ""}
-              >
-                <SelectTrigger id="kantorId">
-                  <SelectValue placeholder="Pilih kantor" />
-                </SelectTrigger>
-                <SelectContent>
-                  {kantorOptions.map((option) => (
-                    <SelectItem key={option.value} value={option.value.toString()}>
-                      {option.label}
-                    </SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
+              <SearchableSelect
+                id="kantorId"
+                label="Kantor"
+                options={kantorOptions.map(o => ({ value: String(o.value), label: o.label }))}
+                value={form.watch("kantorId")?.toString() || undefined}
+                onValueChange={(value) => form.setValue("kantorId", Number(value))}
+                placeholder="Pilih kantor"
+              />
             </div>
 
             <div className="space-y-2">
-              <Label htmlFor="wilayahPembinaanId">Wilayah Pembinaan</Label>
-              <Select 
-                onValueChange={(value) => form.setValue("wilayahPembinaanId", Number(value))} 
-                value={form.watch("wilayahPembinaanId")?.toString() || ""}
-              >
-                <SelectTrigger id="wilayahPembinaanId">
-                  <SelectValue placeholder="Pilih wilayah" />
-                </SelectTrigger>
-                <SelectContent>
-                  {wilayahOptions.map((option) => (
-                    <SelectItem key={option.value} value={option.value.toString()}>
-                      {option.label}
-                    </SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
+              <SearchableSelect
+                id="wilayahPembinaanId"
+                label="Wilayah Pembinaan"
+                options={wilayahOptions.map(o => ({ value: String(o.value), label: o.label }))}
+                value={form.watch("wilayahPembinaanId")?.toString() || undefined}
+                onValueChange={(value) => form.setValue("wilayahPembinaanId", Number(value))}
+                placeholder="Pilih wilayah"
+              />
             </div>
           </div>
 

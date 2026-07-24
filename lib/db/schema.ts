@@ -30,6 +30,7 @@ export {
   pengajuanPergantianAnak,
   peminjamanAjisAnak,
   hafalanAnak,
+  itemHafalan,
   penilaianAnak,
   laporanSemester,
   laporanSemesterPembinaan,

@@ -7,7 +7,7 @@ import { RefKecamatanInput, RefKecamatanUpdateInput, refKecamatanSchema } from '
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
+import { SearchableSelect, type SearchableSelectOption } from '@/components/ui/searchable-select';
 import { createRefKecamatan, updateRefKecamatan } from '@/app/actions/ref-kecamatan';
 import { toast } from 'sonner';
 import { useRouter } from 'next/navigation';
@@ -28,6 +28,12 @@ interface RefKecamatanFormProps {
 export function RefKecamatanForm({ mode, initialData, kabupatenOptions }: RefKecamatanFormProps) {
   const router = useRouter();
   const [isSubmitting, setIsSubmitting] = useState(false);
+
+  // Convert kabupatenOptions to SearchableSelectOption format
+  const kabupatenSelectOptions: SearchableSelectOption[] = kabupatenOptions.map(k => ({
+    value: String(k.id),
+    label: k.nama,
+  }));
 
   const {
     register,
@@ -53,11 +59,6 @@ export function RefKecamatanForm({ mode, initialData, kabupatenOptions }: RefKec
         },
   });
 
-  useEffect(() => {
-    if (initialData) {
-      setValue('kabupatenId', initialData.kabupatenId);
-    }
-  }, [initialData, setValue]);
 
   const onSubmit = async (data: RefKecamatanInput) => {
     setIsSubmitting(true);
@@ -92,23 +93,15 @@ export function RefKecamatanForm({ mode, initialData, kabupatenOptions }: RefKec
         </div>
 
         <div className="space-y-2">
-          <Label htmlFor="kabupatenId">Kabupaten <span className="text-destructive">*</span></Label>
-          <Select
-            defaultValue={initialData?.kabupatenId.toString() || ''}
-            onValueChange={(value: string) => setValue('kabupatenId', Number(value))}
+          <SearchableSelect
+            id="kabupatenId"
+            label="Kabupaten"
+            options={kabupatenSelectOptions}
+            value={initialData?.kabupatenId.toString() || undefined}
+            onValueChange={(value) => setValue('kabupatenId', Number(value))}
+            placeholder="Pilih kabupaten"
             disabled={isSubmitting}
-          >
-            <SelectTrigger id="kabupatenId">
-              <SelectValue placeholder="Pilih kabupaten" />
-            </SelectTrigger>
-            <SelectContent>
-              {kabupatenOptions.map((kabupaten) => (
-                <SelectItem key={kabupaten.id} value={kabupaten.id.toString()}>
-                  {kabupaten.nama}
-                </SelectItem>
-              ))}
-            </SelectContent>
-          </Select>
+          />
           {errors.kabupatenId && <p className="text-sm text-destructive">{errors.kabupatenId.message}</p>}
         </div>
 
@@ -125,20 +118,18 @@ export function RefKecamatanForm({ mode, initialData, kabupatenOptions }: RefKec
         </div>
 
         <div className="space-y-2">
-          <Label htmlFor="aktif">Status</Label>
-            <Select
-              defaultValue={initialData?.aktif === 'y' ? 'aktif' : 'nonaktif'}
-              onValueChange={(value: string) => setValue('aktif', value === 'aktif' ? 'y' : 'n')}
-              disabled={isSubmitting}
-            >
-              <SelectTrigger id="aktif">
-                <SelectValue placeholder="Pilih status" />
-              </SelectTrigger>
-              <SelectContent>
-                <SelectItem value="aktif">Aktif</SelectItem>
-                <SelectItem value="nonaktif">Nonaktif</SelectItem>
-              </SelectContent>
-            </Select>
+          <SearchableSelect
+            id="aktif"
+            label="Status"
+            options={[
+              { value: 'y', label: 'Aktif' },
+              { value: 'n', label: 'Nonaktif' },
+            ]}
+            value={initialData?.aktif === 'y' ? 'y' : 'n'}
+            onValueChange={(value) => setValue('aktif', value)}
+            placeholder="Pilih status"
+            disabled={isSubmitting}
+          />
           {errors.aktif && <p className="text-sm text-destructive">{errors.aktif.message}</p>}
         </div>
       </div>

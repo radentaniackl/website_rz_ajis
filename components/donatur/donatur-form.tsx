@@ -9,7 +9,7 @@ import { toast } from 'sonner';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
+import { SearchableSelect } from '@/components/ui/searchable-select';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Textarea } from '@/components/ui/textarea';
@@ -133,46 +133,42 @@ export function DonaturForm({ initialData, isEdit = false, donaturId }: DonaturF
                   />
                 </div>
                 <div className="space-y-2">
-                  <Label htmlFor="jenisKelamin">Jenis Kelamin</Label>
-                  <Select 
-                    onValueChange={(value) => form.setValue("jenisKelamin", value as 'l' | 'p' | 't')} 
+                  <SearchableSelect
+                    id="jenisKelamin"
+                    label="Jenis Kelamin"
+                    options={[
+                      { value: 'l', label: 'Laki-laki' },
+                      { value: 'p', label: 'Perempuan' },
+                      { value: 't', label: 'Tidak Diketahui' },
+                    ]}
                     value={form.watch("jenisKelamin") || "t"}
-                  >
-                    <SelectTrigger id="jenisKelamin">
-                      <SelectValue placeholder="Pilih jenis kelamin" />
-                    </SelectTrigger>
-                    <SelectContent>
-                      <SelectItem value="l">Laki-laki</SelectItem>
-                      <SelectItem value="p">Perempuan</SelectItem>
-                      <SelectItem value="t">Tidak Diketahui</SelectItem>
-                    </SelectContent>
-                  </Select>
+                    onValueChange={(value) => form.setValue("jenisKelamin", value as 'l' | 'p' | 't')}
+                    placeholder="Pilih jenis kelamin"
+                  />
                 </div>
               </div>
 
               <div className="space-y-2">
-                <Label htmlFor="statusDonatur">Status Donatur *</Label>
-                <Select 
-                  onValueChange={(value) => form.setValue("statusDonatur", value)} 
-                  value={form.watch("statusDonatur") || ""}
-                >
-                  <SelectTrigger id="statusDonatur">
-                    <SelectValue placeholder="Pilih status donatur" />
-                  </SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="individu">Individu</SelectItem>
-                    <SelectItem value="corporate">Corporate</SelectItem>
-                    <SelectItem value="komunitas">Komunitas</SelectItem>
-                    <SelectItem value="lembaga">Lembaga</SelectItem>
-                    <SelectItem value="masjid">Masjid</SelectItem>
-                    <SelectItem value="sekolah">Sekolah</SelectItem>
-                    <SelectItem value="yayasan">Yayasan</SelectItem>
-                    <SelectItem value="instansi">Instansi</SelectItem>
-                    <SelectItem value="organisasi">Organisasi</SelectItem>
-                    <SelectItem value="media">Media</SelectItem>
-                    <SelectItem value="lainnya">Lainnya</SelectItem>
-                  </SelectContent>
-                </Select>
+                <SearchableSelect
+                  id="statusDonatur"
+                  label="Status Donatur"
+                  options={[
+                    { value: 'individu', label: 'Individu' },
+                    { value: 'corporate', label: 'Corporate' },
+                    { value: 'komunitas', label: 'Komunitas' },
+                    { value: 'lembaga', label: 'Lembaga' },
+                    { value: 'masjid', label: 'Masjid' },
+                    { value: 'sekolah', label: 'Sekolah' },
+                    { value: 'yayasan', label: 'Yayasan' },
+                    { value: 'instansi', label: 'Instansi' },
+                    { value: 'organisasi', label: 'Organisasi' },
+                    { value: 'media', label: 'Media' },
+                    { value: 'lainnya', label: 'Lainnya' },
+                  ]}
+                  value={form.watch("statusDonatur") || undefined}
+                  onValueChange={(value) => form.setValue("statusDonatur", value)}
+                  placeholder="Pilih status donatur"
+                />
                 {form.formState.errors.statusDonatur && (
                   <p className="text-sm text-destructive">{form.formState.errors.statusDonatur.message}</p>
                 )}
@@ -189,35 +185,31 @@ export function DonaturForm({ initialData, isEdit = false, donaturId }: DonaturF
 
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                 <div className="space-y-2">
-                  <Label htmlFor="aktif">Status Aktif</Label>
-                  <Select 
-                    onValueChange={(value) => form.setValue("aktif", value as 'y' | 'n' | 'p')} 
+                  <SearchableSelect
+                    id="aktif"
+                    label="Status Aktif"
+                    options={[
+                      { value: 'y', label: 'Aktif' },
+                      { value: 'n', label: 'Nonaktif' },
+                      { value: 'p', label: 'Pending' },
+                    ]}
                     value={form.watch("aktif") || "y"}
-                  >
-                    <SelectTrigger id="aktif">
-                      <SelectValue placeholder="Pilih status" />
-                    </SelectTrigger>
-                    <SelectContent>
-                      <SelectItem value="y">Aktif</SelectItem>
-                      <SelectItem value="n">Nonaktif</SelectItem>
-                      <SelectItem value="p">Pending</SelectItem>
-                    </SelectContent>
-                  </Select>
+                    onValueChange={(value) => form.setValue("aktif", value as 'y' | 'n' | 'p')}
+                    placeholder="Pilih status"
+                  />
                 </div>
                 <div className="space-y-2">
-                  <Label htmlFor="kirimSms">Kirim SMS</Label>
-                  <Select 
-                    onValueChange={(value) => form.setValue("kirimSms", value as 'y' | 'n')} 
+                  <SearchableSelect
+                    id="kirimSms"
+                    label="Kirim SMS"
+                    options={[
+                      { value: 'y', label: 'Ya' },
+                      { value: 'n', label: 'Tidak' },
+                    ]}
                     value={form.watch("kirimSms") || "n"}
-                  >
-                    <SelectTrigger id="kirimSms">
-                      <SelectValue placeholder="Pilih" />
-                    </SelectTrigger>
-                    <SelectContent>
-                      <SelectItem value="y">Ya</SelectItem>
-                      <SelectItem value="n">Tidak</SelectItem>
-                    </SelectContent>
-                  </Select>
+                    onValueChange={(value) => form.setValue("kirimSms", value as 'y' | 'n')}
+                    placeholder="Pilih"
+                  />
                 </div>
               </div>
 
@@ -384,22 +376,14 @@ export function DonaturForm({ initialData, isEdit = false, donaturId }: DonaturF
             </CardHeader>
             <CardContent className="space-y-4">
               <div className="space-y-2">
-                <Label htmlFor="kantorDonaturId">Kantor Donatur</Label>
-                <Select 
-                  onValueChange={(value) => form.setValue("kantorDonaturId", Number(value))} 
-                  value={form.watch("kantorDonaturId")?.toString() || ""}
-                >
-                  <SelectTrigger id="kantorDonaturId">
-                    <SelectValue placeholder="Pilih kantor" />
-                  </SelectTrigger>
-                  <SelectContent>
-                    {kantorOptions.map((option) => (
-                      <SelectItem key={option.value} value={option.value.toString()}>
-                        {option.label}
-                      </SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
+                <SearchableSelect
+                  id="kantorDonaturId"
+                  label="Kantor Donatur"
+                  options={kantorOptions.map(o => ({ value: String(o.value), label: o.label }))}
+                  value={form.watch("kantorDonaturId")?.toString() || undefined}
+                  onValueChange={(value) => form.setValue("kantorDonaturId", Number(value))}
+                  placeholder="Pilih kantor"
+                />
               </div>
 
               <div className="space-y-2">

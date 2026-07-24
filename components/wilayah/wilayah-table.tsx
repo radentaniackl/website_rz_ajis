@@ -21,8 +21,13 @@ interface WilayahTableProps {
     kodeLama: number | null;
     namaWilayah: string;
     alamatWilayah: string | null;
-    kantorId: number | null;
-    desaId: number | null;
+    kantorId: bigint | null;
+    kantorNama: string | null;
+    desaId: bigint | null;
+    desaNama: string | null;
+    kecamatanNama: string | null;
+    kabupatenNama: string | null;
+    propinsiNama: string | null;
     statusApprove: string | null;
     aktif: string;
   }>;
@@ -89,9 +94,8 @@ export function WilayahTable({
               <TableHead className="w-16">No</TableHead>
               <TableHead>Kode Lama</TableHead>
               <TableHead>Nama Wilayah</TableHead>
-              <TableHead>Alamat</TableHead>
-              <TableHead>Kantor ID</TableHead>
-              <TableHead>Desa ID</TableHead>
+              <TableHead>Kantor</TableHead>
+              <TableHead>Lokasi</TableHead>
               <TableHead>Status Approve</TableHead>
               <TableHead>Status</TableHead>
               <TableHead className="text-right">Aksi</TableHead>
@@ -100,7 +104,7 @@ export function WilayahTable({
           <TableBody>
             {data.length === 0 ? (
               <TableRow>
-                <TableCell colSpan={9} className="text-center py-8 text-muted-foreground">
+                <TableCell colSpan={8} className="text-center py-8 text-muted-foreground">
                   Tidak ada data wilayah
                 </TableCell>
               </TableRow>
@@ -109,10 +113,21 @@ export function WilayahTable({
                 <TableRow key={item.id.toString()}>
                   <TableCell className="font-medium">{startRow + index}</TableCell>
                   <TableCell>{item.kodeLama || '-'}</TableCell>
-                  <TableCell>{item.namaWilayah}</TableCell>
-                  <TableCell>{item.alamatWilayah || '-'}</TableCell>
-                  <TableCell>{item.kantorId ? String(item.kantorId) : '-'}</TableCell>
-                  <TableCell>{item.desaId ? String(item.desaId) : '-'}</TableCell>
+                  <TableCell className="font-medium">{item.namaWilayah}</TableCell>
+                  <TableCell>{item.kantorNama || '-'}</TableCell>
+                  <TableCell>
+                    {item.desaNama && (
+                      <div className="text-sm">
+                        <div>{item.desaNama}</div>
+                        {item.kecamatanNama && (
+                          <div className="text-muted-foreground text-xs">
+                            {item.kecamatanNama}, {item.kabupatenNama}
+                          </div>
+                        )}
+                      </div>
+                    )}
+                    {!item.desaNama && '-'}
+                  </TableCell>
                   <TableCell>
                     <Badge variant={item.statusApprove === 'y' || item.statusApprove === 't' ? 'default' : 'secondary'}>
                       {item.statusApprove === 'y' || item.statusApprove === 't' ? 'Approved' : 'Pending'}

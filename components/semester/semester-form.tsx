@@ -9,7 +9,7 @@ import { toast } from 'sonner';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
+import { SearchableSelect } from '@/components/ui/searchable-select';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { semesterSchema, semesterUpdateSchema, type SemesterInput, type SemesterUpdateInput } from '@/lib/validation/schemas';
 import { createSemesterAction, updateSemesterAction } from '@/app/actions/semester';
@@ -98,19 +98,17 @@ export function SemesterForm({ initialData, isEdit = false, semesterId }: Semest
 
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
             <div className="space-y-2">
-              <Label htmlFor="jenis">Jenis Semester</Label>
-              <Select 
-                onValueChange={(value) => form.setValue("jenis", value)} 
-                value={form.watch("jenis") || ""}
-              >
-                <SelectTrigger id="jenis">
-                  <SelectValue placeholder="Pilih jenis" />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="ganjil">Ganjil</SelectItem>
-                  <SelectItem value="genap">Genap</SelectItem>
-                </SelectContent>
-              </Select>
+              <SearchableSelect
+                id="jenis"
+                label="Jenis Semester"
+                options={[
+                  { value: 'ganjil', label: 'Ganjil' },
+                  { value: 'genap', label: 'Genap' },
+                ]}
+                value={form.watch("jenis") || undefined}
+                onValueChange={(value) => form.setValue("jenis", value)}
+                placeholder="Pilih jenis"
+              />
             </div>
             <div className="space-y-2">
               <Label htmlFor="tahun">Tahun</Label>
@@ -129,34 +127,30 @@ export function SemesterForm({ initialData, isEdit = false, semesterId }: Semest
 
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
             <div className="space-y-2">
-              <Label htmlFor="onprogress">Status</Label>
-              <Select 
-                onValueChange={(value) => form.setValue("onprogress", value as 'y' | 'n')} 
+              <SearchableSelect
+                id="onprogress"
+                label="Status"
+                options={[
+                  { value: 'y', label: 'Aktif' },
+                  { value: 'n', label: 'Tidak Aktif' },
+                ]}
                 value={form.watch("onprogress") || "n"}
-              >
-                <SelectTrigger id="onprogress">
-                  <SelectValue placeholder="Pilih status" />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="y">Aktif</SelectItem>
-                  <SelectItem value="n">Tidak Aktif</SelectItem>
-                </SelectContent>
-              </Select>
+                onValueChange={(value) => form.setValue("onprogress", value as 'y' | 'n')}
+                placeholder="Pilih status"
+              />
             </div>
             <div className="space-y-2">
-              <Label htmlFor="lapsem">Laporan Semester</Label>
-              <Select 
-                onValueChange={(value) => form.setValue("lapsem", value as 'y' | 'n')} 
+              <SearchableSelect
+                id="lapsem"
+                label="Laporan Semester"
+                options={[
+                  { value: 'y', label: 'Ya' },
+                  { value: 'n', label: 'Tidak' },
+                ]}
                 value={form.watch("lapsem") || "y"}
-              >
-                <SelectTrigger id="lapsem">
-                  <SelectValue placeholder="Pilih status laporan" />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="y">Ya</SelectItem>
-                  <SelectItem value="n">Tidak</SelectItem>
-                </SelectContent>
-              </Select>
+                onValueChange={(value) => form.setValue("lapsem", value as 'y' | 'n')}
+                placeholder="Pilih status laporan"
+              />
             </div>
           </div>
 

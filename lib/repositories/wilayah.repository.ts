@@ -1,11 +1,12 @@
-import { ajisWilayahPembinaan, ajisKantor, refDesa } from '@/lib/db/schema';
+import { ajisWilayahPembinaan, ajisKantor, refDesa, refKecamatan, refKabupaten, refPropinsi, ajisAnak, ajisSdmWilayah, ajisUserWilayahPembinaan } from '@/lib/db/schema';
 import { db, getOffset, safeQuery, type ListParams } from './base.repository';
-import { eq, ilike, and, desc, or, sql } from 'drizzle-orm';
+import { eq, ilike, and, desc, or, sql, inArray } from 'drizzle-orm';
 import type { SQL } from 'drizzle-orm';
 
 export type WilayahListParams = ListParams & {
   aktif?: 'y' | 'n';
   kantorId?: number;
+  rbacFilter?: SQL;
 };
 
 export type WilayahInput = {
@@ -29,20 +30,16 @@ export type WilayahUpdate = Partial<WilayahInput>;
  */
 
 export async function listWilayah(params: WilayahListParams = {}) {
-  const { page = 1, pageSize = 20, search, aktif, kantorId } = params;
+  const { page = 1, pageSize = 20, search, aktif, kantorId, rbacFilter } = params;
   const offset = getOffset(page, pageSize);
 
   return safeQuery('listWilayah', async () => {
     // Build conditions
     const conditions: SQL[] = [];
 
-    if (aktif) {
-      conditions.push(eq(ajisWilayahPembinaan.aktif, aktif));
-    }
-
-    if (kantorId) {
-      conditions.push(eq(ajisWilayahPembinaan.kantorId, BigInt(kantorId)));
-    }
+    if (rbacFilter) conditions.push(rbacFilter);
+    if (aktif) conditions.push(eq(ajisWilayahPembinaan.aktif, aktif));
+    if (kantorId) conditions.push(eq(ajisWilayahPembinaan.kantorId, BigInt(kantorId)));
 
     if (search) {
       conditions.push(
@@ -55,10 +52,33 @@ export async function listWilayah(params: WilayahListParams = {}) {
 
     const whereClause = conditions.length > 0 ? and(...conditions) : undefined;
 
-    // Get data
+    // Get data with related information
     const data = await db
-      .select()
+      .select({
+        id: ajisWilayahPembinaan.id,
+        kodeLama: ajisWilayahPembinaan.kodeLama,
+        namaWilayah: ajisWilayahPembinaan.namaWilayah,
+        alamatWilayah: ajisWilayahPembinaan.alamatWilayah,
+        kantorId: ajisWilayahPembinaan.kantorId,
+        kantorNama: ajisKantor.nama,
+        desaId: ajisWilayahPembinaan.desaId,
+        desaNama: refDesa.nama,
+        kecamatanNama: refKecamatan.nama,
+        kabupatenNama: refKabupaten.nama,
+        propinsiNama: refPropinsi.nama,
+        statusApprove: ajisWilayahPembinaan.statusApprove,
+        aktif: ajisWilayahPembinaan.aktif,
+        userInsert: ajisWilayahPembinaan.userInsert,
+        dateInsert: ajisWilayahPembinaan.dateInsert,
+        userUpdate: ajisWilayahPembinaan.userUpdate,
+        dateUpdate: ajisWilayahPembinaan.dateUpdate,
+      })
       .from(ajisWilayahPembinaan)
+      .leftJoin(ajisKantor, eq(ajisWilayahPembinaan.kantorId, ajisKantor.id))
+      .leftJoin(refDesa, eq(ajisWilayahPembinaan.desaId, refDesa.id))
+      .leftJoin(refKecamatan, eq(refDesa.kecamatanId, refKecamatan.id))
+      .leftJoin(refKabupaten, eq(refKecamatan.kabupatenId, refKabupaten.id))
+      .leftJoin(refPropinsi, eq(refKabupaten.propinsiId, refPropinsi.id))
       .where(whereClause)
       .orderBy(desc(ajisWilayahPembinaan.id))
       .limit(pageSize)
@@ -194,4 +214,110 @@ export async function deleteWilayah(id: number) {
 
     return wilayah || null;
   });
+}
+
+// ─── RELATED DATA METHODS ─────────────────────────────────────────────────────
+
+export async function findWilayahByIdWithRelations(id: number) {
+  return safeQuery('findWilayahByIdWithRelations', async () => {
+    const [wilayah] = await db
+      .select({
+        id: ajisWilayahPembinaan.id,
+        kodeLama: ajisWilayahPembinaan.kodeLama,
+        namaWilayah: ajisWilayahPembinaan.namaWilayah,
+        alamatWilayah: ajisWilayahPembinaan.alamatWilayah,
+        kantorId: ajisWilayahPembinaan.kantorId,
+        kantorNama: ajisKantor.nama,
+        desaId: ajisWilayahPembinaan.desaId,
+        desaNama: refDesa.nama,
+        kecamatanNama: refKecamatan.nama,
+        kabupatenNama: refKabupaten.nama,
+        propinsiNama: refPropinsi.nama,
+        statusApprove: ajisWilayahPembinaan.statusApprove,
+        aktif: ajisWilayahPembinaan.aktif,
+        userInsert: ajisWilayahPembinaan.userInsert,
+        dateInsert: ajisWilayahPembinaan.dateInsert,
+        userUpdate: ajisWilayahPembinaan.userUpdate,
+        dateUpdate: ajisWilayahPembinaan.dateUpdate,
+      })
+      .from(ajisWilayahPembinaan)
+      .leftJoin(ajisKantor, eq(ajisWilayahPembinaan.kantorId, ajisKantor.id))
+      .leftJoin(refDesa, eq(ajisWilayahPembinaan.desaId, refDesa.id))
+      .leftJoin(refKecamatan, eq(refDesa.kecamatanId, refKecamatan.id))
+      .leftJoin(refKabupaten, eq(refKecamatan.kabupatenId, refKabupaten.id))
+      .leftJoin(refPropinsi, eq(refKabupaten.propinsiId, refPropinsi.id))
+      .where(eq(ajisWilayahPembinaan.id, BigInt(id)))
+      .limit(1);
+
+    return wilayah || null;
+  });
+}
+
+export async function getAnakCountByWilayah(wilayahId: number) {
+  return safeQuery('getAnakCountByWilayah', async () => {
+    const result = await db
+      .select({ count: sql<number>`count(*)::int` })
+      .from(ajisAnak)
+      .where(eq(ajisAnak.wilayahPembinaanId, BigInt(wilayahId)));
+    
+    return result[0]?.count ?? 0;
+  });
+}
+
+export async function getSdmCountByWilayah(wilayahId: number) {
+  return safeQuery('getSdmCountByWilayah', async () => {
+    const result = await db
+      .select({ count: sql<number>`count(*)::int` })
+      .from(ajisSdmWilayah)
+      .where(eq(ajisSdmWilayah.penugasanWilayahId, BigInt(wilayahId)));
+    
+    return result[0]?.count ?? 0;
+  });
+}
+
+export async function getAvailableKantor(user: { id_group_user: number; kantor_id?: number | null }) {
+  return safeQuery('getAvailableKantor', async () => {
+    if (user.id_group_user === 1) {
+      // Super Admin: all kantor
+      return await db.select().from(ajisKantor).where(eq(ajisKantor.aktif, 'y'));
+    } else if (user.id_group_user === 2 && user.kantor_id) {
+      // Branch Admin: only their kantor
+      return await db
+        .select()
+        .from(ajisKantor)
+        .where(and(eq(ajisKantor.id, BigInt(user.kantor_id)), eq(ajisKantor.aktif, 'y')));
+    }
+    // Korwil: no access to create wilayah
+    return [];
+  });
+}
+
+export async function getUserWilayahIds(userId: number) {
+  return safeQuery('getUserWilayahIds', async () => {
+    const result = await db
+      .select({ wilayahPembinaanId: ajisUserWilayahPembinaan.wilayahPembinaanId })
+      .from(ajisUserWilayahPembinaan)
+      .where(eq(ajisUserWilayahPembinaan.userId, BigInt(userId)));
+    
+    return result.map(r => Number(r.wilayahPembinaanId));
+  });
+}
+
+// ─── RBAC FILTER BUILDER ───────────────────────────────────────────────────────
+
+export function buildRbacFilter(user: { id_group_user: number; kantor_id?: number | null; id: number }): SQL | undefined {
+  if (user.id_group_user === 1) {
+    // Super Admin: no filter
+    return undefined;
+  } else if (user.id_group_user === 2 && user.kantor_id) {
+    // Branch Admin: only their office's regions
+    return eq(ajisWilayahPembinaan.kantorId, BigInt(user.kantor_id));
+  } else if (user.id_group_user === 9) {
+    // Korwil: only assigned regions
+    return inArray(
+      ajisWilayahPembinaan.id,
+      sql`(SELECT wilayah_pembinaan_id FROM ajis_user_wilayah_pembinaan WHERE user_id = ${BigInt(user.id)})`
+    );
+  }
+  return undefined;
 }

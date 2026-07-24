@@ -1,16 +1,18 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
+import { SearchableSelect, type SearchableSelectOption } from "@/components/ui/searchable-select";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Loader2 } from "lucide-react";
 import { createSdmAction, updateSdmAction } from "@/app/actions/sdm";
 import { toast } from "sonner";
+import { getKantorOptions, getWilayahOptions } from "@/app/actions/dropdown-data";
 
 interface SdmFormProps {
   initialData?: any;
@@ -19,7 +21,33 @@ interface SdmFormProps {
 export function SdmForm({ initialData }: SdmFormProps) {
   const router = useRouter();
   const [loading, setLoading] = useState(false);
+  const [loadingDropdowns, setLoadingDropdowns] = useState(true);
+  const [kantorOptions, setKantorOptions] = useState<SearchableSelectOption[]>([]);
+  const [wilayahOptions, setWilayahOptions] = useState<SearchableSelectOption[]>([]);
   const isEditing = !!initialData;
+
+  useEffect(() => {
+    async function loadDropdownData() {
+      try {
+        const [kantorResult, wilayahResult] = await Promise.all([
+          getKantorOptions(),
+          getWilayahOptions()
+        ]);
+        
+        if (kantorResult.success && kantorResult.data) {
+          setKantorOptions(kantorResult.data.map(k => ({ value: String(k.value), label: k.label })));
+        }
+        if (wilayahResult.success && wilayahResult.data) {
+          setWilayahOptions(wilayahResult.data.map(w => ({ value: String(w.value), label: w.label })));
+        }
+      } catch (error) {
+        console.error('Error loading dropdown data:', error);
+      } finally {
+        setLoadingDropdowns(false);
+      }
+    }
+    loadDropdownData();
+  }, []);
 
   const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
@@ -128,15 +156,35 @@ export function SdmForm({ initialData }: SdmFormProps) {
                 <Input type="email" id="email" name="email" defaultValue={initialData?.email} placeholder="email@contoh.com" />
               </div>
 
-              <div className="grid grid-cols-2 gap-4">
-                <div className="space-y-2">
-                  <Label htmlFor="penugasanKantorId">ID Kantor</Label>
-                  <Input type="number" id="penugasanKantorId" name="penugasanKantorId" defaultValue={initialData?.penugasanKantorId} placeholder="ID Kantor" />
-                </div>
-                <div className="space-y-2">
-                  <Label htmlFor="penugasanWilayahId">ID Wilayah</Label>
-                  <Input type="number" id="penugasanWilayahId" name="penugasanWilayahId" defaultValue={initialData?.penugasanWilayahId} placeholder="ID Wilayah" />
-                </div>
+              <div className="space-y-2">
+                <SearchableSelect
+                  id="penugasanKantorId"
+                  label="Kantor Penugasan"
+                  options={kantorOptions}
+                  value={initialData?.penugasanKantorId ? String(initialData.penugasanKantorId) : undefined}
+                  onValueChange={(value) => {
+                    const input = document.getElementById('penugasanKantorId') as HTMLInputElement;
+                    if (input) input.value = value;
+                  }}
+                  placeholder={loadingDropdowns ? 'Memuat...' : 'Pilih kantor'}
+                  disabled={loadingDropdowns}
+                />
+                <input type="hidden" id="penugasanKantorId" name="penugasanKantorId" defaultValue={initialData?.penugasanKantorId} />
+              </div>
+              <div className="space-y-2">
+                <SearchableSelect
+                  id="penugasanWilayahId"
+                  label="Wilayah Penugasan"
+                  options={wilayahOptions}
+                  value={initialData?.penugasanWilayahId ? String(initialData.penugasanWilayahId) : undefined}
+                  onValueChange={(value) => {
+                    const input = document.getElementById('penugasanWilayahId') as HTMLInputElement;
+                    if (input) input.value = value;
+                  }}
+                  placeholder={loadingDropdowns ? 'Memuat...' : 'Pilih wilayah'}
+                  disabled={loadingDropdowns}
+                />
+                <input type="hidden" id="penugasanWilayahId" name="penugasanWilayahId" defaultValue={initialData?.penugasanWilayahId} />
               </div>
 
               <div className="space-y-2">

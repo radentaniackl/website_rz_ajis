@@ -872,3 +872,51 @@ export const sdmWilayahUpdateSchema = z.preprocess(cleanAnakFormValues, sdmWilay
 
 export type SdmWilayahInput = z.infer<typeof sdmWilayahSchema>;
 export type SdmWilayahUpdateInput = z.infer<typeof sdmWilayahUpdateSchema>;
+
+// Hafalan Schemas
+const hafalanObjectSchema = z.object({
+  kodeLama: z.number().int().positive('Kode lama harus positif').optional(),
+  anakId: z.number().int().positive('Anak ID harus positif'),
+  itemHafalanId: z.number().int().positive('Item hafalan ID harus positif').optional(),
+  jenis: z.string().max(50, 'Jenis hafalan maksimal 50 karakter').optional(),
+  kontenUji: z.string().min(1, 'Konten uji wajib diisi').max(100, 'Konten uji maksimal 100 karakter'),
+  tglPengujian: z.string().refine((val) => !val || !isNaN(Date.parse(val)), 'Format tanggal tidak valid').optional(),
+  keterangan: z.string().max(1000, 'Keterangan maksimal 1000 karakter').optional(),
+  semesterId: z.number().int().positive('Semester ID harus positif').optional(),
+});
+
+export const hafalanSchema = z.preprocess(cleanAnakFormValues, hafalanObjectSchema);
+export const hafalanUpdateSchema = z.preprocess(cleanAnakFormValues, hafalanObjectSchema.partial());
+
+export type HafalanInput = z.infer<typeof hafalanSchema>;
+export type HafalanUpdateInput = z.infer<typeof hafalanUpdateSchema>;
+
+// Item Hafalan Schemas (Master Data)
+const itemHafalanObjectSchema = z.object({
+  kodeLama: z.number().int().positive('Kode lama harus positif').optional(),
+  jenis: z.number().int().positive('Jenis harus positif').optional(),
+  konten: z.string().min(1, 'Konten wajib diisi').max(100, 'Konten maksimal 100 karakter'),
+});
+
+export const itemHafalanSchema = z.preprocess(cleanAnakFormValues, itemHafalanObjectSchema);
+export const itemHafalanUpdateSchema = z.preprocess(cleanAnakFormValues, itemHafalanObjectSchema.partial());
+
+export type ItemHafalanInput = z.infer<typeof itemHafalanSchema>;
+export type ItemHafalanUpdateInput = z.infer<typeof itemHafalanUpdateSchema>;
+
+// Wilayah Pembinaan Schemas
+const wilayahPembinaanObjectSchema = z.object({
+  kodeLama: z.number().int().positive('Kode lama harus positif').optional(),
+  namaWilayah: z.string().min(3, 'Nama wilayah minimal 3 karakter').max(150, 'Nama wilayah maksimal 150 karakter'),
+  alamatWilayah: z.string().max(500, 'Alamat wilayah maksimal 500 karakter').optional().or(z.literal('')),
+  kantorId: z.number().int().positive('Kantor ID harus positif').nullable().optional(),
+  desaId: z.number().int().positive('Desa ID harus positif').nullable().optional(),
+  statusApprove: z.enum(['y', 't'], { errorMap: () => ({ message: 'Status approve harus y atau t' }) }).nullable().optional(),
+  aktif: z.enum(['y', 'n'], { errorMap: () => ({ message: 'Status harus y atau n' }) }).default('y'),
+});
+
+export const wilayahPembinaanSchema = z.preprocess(cleanAnakFormValues, wilayahPembinaanObjectSchema);
+export const wilayahPembinaanUpdateSchema = z.preprocess(cleanAnakFormValues, wilayahPembinaanObjectSchema.partial());
+
+export type WilayahPembinaanInput = z.infer<typeof wilayahPembinaanSchema>;
+export type WilayahPembinaanUpdateInput = z.infer<typeof wilayahPembinaanUpdateSchema>;
